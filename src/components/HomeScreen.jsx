@@ -21,7 +21,7 @@ const TOP_ARTICLES = [
   { id: 'fl-5', title: 'Integraciones con APIs externas', mins: 6 },
 ]
 
-export function HomeScreen({ onClose, isExpanded, onToggleExpand, onNewChat, onTabChange, userName }) {
+export function HomeScreen({ onClose, isExpanded, onToggleExpand, onNewChat, onTabChange, userName, loggedInUser, onLoginClick, onAskArticle }) {
   const [query, setQuery] = useState('')
 
   const filteredArticles = query.trim()
@@ -43,17 +43,20 @@ export function HomeScreen({ onClose, isExpanded, onToggleExpand, onNewChat, onT
         <div style={heroBgStyle} />
         <div style={heroOverlayStyle} />
         <div style={topRowStyle}>
-          <div style={avatarsStyle}>
-            {AGENT_AVATARS.map((src, i) => (
-              <img
-                key={i}
-                src={src}
-                alt=""
-                style={{ ...avatarStyle, zIndex: 3 - i, marginLeft: i === 0 ? 0 : -10 }}
-              />
-            ))}
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <BotmakerLogo size={42} white />
           </div>
-          <div style={{ display: 'flex', gap: 2 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            {loggedInUser ? (
+              <div style={userChipStyle}>
+                <UserAvatarIcon initial={loggedInUser.name.charAt(0).toUpperCase()} />
+                <span style={userChipNameStyle}>{loggedInUser.name.split(' ')[0]}</span>
+              </div>
+            ) : (
+              <button style={loginBtnStyle} onClick={onLoginClick}>
+                Ingresar
+              </button>
+            )}
             <button style={heroBtnStyle} onClick={onToggleExpand} aria-label={isExpanded ? 'Contraer' : 'Expandir'}>
               {isExpanded ? <ContractIcon /> : <ExpandIcon />}
             </button>
@@ -74,9 +77,21 @@ export function HomeScreen({ onClose, isExpanded, onToggleExpand, onNewChat, onT
         {/* Card de chat */}
         <div style={sectionStyle}>
           <button className="cw-home-card" style={chatCardStyle} onClick={onNewChat}>
-            <div style={{ position: 'relative', flexShrink: 0 }}>
-              <div style={cardIconStyle}><BotmakerLogo size={22} /></div>
-              <span style={onlineBadgeStyle} />
+            <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+              <div style={{ ...cardIconStyle, zIndex: 2, position: 'relative' }}>
+                <BotmakerLogo size={22} />
+              </div>
+              <img
+                src={AGENT_AVATARS[0]}
+                alt=""
+                style={{
+                  width: 38, height: 38, borderRadius: '50%',
+                  border: '2.5px solid #fff',
+                  objectFit: 'cover',
+                  marginLeft: -10,
+                  position: 'relative', zIndex: 1,
+                }}
+              />
             </div>
             <div style={{ flex: 1, textAlign: 'left' }}>
               <div style={{ fontWeight: 500, fontSize: 14, color: '#111827' }}>Chatear con el equipo</div>
@@ -114,7 +129,7 @@ export function HomeScreen({ onClose, isExpanded, onToggleExpand, onNewChat, onT
                   key={a.id}
                   className="cw-home-faq-row"
                   style={faqRowStyle}
-                  onClick={() => onTabChange('help')}
+                  onClick={() => onAskArticle?.(a)}
                 >
                   <span style={{ flex: 1, fontSize: 13, color: '#374151', textAlign: 'left', lineHeight: 1.4 }}>
                     {a.title}
@@ -150,6 +165,19 @@ const TAB_ITEMS = [
 ]
 
 // ── Íconos ───────────────────────────────────────────────────────────────────
+
+function UserAvatarIcon({ initial }) {
+  return (
+    <div style={{
+      width: 20, height: 20, borderRadius: '50%',
+      background: 'rgba(255,255,255,0.3)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontSize: 11, fontWeight: 700, color: '#fff', flexShrink: 0,
+    }}>
+      {initial}
+    </div>
+  )
+}
 
 function SearchIcon() {
   return (
@@ -270,6 +298,34 @@ const heroBtnStyle = {
   transition: 'background 120ms',
 }
 
+const loginBtnStyle = {
+  height: 28,
+  padding: '0 12px',
+  borderRadius: 14,
+  border: '1.5px solid rgba(255,255,255,0.35)',
+  background: 'rgba(255,255,255,0.12)',
+  color: '#fff',
+  fontSize: 12, fontWeight: 600,
+  cursor: 'pointer',
+  fontFamily: 'var(--cw-font-family)',
+  transition: 'background 120ms',
+  whiteSpace: 'nowrap',
+}
+
+const userChipStyle = {
+  display: 'flex', alignItems: 'center', gap: 6,
+  height: 28, padding: '0 10px 0 6px',
+  borderRadius: 14,
+  background: 'rgba(255,255,255,0.15)',
+  border: '1.5px solid rgba(255,255,255,0.25)',
+}
+
+const userChipNameStyle = {
+  fontSize: 12, fontWeight: 600,
+  color: '#fff',
+  fontFamily: 'var(--cw-font-family)',
+}
+
 const heroTextStyle = {
   position: 'relative',
   zIndex: 1,
@@ -319,10 +375,8 @@ const chatCardStyle = {
 
 const onlineBadgeStyle = {
   position: 'absolute',
-  bottom: 1,
-  right: 1,
-  width: 10,
-  height: 10,
+  bottom: 2, right: 0,
+  width: 10, height: 10,
   borderRadius: '50%',
   background: '#22c55e',
   border: '2px solid #fff',
@@ -331,7 +385,7 @@ const onlineBadgeStyle = {
 const cardIconStyle = {
   width: 38,
   height: 38,
-  borderRadius: 10,
+  borderRadius: '50%',
   background: '#f3f4f6',
   display: 'flex',
   alignItems: 'center',

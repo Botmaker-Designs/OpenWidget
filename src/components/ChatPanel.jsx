@@ -5,7 +5,7 @@ import { VoiceChat } from './VoiceChat'
 import { BotmakerLogo } from './BotmakerLogo'
 import { HumanAvatar } from './HumanAvatar'
 
-export function ChatPanel({ config, messages, isTyping, typingMode, onSend, onQuickReply, onEscalate, onLeaveMessage, onClose, onBack, agentSession, isExpanded, onToggleExpand }) {
+export function ChatPanel({ config, messages, isTyping, typingMode, onSend, onQuickReply, onEscalate, onLeaveMessage, onClose, onBack, agentSession, isExpanded, onToggleExpand, onAddVoiceMessage, onStreamVoiceBot }) {
   const [voiceMode, setVoiceMode] = useState(false)
 
   return (
@@ -43,12 +43,17 @@ export function ChatPanel({ config, messages, isTyping, typingMode, onSend, onQu
         agentName={agentSession?.name}
       />
 
-      <ChatInput onSend={onSend} disabled={isTyping} onVoice={() => setVoiceMode(true)} />
-
-      {voiceMode && (
+      {voiceMode ? (
         <VoiceChat
+          onAddMessage={onAddVoiceMessage}
+          onStreamBot={onStreamVoiceBot}
           onClose={() => setVoiceMode(false)}
-          onMessage={(text) => onSend(text)}
+        />
+      ) : (
+        <ChatInput
+          onSend={onSend}
+          disabled={isTyping}
+          onVoice={() => setVoiceMode(true)}
         />
       )}
     </>

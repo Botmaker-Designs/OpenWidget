@@ -7,6 +7,7 @@ import { SessionsList } from './SessionsList'
 import { HelpCenter } from './HelpCenter'
 import { HomeScreen } from './HomeScreen'
 import { MyAgents } from './MyAgents'
+import { LoginScreen } from './LoginScreen'
 import { IncomingCall } from './IncomingCall'
 import { ActiveCall } from './ActiveCall'
 import { ActiveVideoCall } from './ActiveVideoCall'
@@ -16,6 +17,19 @@ let nextId = 1
 
 function interpolate(text, variables = {}) {
   return text.replace(/\{\{(\w+)\}\}/g, (_, key) => variables[key] ?? '')
+}
+
+const ARTICLE_RESPONSES = {
+  'gs-1': 'Botmaker es una plataforma omnicanal de automatización conversacional que te permite crear bots con IA, gestionar conversaciones en WhatsApp, Instagram, Webchat y más canales desde un solo lugar. Con Botmaker podés combinar respuestas automáticas con atención humana, integrar tu CRM y analizar métricas en tiempo real.',
+  'ai-1': 'Un Agente de IA en Botmaker es un asistente virtual potenciado por modelos de lenguaje (LLMs) que puede entender preguntas complejas, acceder a bases de conocimiento propias y mantener conversaciones naturales con tus clientes. A diferencia de los bots tradicionales por flujos, el Agente de IA responde de forma dinámica sin necesidad de programar cada camino posible.',
+  'ch-3': 'Para integrar el Webchat en tu sitio web solo necesitás copiar un snippet de JavaScript generado desde tu cuenta de Botmaker y pegarlo antes del cierre del tag </body>. El widget se personaliza en color, posición e idioma desde el panel de configuración, sin tocar código. También podés usar nuestro SDK para una integración más avanzada.',
+  'fl-1': 'Un flujo de conversación en Botmaker es una secuencia visual de pasos que define cómo responde tu bot según lo que escribe el usuario. Podés crear flujos desde el editor drag & drop: agregás nodos de mensaje, condiciones, variables y llamadas a APIs externas. Los flujos se activan por palabras clave, intenciones o eventos específicos.',
+  'ch-1': 'Para conectar WhatsApp Business API necesitás tener una cuenta de Meta Business Manager verificada y un número de teléfono habilitado para la API. Desde Botmaker, el proceso de onboarding te guía paso a paso: verificás el negocio, asociás el número y configurás los templates de mensajes. El proceso tarda entre 1 y 3 días hábiles.',
+  'ai-7': 'La escalada automática transfiere la conversación de un bot a un agente humano cuando se detectan ciertas condiciones: el usuario pide hablar con una persona, el bot no puede resolver la consulta después de N intentos, o se activa una palabra clave específica. Desde Botmaker podés configurar las reglas de escalada y la cola de agentes que recibirán el chat.',
+  'in-1': 'El Inbox unificado de Botmaker centraliza todos los chats de todos tus canales (WhatsApp, Instagram, Webchat, etc.) en una sola bandeja de entrada. Los agentes pueden ver el historial completo, transferir conversaciones entre equipos, usar respuestas rápidas y ver el contexto del usuario en tiempo real. También soporta etiquetas y filtros para organizar la gestión.',
+  'gs-4': 'Para agregar agentes humanos a tu cuenta de Botmaker entrás a Configuración → Equipo → Invitar agente. Ingresás el email del agente, asignás su rol (Agente, Supervisor o Administrador) y el equipo al que pertenece. El agente recibe un mail de invitación para crear su contraseña y ya puede acceder al Inbox para gestionar conversaciones.',
+  'int-5': 'La API REST de Botmaker te permite enviar y recibir mensajes de forma programática, gestionar contactos, consultar historial de conversaciones y disparar flujos desde sistemas externos. Usa autenticación por API Key. La documentación completa con ejemplos en cURL, Python y Node.js está disponible en developers.botmaker.com.',
+  'fl-5': 'Botmaker permite integrar APIs externas dentro de los flujos usando el nodo "Llamar a API". Podés hacer requests GET/POST a cualquier endpoint, mapear la respuesta a variables del bot y usarlas en mensajes posteriores. También soporta webhooks entrantes para que sistemas externos disparen acciones dentro de una conversación activa.',
 }
 
 function simulateBotResponse(userText) {
@@ -39,13 +53,14 @@ export function ChatWidget({ config: configOverrides = {} }) {
   const { logFallback } = useFallbackLog(config.fallbackLogEndpoint)
 
   const [isOpen, setIsOpen]         = useState(false)
-  const [isExpanded, setIsExpanded] = useState(false)
+  const [isExpanded, setIsExpanded] = useState(true)
   const [view, setView]             = useState('home')
   const [sessions, setSessions]     = useState([])
   const [activeSessionId, setActiveSessionId] = useState(null)
   const [isTyping, setIsTyping]     = useState(false)
   const [typingMode, setTypingMode] = useState('writing')
   const [unreadCount, setUnreadCount] = useState(0)
+  const [loggedInUser, setLoggedInUser] = useState(null)
   const [incomingCall, setIncomingCall]   = useState(null)
   const [activeCall, setActiveCall]       = useState(null)
   const [activeVideoCall, setActiveVideoCall] = useState(null)
@@ -219,6 +234,36 @@ export function ChatWidget({ config: configOverrides = {} }) {
     addMessage(sid, { id: nextId++, role: 'bot', type: 'text', text: 'Dejá tu mensaje y te responderemos a la brevedad.', createdAt: new Date(), senderName: config.botName, senderType: 'Asistente IA' })
   }
 
+  const handleAskArticle = (article) => {
+    const sessionId = nextId++
+    const userMsg = { id: nextId++, role: 'user', type: 'text', text: article.title, createdAt: new Date() }
+    setSessions(prev => [{ id: sessionId, messages: [userMsg], timestamp: 'Ahora', startedAt: new Date() }, ...prev])
+    setActiveSessionId(sessionId)
+    setAgentSession(null)
+    setView('chat')
+    setIsTyping(true)
+    setTypingMode('writing')
+    setTimeout(() => {
+      setIsTyping(false)
+      const responseText = ARTICLE_RESPONSES[article.id] ?? 'Entendido. Estoy procesando tu consulta y en breve te doy una respuesta completa.'
+      const sid = sessionId
+      const msgId = nextId++
+      setSessions(prev => prev.map(s => s.id === sid
+        ? { ...s, messages: [...s.messages, { id: msgId, role: 'bot', type: 'streaming', text: '', createdAt: new Date(), senderName: config.botName, senderType: 'Asistente IA' }] }
+        : s
+      ))
+      let i = 0
+      streamingRef.current = setInterval(() => {
+        i++
+        updateLastMessage(sid, msg => ({ ...msg, text: responseText.slice(0, i) }))
+        if (i >= responseText.length) {
+          clearInterval(streamingRef.current)
+          updateLastMessage(sid, msg => ({ ...msg, type: 'text' }))
+        }
+      }, 18)
+    }, 1400)
+  }
+
   const handleTabChange = (tab) => {
     if (tab === 'home')     setView('home')
     if (tab === 'messages') setView('sessions')
@@ -241,7 +286,12 @@ export function ChatWidget({ config: configOverrides = {} }) {
     <div className="cw-widget">
       {isOpen && (
         <div style={panelShell(config.position, isExpanded)}>
-          {view === 'agents' ? (
+          {view === 'login' ? (
+            <LoginScreen
+              onLogin={(user) => { setLoggedInUser(user); setView('home') }}
+              onBack={() => setView('home')}
+            />
+          ) : view === 'agents' ? (
             <MyAgents
               onClose={handleClose}
               isExpanded={isExpanded}
@@ -264,6 +314,9 @@ export function ChatWidget({ config: configOverrides = {} }) {
               onNewChat={startNewChat}
               onTabChange={handleTabChange}
               userName={config.user?.name}
+              loggedInUser={loggedInUser}
+              onLoginClick={() => setView('login')}
+              onAskArticle={handleAskArticle}
             />
           ) : view === 'help' ? (
             <HelpCenter
@@ -300,6 +353,8 @@ export function ChatWidget({ config: configOverrides = {} }) {
               agentSession={agentSession}
               isExpanded={isExpanded}
               onToggleExpand={() => setIsExpanded(e => !e)}
+              onAddVoiceMessage={(msg) => addMessage(activeSessionId, { id: nextId++, createdAt: new Date(), senderName: config.botName, senderType: 'Asistente IA', ...msg })}
+              onStreamVoiceBot={(text) => streamText(activeSessionId, text)}
             />
           )}
 

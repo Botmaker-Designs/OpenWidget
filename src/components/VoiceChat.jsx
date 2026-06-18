@@ -19,32 +19,30 @@ const STATE_LABEL = {
   error:      'Sin acceso al micrófono',
 }
 
-const ACTIVATE      = 0.022  // RMS threshold to consider voice
-const VOICE_HOLD_MS = 150    // voice must stay above threshold this long to "count"
-const SILENCE_MS    = 2000   // ms of silence after speech → process
+const ACTIVATE      = 0.022
+const VOICE_HOLD_MS = 150
+const SILENCE_MS    = 2000
 
-export function VoiceChat({ onClose, onMessage }) {
-  const [orbState, setOrbState]     = useState('connecting')
-  const [volume, setVolume]         = useState(0)
-  const [transcript, setTranscript] = useState('')
-  const [botText, setBotText]       = useState('')
+export function VoiceChat({ onAddMessage, onStreamBot, onClose }) {
+  const [orbState, setOrbState] = useState('connecting')
+  const [volume, setVolume]     = useState(0)
 
-  // Stable refs
-  const orbStateRef    = useRef('connecting')
-  const loopRef        = useRef(true)
-  const processingRef  = useRef(false)
-  const streamRef      = useRef(null)
-  const audioCtxRef    = useRef(null)
-  const rafRef         = useRef(null)
-  const recogRef       = useRef(null)
-  const accumulatedRef = useRef('')  // transcript built across SR restarts
+  const orbStateRef          = useRef('connecting')
+  const loopRef              = useRef(true)
+  const processingRef        = useRef(false)
+  const audioCtxRef          = useRef(null)
+  const rafRef               = useRef(null)
+  const recogRef             = useRef(null)
+  const accumulatedRef       = useRef('')
+  const onAddMessageRef      = useRef(onAddMessage)
+  const onStreamBotRef       = useRef(onStreamBot)
+  const goRef                = useRef(null)
+  const processUtteranceRef  = useRef(null)
+  const startRecognitionRef  = useRef(null)
 
-  // "Latest function" refs — VAD closures read these instead of stale captures
-  const goRef                 = useRef(null)
-  const processUtteranceRef   = useRef(null)
-  const startRecognitionRef   = useRef(null)
+  useEffect(() => { onAddMessageRef.current = onAddMessage }, [onAddMessage])
+  useEffect(() => { onStreamBotRef.current = onStreamBot }, [onStreamBot])
 
-  // ── go: update both ref + React state ────────────────────────────────────
   const go = (state) => {
     orbStateRef.current = state
     setOrbState(state)
@@ -53,7 +51,6 @@ export function VoiceChat({ onClose, onMessage }) {
 
   // ── TTS ──────────────────────────────────────────────────────────────────
   const speak = (text, onDone) => {
-    setBotText(text)
     go('speaking')
     window.speechSynthesis.cancel()
     const utt     = new SpeechSynthesisUtterance(text)
@@ -61,7 +58,9 @@ export function VoiceChat({ onClose, onMessage }) {
     utt.rate      = 0.95
     const esVoice = window.speechSynthesis.getVoices().find(v => v.lang.startsWith('es'))
     if (esVoice) utt.voice = esVoice
-    utt.onend = () => { setBotText(''); onDone?.() }
+    // Stream the bot text into MessageList character-by-character as TTS plays
+    onStreamBotRef.current?.(text)
+    utt.onend = () => onDone?.()
     window.speechSynthesis.speak(utt)
   }
 
@@ -71,17 +70,18 @@ export function VoiceChat({ onClose, onMessage }) {
     const said = accumulatedRef.current.trim() || '(mensaje de voz)'
     processingRef.current  = true
     accumulatedRef.current = ''
-    setTranscript('')
     recogRef.current?.abort()
     go('connecting')
-    if (said !== '(mensaje de voz)') onMessage?.(said)
+
+    if (said !== '(mensaje de voz)') {
+      onAddMessageRef.current?.({ role: 'user', type: 'text', text: said })
+    }
 
     setTimeout(() => {
       if (!loopRef.current) return
       const response = BOT_RESPONSES[Math.floor(Math.random() * BOT_RESPONSES.length)]
       speak(response, () => {
         if (!loopRef.current) return
-        setBotText('')
         processingRef.current = false
         go('idle')
         startRecognitionRef.current?.()
@@ -96,7 +96,7 @@ export function VoiceChat({ onClose, onMessage }) {
 
     const recog          = new SR()
     recog.lang           = 'es-AR'
-    recog.continuous     = false   // let Chrome stop on silence, we restart
+    recog.continuous     = false
     recog.interimResults = true
     recogRef.current     = recog
 
@@ -107,23 +107,18 @@ export function VoiceChat({ onClose, onMessage }) {
       for (let i = 0; i < e.results.length; i++) {
         sessionText += e.results[i][0].transcript
       }
-      const full = [accumulatedRef.current, sessionText].filter(Boolean).join(' ').trim()
-      setTranscript(full)
     }
 
     recog.onerror = (e) => {
       if (e.error === 'not-allowed') goRef.current?.('error')
-      // no-speech / aborted → onend handles restart
     }
 
     recog.onend = () => {
       if (!loopRef.current || processingRef.current) return
-      // Commit this session's text to the accumulated buffer
       if (sessionText.trim()) {
         accumulatedRef.current = [accumulatedRef.current, sessionText.trim()]
           .filter(Boolean).join(' ')
       }
-      // Restart immediately to keep capturing
       setTimeout(() => startRecognitionRef.current?.(), 100)
     }
 
@@ -131,7 +126,7 @@ export function VoiceChat({ onClose, onMessage }) {
   }
   startRecognitionRef.current = startRecognition
 
-  // ── VAD: RMS silence timer ────────────────────────────────────────────────
+  // ── VAD ──────────────────────────────────────────────────────────────────
   const startVAD = (stream) => {
     const ctx = new AudioContext()
     audioCtxRef.current = ctx
@@ -142,14 +137,13 @@ export function VoiceChat({ onClose, onMessage }) {
     source.connect(analyser)
 
     const buf            = new Uint8Array(analyser.fftSize)
-    let voiceActive      = false   // currently in "voice on" state
-    let hasSpoken        = false   // spoke at least once this turn
-    let silenceStartedAt = null    // when silence began (after speech)
-    let voiceRisingAt    = null    // when RMS first crossed ACTIVATE (debounce start)
+    let voiceActive      = false
+    let hasSpoken        = false
+    let silenceStartedAt = null
+    let voiceRisingAt    = null
 
     const poll = () => {
       if (!loopRef.current) return
-
       analyser.getByteTimeDomainData(buf)
       let sum = 0
       for (let i = 0; i < buf.length; i++) {
@@ -160,31 +154,22 @@ export function VoiceChat({ onClose, onMessage }) {
       setVolume(Math.min(rms * 8, 1))
 
       const cur = orbStateRef.current
-
       if (cur === 'idle' || cur === 'listening') {
         if (rms > ACTIVATE) {
-          // ── Above threshold ─────────────────────────────────────────────
           if (voiceRisingAt === null) voiceRisingAt = Date.now()
-
-          // Only flip to "voice active" after VOICE_HOLD_MS of sustained sound
-          // This filters out brief noise spikes that would reset the silence timer
           if (!voiceActive && Date.now() - voiceRisingAt >= VOICE_HOLD_MS) {
             voiceActive      = true
             hasSpoken        = true
-            silenceStartedAt = null    // cancel any running silence timer
+            silenceStartedAt = null
             goRef.current?.('listening')
           }
         } else {
-          // ── Below threshold ─────────────────────────────────────────────
-          voiceRisingAt = null   // reset the debounce counter
-
+          voiceRisingAt = null
           if (voiceActive) {
             voiceActive      = false
             silenceStartedAt = Date.now()
             goRef.current?.('idle')
           }
-
-          // Count silence; fire when 2 s elapsed
           if (hasSpoken && silenceStartedAt !== null) {
             if (Date.now() - silenceStartedAt >= SILENCE_MS) {
               hasSpoken        = false
@@ -194,13 +179,9 @@ export function VoiceChat({ onClose, onMessage }) {
           }
         }
       } else {
-        // connecting / speaking → full reset
-        voiceActive      = false
-        hasSpoken        = false
-        silenceStartedAt = null
-        voiceRisingAt    = null
+        voiceActive = false; hasSpoken = false
+        silenceStartedAt = null; voiceRisingAt = null
       }
-
       rafRef.current = requestAnimationFrame(poll)
     }
     poll()
@@ -208,14 +189,13 @@ export function VoiceChat({ onClose, onMessage }) {
 
   // ── Lifecycle ─────────────────────────────────────────────────────────────
   useEffect(() => {
-    loopRef.current       = true
-    processingRef.current = false
+    loopRef.current        = true
+    processingRef.current  = false
     accumulatedRef.current = ''
 
     const init = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-        streamRef.current = stream
         startVAD(stream)
         setTimeout(() => {
           if (!loopRef.current) return
@@ -234,19 +214,8 @@ export function VoiceChat({ onClose, onMessage }) {
       recogRef.current?.abort()
       window.speechSynthesis.cancel()
       audioCtxRef.current?.close()
-      streamRef.current?.getTracks().forEach(t => t.stop())
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
-
-  const handleClose = () => {
-    loopRef.current = false
-    cancelAnimationFrame(rafRef.current)
-    recogRef.current?.abort()
-    window.speechSynthesis.cancel()
-    audioCtxRef.current?.close()
-    streamRef.current?.getTracks().forEach(t => t.stop())
-    onClose?.()
-  }
 
   // ── Render ────────────────────────────────────────────────────────────────
   const orbVolume =
@@ -257,43 +226,37 @@ export function VoiceChat({ onClose, onMessage }) {
     <div style={containerStyle}>
       <style>{`
         @keyframes cw-voice-in {
-          from { opacity: 0; transform: translateY(10px); }
+          from { opacity: 0; transform: translateY(8px); }
           to   { opacity: 1; transform: translateY(0); }
         }
-        @keyframes cw-bubble-in {
-          from { opacity: 0; transform: translateY(6px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        .cw-voice-close:hover { background: rgba(0,0,0,0.06) !important; }
-        /* The first child span of orb-ui's circle theme is the glow layer —
-           override its box-shadow so the aura never shows */
         .cw-orb > span:first-child { box-shadow: none !important; }
+        .cw-voice-close-btn {
+          width: 44px; height: 44px; border-radius: 50%;
+          border: 1.5px solid #e5e7eb;
+          background: #fff; color: #6b7280;
+          cursor: pointer; display: flex; align-items: center; justify-content: center;
+          transition: background 120ms, color 120ms, border-color 120ms;
+        }
+        .cw-voice-close-btn:hover { background: #fee2e2; color: #dc2626; border-color: #fca5a5; }
       `}</style>
 
-      <button className="cw-voice-close" style={closeStyle} onClick={handleClose} aria-label="Cerrar">
-        <CloseIcon />
-      </button>
+      <div style={bgStyle} />
 
-      <div style={orbZoneStyle}>
-        <div style={orbColorStyle(orbState)}>
-          <Orb state={orbState} volume={orbVolume} theme="circle" size={170} className="cw-orb" />
+      {orbState === 'error' && (
+        <p style={errorStyle}>Permití el acceso al micrófono para usar Voice Chat.</p>
+      )}
+
+      {/* Orb + label */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+        <div style={orbWrapStyle(orbState)}>
+          <Orb state={orbState} volume={orbVolume} theme="circle" size={120} className="cw-orb" />
         </div>
         <p style={stateLabelStyle}>{STATE_LABEL[orbState] ?? ''}</p>
       </div>
 
-      <div style={textZoneStyle}>
-        {transcript && (orbState === 'listening' || orbState === 'idle') && (
-          <div style={userBubbleStyle}>{transcript}</div>
-        )}
-        {botText && (
-          <div style={botBubbleStyle}>{botText}</div>
-        )}
-        {orbState === 'error' && (
-          <p style={{ color: '#ef4444', fontSize: 13, textAlign: 'center', margin: 0 }}>
-            Permití el acceso al micrófono para usar Voice Chat.
-          </p>
-        )}
-      </div>
+      <button className="cw-voice-close-btn" onClick={onClose} aria-label="Cerrar Voice Chat" style={{ position: 'absolute', top: 10, right: 10, zIndex: 2 }}>
+        <CloseIcon />
+      </button>
     </div>
   )
 }
@@ -306,54 +269,48 @@ function CloseIcon() {
   )
 }
 
-// hue-rotate shifts the orb's base blue:
-//   0deg   → blue   (idle / listening)
-//   145deg → green  (speaking / responding)
-//   220deg → purple (connecting)
-const orbColorStyle = (state) => ({
+const orbWrapStyle = (state) => ({
   filter: state === 'speaking' ? 'sepia(1) saturate(6) hue-rotate(160deg)' : 'none',
+  transition: 'filter 300ms',
 })
 
 const containerStyle = {
+  flexShrink: 0,
+  display: 'flex', flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'center',
+  background: '#f8f9ff',
+  borderTop: '1px solid #f3f4f6',
+  borderRadius: 16,
+  margin: 8,
+  position: 'relative',
+  overflow: 'hidden',
+  padding: '20px 24px 18px',
+  gap: 6,
+  animation: 'cw-voice-in 220ms ease forwards',
+}
+const bgStyle = {
   position: 'absolute', inset: 0,
-  display: 'flex', flexDirection: 'column',
-  alignItems: 'center', justifyContent: 'center',
-  background: '#ffffff', zIndex: 5,
-  animation: 'cw-voice-in 280ms cubic-bezier(0.22,1,0.36,1) forwards',
+  pointerEvents: 'none',
+  opacity: 0.1,
+  backgroundImage: 'url(/voice-bg.jpg)',
+  backgroundSize: 'cover',
+  backgroundPosition: 'center',
 }
-const closeStyle = {
-  position: 'absolute', top: 14, right: 14,
-  width: 36, height: 36, borderRadius: '50%',
-  border: '1.5px solid #e5e7eb', background: '#fff',
-  color: '#6b7280', cursor: 'pointer',
-  display: 'flex', alignItems: 'center', justifyContent: 'center',
-  transition: 'background 120ms',
-}
-const orbZoneStyle = {
-  display: 'flex', flexDirection: 'column',
-  alignItems: 'center', gap: 18, marginBottom: 20,
+const errorStyle = {
+  position: 'relative', zIndex: 1,
+  margin: 0, fontSize: 13,
+  color: '#ef4444', textAlign: 'center',
 }
 const stateLabelStyle = {
-  margin: 0, fontSize: 14, color: '#6b7280',
-  fontWeight: 500, letterSpacing: '0.01em', minHeight: 20,
+  position: 'relative', zIndex: 1,
+  margin: 0, fontSize: 13,
+  color: '#9ca3af',
+  fontWeight: 500, letterSpacing: '0.01em',
 }
-const textZoneStyle = {
-  width: '100%', maxWidth: 290,
-  display: 'flex', flexDirection: 'column',
-  alignItems: 'center', gap: 10,
-  minHeight: 56, padding: '0 20px',
-}
-const userBubbleStyle = {
-  background: '#f3f4f6', color: '#111827',
-  borderRadius: 16, padding: '9px 14px',
-  fontSize: 14, lineHeight: 1.45,
-  textAlign: 'center', maxWidth: '100%',
-  animation: 'cw-bubble-in 180ms ease forwards',
-}
-const botBubbleStyle = {
-  background: 'var(--cw-primary)', color: '#fff',
-  borderRadius: 16, padding: '9px 14px',
-  fontSize: 14, lineHeight: 1.45,
-  textAlign: 'center', maxWidth: '100%',
-  animation: 'cw-bubble-in 180ms ease forwards',
+const actionRowStyle = {
+  position: 'relative', zIndex: 1,
+  display: 'flex', alignItems: 'center', justifyContent: 'center',
+  gap: 16,
+  marginTop: 10,
 }

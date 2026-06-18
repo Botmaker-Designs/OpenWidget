@@ -4,7 +4,7 @@ import { EmojiPicker } from './EmojiPicker'
 
 const MAX_ATTACHMENTS = 3
 
-export function ChatInput({ onSend, disabled, onVoice }) {
+export function ChatInput({ onSend, disabled, onVoice, voiceMode }) {
   const [text, setText]               = useState('')
   const [attachments, setAttachments] = useState([]) // [{ id, url, name, loading }]
   const textareaRef = useRef(null)
@@ -97,8 +97,10 @@ export function ChatInput({ onSend, disabled, onVoice }) {
           flex-shrink: 0;
           display: flex;
           flex-direction: column;
+          min-height: 188px;
         }
         .cw-input-box {
+          flex: 1;
           margin: 12px;
           border: 1.5px solid var(--cw-border);
           border-radius: 14px;
@@ -127,7 +129,7 @@ export function ChatInput({ onSend, disabled, onVoice }) {
           font-size: 14px; color: var(--cw-text);
           line-height: 1.5;
           padding: 12px 14px 6px;
-          max-height: 100px; overflow-y: auto; width: 100%;
+          flex: 1; overflow-y: auto; width: 100%;
         }
         .cw-textarea::placeholder { color: #9ca3af; }
         .cw-action-row {
@@ -210,7 +212,7 @@ export function ChatInput({ onSend, disabled, onVoice }) {
                     <img src={a.url} alt={a.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   )}
                   <button className="cw-thumb-remove" onClick={() => removeAttachment(a.id)} aria-label="Quitar">
-                    <CloseIcon />
+                    <RemoveIcon />
                   </button>
                 </div>
               ))}
@@ -246,49 +248,29 @@ export function ChatInput({ onSend, disabled, onVoice }) {
             <button className="cw-action-btn" title="GIF" disabled={disabled}><GifIcon /></button>
             {canSend
               ? <button className="cw-send-btn" onClick={handleSend} aria-label="Enviar"><SendIcon /></button>
-              : <div style={{ position: 'relative', marginLeft: 'auto', flexShrink: 0 }} className="cw-voice-tip-wrap">
-                  <style>{`
-                    .cw-voice-tip-wrap .cw-voice-tip {
-                      opacity: 0; pointer-events: none; transform: translateX(4px);
-                      transition: opacity 150ms 0ms, transform 150ms 0ms;
-                    }
-                    .cw-voice-tip-wrap:hover .cw-voice-tip {
-                      opacity: 1; transform: translateX(0);
-                      transition: opacity 150ms 500ms, transform 150ms 500ms;
-                    }
-                    .cw-voice-tip-wrap:hover .cw-send-btn {
-                      background: #bfdbfe !important;
-                    }
-                    .cw-voice-tip-wrap .cw-send-btn:active {
-                      background: #93c5fd !important; transform: scale(0.92);
-                    }
-                  `}</style>
-                  <button className="cw-send-btn" onClick={onVoice} disabled={disabled} aria-label="Activar Voice Chat" style={{ background: '#dbeafe', color: '#2563eb' }}><MicIcon /></button>
-                  <div className="cw-voice-tip" style={{
-                    position: 'absolute', right: 'calc(100% + 8px)', top: '50%',
-                    transform: 'translateY(-50%)',
-                    background: '#111827', color: '#fff',
-                    fontSize: 11, fontWeight: 600, whiteSpace: 'nowrap',
-                    padding: '5px 10px', borderRadius: 8,
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-                    display: 'flex', alignItems: 'center', gap: 5,
-                    fontFamily: 'var(--cw-font-family)',
-                  }}>
-                    <span style={{ fontSize: 13 }}>🎙</span> Activar Voice Chat
-                    <div style={{
-                      position: 'absolute', left: '100%', top: '50%', transform: 'translateY(-50%)',
-                      width: 0, height: 0,
-                      borderTop: '5px solid transparent', borderBottom: '5px solid transparent',
-                      borderLeft: '5px solid #111827',
-                    }} />
-                  </div>
-                </div>
+              : <button
+                  className="cw-send-btn"
+                  onClick={onVoice}
+                  disabled={disabled}
+                  aria-label="Activar Voice Chat"
+                  style={{ marginLeft: 'auto', background: '#dbeafe', color: '#2563eb' }}
+                >
+                  <MicIcon />
+                </button>
             }
           </div>
         </div>
 
       </div>
     </>
+  )
+}
+
+function CloseIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+      <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
+    </svg>
   )
 }
 
@@ -299,7 +281,7 @@ function DropIcon() {
     </svg>
   )
 }
-function CloseIcon() {
+function RemoveIcon() {
   return (
     <svg width="9" height="9" viewBox="0 0 24 24" fill="none">
       <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
@@ -333,9 +315,12 @@ function GifIcon() {
 }
 function MicIcon() {
   return (
-    <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
-      <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" stroke="currentColor" strokeWidth="2"/>
-      <path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
+      <rect x="1"  y="9"  width="3" height="6"  rx="1.5"/>
+      <rect x="6"  y="5"  width="3" height="14" rx="1.5"/>
+      <rect x="11" y="2"  width="3" height="20" rx="1.5"/>
+      <rect x="16" y="5"  width="3" height="14" rx="1.5"/>
+      <rect x="21" y="9"  width="3" height="6"  rx="1.5"/>
     </svg>
   )
 }
