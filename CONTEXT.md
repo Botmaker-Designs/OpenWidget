@@ -102,3 +102,128 @@ Este documento cubre exclusivamente el **Chatbot Widget**. El Help Center (artí
 | Persistencia de sesión | localStorage vs. cookie vs. backend session | Por definir |
 | Protocolo de mensajería | REST polling vs. WebSocket vs. SSE | Por definir |
 | Handoff a agente | Cola propia vs. integración con herramienta externa | Por definir |
+
+---
+
+## Setup técnico actual (implementación de referencia)
+
+### Repositorios
+- **Repo activo**: https://github.com/santiagogarbers/OpenWidget (privado)
+- **Git config**: `user.name = Santiago Garbers` / `user.email = santiagogarbers@botmaker.io`
+
+### Stack
+- **Vite + React 19** (sin TypeScript), puerto dev: 5173
+- **Estilos**: CSS-in-JS con inline styles + bloques `<style>` dentro de cada componente
+- **Librerías**:
+  - `orb-ui` — `<Orb state volume theme="circle" size className />` para el voice chat
+  - Web Audio API — VAD con RMS threshold
+  - SpeechRecognition API — `continuous: false`, `lang: 'es-AR'`
+  - SpeechSynthesis API — TTS de respuestas del bot
+
+### Estructura de archivos
+```
+src/components/
+  ChatWidget.jsx       # Raíz: estado global, sesiones, routing de vistas
+  ChatPanel.jsx        # Vista chat: header + MessageList + ChatInput o VoiceChat
+  ChatInput.jsx        # Input de texto con adjuntos, emoji, GIF, waves button
+  VoiceChat.jsx        # Panel de voz: orb + controles (reemplaza ChatInput)
+  MessageList.jsx      # Burbujas de conversación
+  HomeScreen.jsx       # Home con logo Botmaker, FAQ artículos, card de chat
+  LoginScreen.jsx      # Login email/contraseña + Google/Facebook
+  BotmakerLogo.jsx     # SVG del logo — prop `white` para versión blanca
+  HumanAvatar.jsx      # Avatar generativo de agente humano
+  FloatingButton.jsx   # Botón flotante abrir/cerrar widget
+  SessionsList.jsx     # Lista de conversaciones anteriores
+  HelpCenter.jsx       # Centro de ayuda / artículos
+  MyAgents.jsx         # Lista de agentes disponibles
+  IncomingCall.jsx     # UI llamada entrante
+  ActiveCall.jsx       # UI llamada activa de voz
+  ActiveVideoCall.jsx  # UI videollamada activa
+  Aurora/              # Componente Aurora WebGL (ogl) — no usado actualmente
+  GlassSurface/        # Efecto glass con SVG displacement — no usado actualmente
+public/
+  voice-bg.jpg         # Background del panel de voz (opacity 0.1)
+```
+
+### Estado global (ChatWidget)
+```js
+sessions          // [{ id, messages, timestamp, agent }]
+activeSessionId
+isTyping / typingMode   // 'writing' | 'reading'
+isOpen / isExpanded     // expandido por defecto (true)
+view              // 'home' | 'chat' | 'sessions' | 'help' | 'agents' | 'login'
+loggedInUser      // null | { name, email, provider }
+agentSession      // null | { name, avatar, status }
+incomingCall / activeCall / activeVideoCall
+```
+
+### Estructura de mensaje
+```js
+{
+  id: Number,
+  role: 'user' | 'bot' | 'system',
+  type: 'text' | 'streaming' | 'image' | 'fallback' | 'transferring',
+  text: String,
+  attachments: Array,
+  createdAt: Date,
+  senderName: String,
+  senderType: 'Asistente IA' | 'Agente',
+}
+```
+
+### Streaming bot response (char-by-char, 18ms/char)
+```js
+const streamText = (sessionId, fullText) => {
+  addMessage(sessionId, { type: 'streaming', text: '' })
+  let i = 0
+  const interval = setInterval(() => {
+    updateLastMessage(sessionId, msg => ({ ...msg, text: fullText.slice(0, ++i) }))
+    if (i >= fullText.length) { clearInterval(interval); /* set type: 'text' */ }
+  }, 18)
+}
+```
+
+### Voice Chat — flujo completo
+```
+Usuario habla
+  → VAD (RMS > 0.022 por 150ms) → orbState: 'listening'
+  → SpeechRecognition acumula en accumulatedRef
+  → Silencio 2000ms → processUtterance()
+    → onAddMessage({ role: 'user', text })   → burbuja usuario en MessageList
+    → onStreamBot(botResponse)               → burbuja bot streama char-by-char
+    → speak(botResponse)                     → TTS en paralelo con el streaming
+```
+
+**Parámetros VAD**: `ACTIVATE=0.022`, `VOICE_HOLD_MS=150`, `SILENCE_MS=2000`
+
+**CSS fix para quitar aura del orb**: `.cw-orb > span:first-child { box-shadow: none !important; }`
+
+**Filtro cyan cuando el bot habla**: `filter: 'sepia(1) saturate(6) hue-rotate(160deg)'`
+
+### Patrón "latest function ref" (evita stale closures en RAF/timers)
+```js
+const goRef = useRef(null)
+const go = (state) => { orbStateRef.current = state; setOrbState(state) }
+goRef.current = go  // se actualiza en cada render; los callbacks leen goRef.current
+```
+
+### ChatInput
+- `min-height: 188px` para igualar altura al panel de voz
+- `flex: 1` en `.cw-input-box` y `.cw-textarea` para llenar el espacio
+- Adjuntos: hasta 3 imágenes, drag & drop, skeleton loader 2s
+- Waves button (5 barras simétricas SVG) activa voice mode
+
+### HomeScreen — artículos FAQ
+IDs con respuestas en `ARTICLE_RESPONSES` (ChatWidget): `gs-1`, `ai-1`, `ch-3`, `fl-1`, `ch-1`, `ai-7`, `in-1`, `gs-4`, `int-5`, `fl-5`
+
+### Panel shell
+```js
+// isExpanded = true por defecto
+width: 'min(680px, 94vw)', height: 'min(720px, calc(100vh - 120px))'
+position: 'fixed', bottom: 96, overflow: 'hidden'
+```
+
+### CSS Variables globales
+`--cw-primary`, `--cw-primary-dark`, `--cw-bg`, `--cw-border`, `--cw-text`,
+`--cw-border-radius`, `--cw-font-family`, `--cw-panel-width`, `--cw-panel-height`,
+`--cw-shadow`, `--cw-z-index`
