@@ -1,6 +1,42 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { HELP_COLLECTIONS } from '../config/helpContent'
 import { BotmakerLogo } from './BotmakerLogo'
+
+const DAY_NAMES = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday']
+const DAY_LABELS = { monday:'Lun', tuesday:'Mar', wednesday:'Mié', thursday:'Jue', friday:'Vie', saturday:'Sáb', sunday:'Dom' }
+
+function isWithinBusinessHours(businessHours) {
+  if (!businessHours?.schedule) return false
+  const now = new Date()
+  const day = DAY_NAMES[now.getDay()]
+  const slot = businessHours.schedule[day]
+  if (!slot) return false
+  const [oh, om] = slot.open.split(':').map(Number)
+  const [ch, cm] = slot.close.split(':').map(Number)
+  const mins = now.getHours() * 60 + now.getMinutes()
+  return mins >= oh * 60 + om && mins < ch * 60 + cm
+}
+
+function formatTimeRange(businessHours) {
+  if (!businessHours?.schedule) return null
+  const activeDays = DAY_NAMES.filter(d => businessHours.schedule[d])
+  if (!activeDays.length) return null
+  const slot = businessHours.schedule[activeDays[0]]
+  return `de ${slot.open} a ${slot.close}`
+}
+
+function formatScheduleSummary(businessHours) {
+  if (!businessHours?.schedule) return null
+  const schedule = businessHours.schedule
+  const activeDays = DAY_NAMES.filter(d => schedule[d])
+  if (!activeDays.length) return null
+  const first = activeDays[0], last = activeDays[activeDays.length - 1]
+  const slot = schedule[first]
+  const rangeLabel = first === last
+    ? DAY_LABELS[first]
+    : `${DAY_LABELS[first]}–${DAY_LABELS[last]}`
+  return `${rangeLabel} · ${slot.open}–${slot.close}`
+}
 
 const AGENT_AVATARS = [
   'https://i.pravatar.cc/40?img=47',
@@ -21,8 +57,11 @@ const TOP_ARTICLES = [
   { id: 'fl-5', title: 'Integraciones con APIs externas', mins: 6 },
 ]
 
-export function HomeScreen({ onClose, isExpanded, onToggleExpand, onNewChat, onTabChange, userName, loggedInUser, onLoginClick, onAskArticle }) {
+export function HomeScreen({ onClose, isExpanded, onToggleExpand, onNewChat, onTabChange, userName, loggedInUser, onLoginClick, onAskArticle, chatCardVariant = 'team', businessHours, sessions = [], onSelectSession, animKey = 0 }) {
   const [query, setQuery] = useState('')
+  const available      = useMemo(() => isWithinBusinessHours(businessHours), [businessHours])
+  const scheduleLabel  = useMemo(() => formatScheduleSummary(businessHours), [businessHours])
+  const timeRange      = useMemo(() => formatTimeRange(businessHours), [businessHours])
 
   const filteredArticles = query.trim()
     ? TOP_ARTICLES.filter(a => a.title.toLowerCase().includes(query.toLowerCase()))
@@ -33,13 +72,18 @@ export function HomeScreen({ onClose, isExpanded, onToggleExpand, onNewChat, onT
       <style>{`
         .cw-home-card:hover { background: #f0f4ff !important; border-color: var(--cw-primary) !important; }
         .cw-home-card:active { background: #e0ecff !important; }
+        .cw-home-recent:hover { background: #f9fafb !important; border-color: #d1d5db !important; }
+        .cw-home-recent:active { background: #f3f4f6 !important; }
         .cw-home-faq-row:hover { background: #eaecef !important; }
         .cw-home-faq-row:active { background: #e2e4e8 !important; }
         .cw-home-faq-row:last-child { border-bottom: none !important; }
+        .cw-tab-item { transition: color 120ms ease; }
+        .cw-tab-item:hover  { color: #374151 !important; }
+        .cw-tab-item.active:hover { color: var(--cw-primary-dark) !important; }
       `}</style>
 
       {/* Hero con foto de fondo blureada */}
-      <div style={heroStyle}>
+      <div key={`hero-${animKey}`} className="cw-anim-hero" style={heroStyle}>
         <div style={heroBgStyle} />
         <div style={heroOverlayStyle} />
         <div style={topRowStyle}>
@@ -70,37 +114,58 @@ export function HomeScreen({ onClose, isExpanded, onToggleExpand, onNewChat, onT
           {userName && <p style={greetingStyle}>¡Hola! {userName}</p>}
           <h1 style={headingStyle}>¿Cómo podemos<br />ayudarte?</h1>
         </div>
+
       </div>
 
       {/* Contenido blanco */}
-      <div style={bodyStyle}>
+      <div key={`body-${animKey}`} className="cw-anim-body" style={bodyStyle}>
         {/* Card de chat */}
         <div style={sectionStyle}>
-          <button className="cw-home-card" style={chatCardStyle} onClick={onNewChat}>
-            <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-              <div style={{ ...cardIconStyle, zIndex: 2, position: 'relative' }}>
-                <BotmakerLogo size={22} />
+          {sessions.length > 0 ? (
+            <RecentMessage session={sessions[0]} onSelect={() => onSelectSession?.(sessions[0].id)} />
+          ) : chatCardVariant === 'hours' ? (
+            <button className="cw-home-card" style={chatCardStyle} onClick={onNewChat}>
+              <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+                <div style={{ ...cardIconStyle, position: 'relative' }}>
+                  <BotmakerLogo size={22} />
+                  <span style={{ ...onlineBadgeStyle, background: available ? '#22c55e' : '#f59e0b' }} />
+                </div>
               </div>
-              <img
-                src={AGENT_AVATARS[0]}
-                alt=""
-                style={{
-                  width: 38, height: 38, borderRadius: '50%',
-                  border: '2.5px solid #fff',
-                  objectFit: 'cover',
-                  marginLeft: -10,
-                  position: 'relative', zIndex: 1,
-                }}
-              />
-            </div>
-            <div style={{ flex: 1, textAlign: 'left' }}>
-              <div style={{ fontWeight: 500, fontSize: 14, color: '#111827' }}>Chatear con el equipo</div>
-              <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>
-                Nuestro bot y equipo te ayudarán
+              <div style={{ flex: 1, textAlign: 'left' }}>
+                <div style={{ fontWeight: 500, fontSize: 14, color: '#111827' }}>Chatear con el asistente</div>
+                <div style={{ fontSize: 12, color: '#6b7280', marginTop: 3 }}>
+                  {timeRange ? `Agentes disponibles ${timeRange}` : available ? 'Agentes disponibles ahora' : 'Fuera de horario'}
+                </div>
               </div>
-            </div>
-            <ChevronIcon color="#9ca3af" />
-          </button>
+              <ChevronIcon color="#9ca3af" />
+            </button>
+          ) : (
+            <button className="cw-home-card" style={chatCardStyle} onClick={onNewChat}>
+              <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+                <div style={{ ...cardIconStyle, zIndex: 2, position: 'relative' }}>
+                  <BotmakerLogo size={22} />
+                </div>
+                <img
+                  src={AGENT_AVATARS[0]}
+                  alt=""
+                  style={{
+                    width: 38, height: 38, borderRadius: '50%',
+                    border: '2.5px solid #fff',
+                    objectFit: 'cover',
+                    marginLeft: -10,
+                    position: 'relative', zIndex: 1,
+                  }}
+                />
+              </div>
+              <div style={{ flex: 1, textAlign: 'left' }}>
+                <div style={{ fontWeight: 500, fontSize: 14, color: '#111827' }}>Iniciar nueva conversación</div>
+                <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>
+                  Nuestro agente y equipo están disponibles
+                </div>
+              </div>
+              <ChevronIcon color="#9ca3af" />
+            </button>
+          )}
         </div>
 
         {/* FAQ */}
@@ -143,9 +208,9 @@ export function HomeScreen({ onClose, isExpanded, onToggleExpand, onNewChat, onT
       </div>
 
       {/* Tab bar */}
-      <div style={tabBarStyle}>
+      <div key={`footer-${animKey}`} className="cw-anim-footer" style={tabBarStyle}>
         {TAB_ITEMS.map(t => (
-          <button key={t.key} style={tabItemStyle(t.key === 'home')} onClick={() => onTabChange(t.key)}>
+          <button key={t.key} className={`cw-tab-item${t.key === 'home' ? ' active' : ''}`} style={tabItemStyle(t.key === 'home')} onClick={() => onTabChange(t.key)}>
             {t.icon}
             <span style={{ fontSize: 10, marginTop: 3, fontWeight: t.key === 'home' ? 600 : 400 }}>{t.label}</span>
           </button>
@@ -155,11 +220,107 @@ export function HomeScreen({ onClose, isExpanded, onToggleExpand, onNewChat, onT
   )
 }
 
+// ── Recent message card ───────────────────────────────────────────────────────
+
+function RecentMessage({ session, onSelect }) {
+  const lastMsg  = session.messages.filter(m => m.text).at(-1)
+  const preview  = lastMsg?.text ?? '...'
+  const name     = session.agent?.name ?? lastMsg?.senderName ?? 'Asistente'
+  const avatar   = session.agent?.avatar ?? null
+  const unread   = !!session.unread
+
+  return (
+    <button className="cw-home-recent" style={recentCardStyle} onClick={onSelect}>
+      <p style={recentLabelStyle}>Mensaje reciente</p>
+      <div style={recentRowStyle}>
+        <div style={recentAvatarWrapStyle}>
+          {avatar
+            ? <img src={avatar} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            : <BotmakerLogo size={20} />
+          }
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
+            <span style={recentNameStyle}>{name}</span>
+            <span style={recentTimeStyle}>{session.timestamp}</span>
+          </div>
+          <div style={recentPreviewStyle}>{preview}</div>
+        </div>
+        <span style={recentDotStyle} />
+      </div>
+    </button>
+  )
+}
+
+const recentCardStyle = {
+  width: '100%',
+  background: '#fff',
+  border: '1.5px solid #e5e7eb',
+  borderRadius: 12,
+  padding: '12px 14px',
+  cursor: 'pointer',
+  textAlign: 'left',
+  fontFamily: 'var(--cw-font-family)',
+  boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+  transition: 'background 150ms, border-color 150ms',
+}
+const recentLabelStyle = {
+  margin: '0 0 8px',
+  fontSize: 11,
+  fontWeight: 600,
+  color: '#9ca3af',
+  letterSpacing: '0.04em',
+  textTransform: 'uppercase',
+}
+const recentRowStyle = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: 10,
+}
+const recentAvatarWrapStyle = {
+  width: 38,
+  height: 38,
+  borderRadius: 10,
+  background: '#f3f4f6',
+  border: '1.5px solid #e5e7eb',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  flexShrink: 0,
+  overflow: 'hidden',
+}
+const recentNameStyle = {
+  fontSize: 13,
+  fontWeight: 600,
+  color: '#111827',
+}
+const recentTimeStyle = {
+  fontSize: 11,
+  color: '#9ca3af',
+  flexShrink: 0,
+  marginLeft: 8,
+}
+const recentPreviewStyle = {
+  fontSize: 12,
+  color: '#6b7280',
+  whiteSpace: 'nowrap',
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+}
+const recentDotStyle = {
+  width: 8,
+  height: 8,
+  borderRadius: '50%',
+  background: '#ef4444',
+  flexShrink: 0,
+  marginLeft: 6,
+}
+
 // ── Tab bar ──────────────────────────────────────────────────────────────────
 
 const TAB_ITEMS = [
   { key: 'home',     label: 'Inicio',   icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg> },
-  { key: 'messages', label: 'Mensajes', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg> },
+  { key: 'messages', label: 'Chats', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg> },
   { key: 'help',     label: 'Ayuda',    icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/><circle cx="12" cy="17" r="0.5" fill="currentColor" stroke="currentColor" strokeWidth="1.5"/></svg> },
   { key: 'agents',   label: 'Mis Agentes', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><circle cx="9" cy="7" r="4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg> },
 ]

@@ -2,24 +2,37 @@ import { useState, useEffect, useRef } from 'react'
 import { BotmakerLogo } from './BotmakerLogo'
 
 const styles = {
-  button: (position) => ({
+  wrap: (position) => ({
     position: 'fixed',
     bottom: 24,
     ...(position === 'bottom-left' ? { left: 24 } : { right: 24 }),
     width: 'var(--cw-button-size)',
     height: 'var(--cw-button-size)',
+    zIndex: 'var(--cw-z-index)',
+  }),
+  button: {
+    position: 'relative',
+    width: '100%',
+    height: '100%',
     borderRadius: '50%',
-    background: 'var(--cw-primary)',
+    background: 'linear-gradient(145deg, var(--cw-primary) 0%, var(--cw-primary-dark) 100%)',
     border: 'none',
     cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    boxShadow: '0 4px 16px rgba(0,0,0,0.18)',
-    zIndex: 'var(--cw-z-index)',
-    transition: 'transform 120ms ease, background 120ms ease',
-    animation: 'cw-pop-in 220ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
-  }),
+    boxShadow: '0 4px 14px rgba(0,0,0,0.14), 0 8px 32px rgba(37,99,235,0.3), inset 0 1px 0 rgba(255,255,255,0.22)',
+    transition: 'transform 300ms cubic-bezier(0.34,1.56,0.64,1), box-shadow 300ms cubic-bezier(0.34,1.56,0.64,1)',
+    animation: 'cw-pop-in 280ms cubic-bezier(0.34,1.56,0.64,1) forwards',
+    overflow: 'hidden',
+  },
+  shine: {
+    position: 'absolute',
+    inset: 0,
+    borderRadius: '50%',
+    background: 'radial-gradient(ellipse at 38% 28%, rgba(255,255,255,0.32) 0%, transparent 62%)',
+    pointerEvents: 'none',
+  },
   badge: {
     position: 'absolute',
     top: -4,
@@ -98,11 +111,22 @@ export function FloatingButton({ isOpen, unreadCount = 0, position = 'bottom-rig
     <>
       <style>{`
         @keyframes cw-pop-in {
-          from { opacity: 0; transform: scale(0.6); }
+          from { opacity: 0; transform: scale(0.5); }
           to   { opacity: 1; transform: scale(1); }
         }
-        .cw-fab:hover  { transform: scale(1.08) !important; background: var(--cw-primary-dark) !important; }
-        .cw-fab:active { transform: scale(0.96) !important; }
+        @keyframes cw-fab-pulse {
+          0%   { transform: scale(1);    opacity: 0.55; }
+          100% { transform: scale(1.75); opacity: 0; }
+        }
+        .cw-fab-ring {
+          position: absolute; inset: 0;
+          border-radius: 50%;
+          background: var(--cw-primary);
+          animation: cw-fab-pulse 2.4s cubic-bezier(0.2,0,0.6,1) infinite;
+          pointer-events: none;
+        }
+        .cw-fab:hover        { transform: scale(1.1)  !important; box-shadow: 0 6px 20px rgba(0,0,0,0.16), 0 12px 40px rgba(37,99,235,0.38), inset 0 1px 0 rgba(255,255,255,0.28) !important; }
+        .cw-fab:active       { transform: scale(0.94) !important; box-shadow: 0 2px 8px rgba(0,0,0,0.12), 0 4px 16px rgba(37,99,235,0.2), inset 0 1px 0 rgba(255,255,255,0.22) !important; }
         .cw-notif {
           position: fixed;
           bottom: 92px;
@@ -166,19 +190,23 @@ export function FloatingButton({ isOpen, unreadCount = 0, position = 'bottom-rig
         </div>
       )}
 
-      <button
-        className="cw-fab"
-        style={styles.button(position)}
-        onClick={onClick}
-        aria-label={isOpen ? 'Cerrar chat' : 'Abrir chat'}
-      >
-        {isOpen ? <CloseIcon /> : <ChatIcon />}
-        {!isOpen && unreadCount > 0 && (
-          <span style={styles.badge}>
-            {unreadCount > 99 ? '99+' : unreadCount}
-          </span>
-        )}
-      </button>
+      <div style={styles.wrap(position)}>
+        {!isOpen && <span className="cw-fab-ring" />}
+        <button
+          className="cw-fab"
+          style={styles.button}
+          onClick={onClick}
+          aria-label={isOpen ? 'Cerrar chat' : 'Abrir chat'}
+        >
+          <span style={styles.shine} />
+          {isOpen ? <CloseIcon /> : <BotmakerLogo size={26} white />}
+          {!isOpen && unreadCount > 0 && (
+            <span style={styles.badge}>
+              {unreadCount > 99 ? '99+' : unreadCount}
+            </span>
+          )}
+        </button>
+      </div>
     </>
   )
 }

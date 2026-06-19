@@ -5,7 +5,7 @@ export function SessionsList({ sessions, botName, botAvatar, onSelectSession, on
     <div style={containerStyle}>
       {/* Header */}
       <div style={headerStyle}>
-        <span style={{ fontSize: 15, fontWeight: 700, color: '#111827' }}>Mensajes</span>
+        <span style={{ fontSize: 15, fontWeight: 700, color: '#111827' }}>Chats</span>
         <div style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', display: 'flex', gap: 2 }}>
           <button style={headerBtnStyle} onClick={onToggleExpand} aria-label={isExpanded ? 'Contraer' : 'Expandir'}>
             {isExpanded ? <ContractIcon /> : <ExpandIcon />}
@@ -19,7 +19,7 @@ export function SessionsList({ sessions, botName, botAvatar, onSelectSession, on
       {/* Lista de sesiones */}
       <div style={listStyle}>
         {sessions.length === 0 ? (
-          <div style={emptyStyle}>No hay conversaciones anteriores.</div>
+          <EmptyState />
         ) : (
           sessions.map(session => (
             <SessionRow
@@ -71,6 +71,9 @@ function SessionRow({ session, botName, botAvatar, onClick, isTyping }) {
         .cw-session-row:active { background: #eeeeee; }
         .cw-cta-btn:hover { border-color: var(--cw-primary) !important; background: #f0f5ff !important; box-shadow: 0 0 0 3px rgba(37,99,235,0.08); }
         .cw-cta-btn:active { background: #e0ecff !important; }
+        .cw-tab-item { transition: color 120ms ease; }
+        .cw-tab-item:hover { color: #374151 !important; }
+        .cw-tab-item.active:hover { color: var(--cw-primary-dark) !important; }
       `}</style>
       <button className="cw-session-row" style={rowStyle} onClick={onClick}>
         <div style={{ position: 'relative', flexShrink: 0 }}>
@@ -123,18 +126,32 @@ function SessionRow({ session, botName, botAvatar, onClick, isTyping }) {
 function TabBar({ activeTab, onTabChange }) {
   const tabs = [
     { key: 'home',     label: 'Inicio',   icon: <HomeIcon /> },
-    { key: 'messages', label: 'Mensajes', icon: <MessagesIcon /> },
+    { key: 'messages', label: 'Chats', icon: <MessagesIcon /> },
     { key: 'help',     label: 'Ayuda',    icon: <HelpIcon /> },
     { key: 'agents',   label: 'Mis Agentes', icon: <AgentsIcon /> },
   ]
   return (
     <div style={tabBarStyle}>
       {tabs.map(t => (
-        <button key={t.key} style={tabItemStyle(activeTab === t.key)} onClick={() => onTabChange(t.key)}>
+        <button key={t.key} className={`cw-tab-item${activeTab === t.key ? ' active' : ''}`} style={tabItemStyle(activeTab === t.key)} onClick={() => onTabChange(t.key)}>
           {t.icon}
           <span style={{ fontSize: 10, marginTop: 3, fontWeight: activeTab === t.key ? 600 : 400 }}>{t.label}</span>
         </button>
       ))}
+    </div>
+  )
+}
+
+function EmptyState() {
+  return (
+    <div style={emptyStateStyle}>
+      <div style={emptyIconWrapStyle}>
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="#9ca3af" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </div>
+      <p style={emptyTitleStyle}>No hay mensajes</p>
+      <p style={emptySubtitleStyle}>Los mensajes del equipo se mostrarán aquí</p>
     </div>
   )
 }
@@ -237,6 +254,7 @@ const containerStyle = {
   display: 'flex',
   flexDirection: 'column',
   height: '100%',
+  background: '#fff',
 }
 const headerStyle = {
   display: 'flex',
@@ -273,6 +291,7 @@ const closeBtnStyle = {
 }
 const listStyle = {
   flex: 1,
+  minHeight: 0,
   overflowY: 'auto',
   padding: '6px 0',
   scrollbarWidth: 'thin',
@@ -310,19 +329,45 @@ const rowAvatarStyle = {
   alignItems: 'center',
   justifyContent: 'center',
 }
-const emptyStyle = {
-  padding: 24,
+const emptyStateStyle = {
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'center',
+  height: '100%',
+  padding: '0 32px',
   textAlign: 'center',
-  color: '#9ca3af',
+}
+const emptyIconWrapStyle = {
+  width: 56,
+  height: 56,
+  borderRadius: '50%',
+  background: '#f3f4f6',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  marginBottom: 16,
+}
+const emptyTitleStyle = {
+  margin: '0 0 8px',
+  fontSize: 15,
+  fontWeight: 600,
+  color: '#111827',
+}
+const emptySubtitleStyle = {
+  margin: 0,
   fontSize: 13,
+  color: '#9ca3af',
+  lineHeight: 1.5,
 }
 const footerStyle = {
   borderTop: '1px solid #f3f4f6',
   flexShrink: 0,
-  padding: '12px 16px 0',
+  padding: '12px 0 0',
 }
 const ctaBtnStyle = {
-  width: '100%',
+  width: 'calc(100% - 32px)',
+  margin: '0 16px',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',

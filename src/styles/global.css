@@ -16,6 +16,16 @@
   to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 }
 
+@keyframes cw-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.cw-anim-hero    { animation: cw-enter 300ms cubic-bezier(0.22,1,0.36,1) 60ms  both; }
+.cw-anim-body    { animation: cw-enter 300ms cubic-bezier(0.22,1,0.36,1) 120ms both; }
+.cw-anim-footer  { animation: cw-enter 280ms cubic-bezier(0.22,1,0.36,1) 170ms both; }
+.cw-anim-view    { animation: cw-enter 260ms cubic-bezier(0.22,1,0.36,1) 50ms  both; }
+
 .cw-widget {
   font-family: var(--cw-font-family);
   font-size: var(--cw-font-size);

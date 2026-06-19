@@ -46,4 +46,7 @@ export const defaultConfig = {
 
   // Posición del botón flotante
   position: 'bottom-right', // 'bottom-right' | 'bottom-left'
+
+  // Variante de la card de chat en HomeScreen
+  chatCardVariant: 'team', // 'team' | 'hours'
 }

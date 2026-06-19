@@ -9,7 +9,7 @@ export function ChatPanel({ config, messages, isTyping, typingMode, typingStates
   const [voiceMode, setVoiceMode] = useState(false)
 
   return (
-    <>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <style>{`
         .cw-header-btn {
           width: 32px; height: 32px;
@@ -57,7 +57,7 @@ export function ChatPanel({ config, messages, isTyping, typingMode, typingStates
           onVoice={() => setVoiceMode(true)}
         />
       )}
-    </>
+    </div>
   )
 }
 
@@ -88,7 +88,7 @@ function PanelHeader({ config, agentSession, isExpanded, onToggleExpand, onClose
               {subtitle}
             </div>
           )}
-          {isAgent && <div style={{ fontSize: 12, color: '#22c55e', marginTop: 2, fontWeight: 500 }}>Online</div>}
+          {isAgent && <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2, fontWeight: 400 }}>Tiempo aprox de respuesta &lt; 3 mins</div>}
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>

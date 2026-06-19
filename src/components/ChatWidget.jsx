@@ -66,6 +66,7 @@ export function ChatWidget({ config: configOverrides = {} }) {
   const { logFallback } = useFallbackLog(config.fallbackLogEndpoint)
 
   const [isOpen, setIsOpen]         = useState(false)
+  const [animKey, setAnimKey]       = useState(0)
   const [isExpanded, setIsExpanded] = useState(true)
   const [view, setView]             = useState('home')
   const [sessions, setSessions]     = useState([])
@@ -103,6 +104,21 @@ export function ChatWidget({ config: configOverrides = {} }) {
   useEffect(() => {
     if (isOpen) setUnreadCount(0)
   }, [isOpen])
+
+  const DEMO_SESSION_ID = -1
+  useEffect(() => {
+    if (config.demoActiveChat === 'active') {
+      setSessions(prev => prev.some(s => s.id === DEMO_SESSION_ID) ? prev : [{
+        id: DEMO_SESSION_ID,
+        messages: [{ id: -2, role: 'bot', type: 'text', text: 'Hola, parece que tu mensaje no llegó correctamente. ¿Podemos ayudarte con algo?', createdAt: new Date(), senderName: config.botName, senderType: 'Asistente IA' }],
+        timestamp: 'Ahora',
+        startedAt: new Date(),
+        unread: true,
+      }, ...prev.filter(s => s.id !== DEMO_SESSION_ID)])
+    } else {
+      setSessions(prev => prev.filter(s => s.id !== DEMO_SESSION_ID))
+    }
+  }, [config.demoActiveChat])
 
   const activeMessages = sessions.find(s => s.id === activeSessionId)?.messages ?? []
 
@@ -312,7 +328,10 @@ export function ChatWidget({ config: configOverrides = {} }) {
   const handleOpen = () => {
     setNotification(null)
     setIsOpen(o => {
-      if (!o) setView('home')
+      if (!o) {
+        setAnimKey(k => k + 1)
+        setView('home')
+      }
       return !o
     })
   }
@@ -352,6 +371,11 @@ export function ChatWidget({ config: configOverrides = {} }) {
               loggedInUser={loggedInUser}
               onLoginClick={() => setView('login')}
               onAskArticle={handleAskArticle}
+              chatCardVariant={config.chatCardVariant}
+              businessHours={config.businessHours}
+              sessions={sessions}
+              onSelectSession={openSession}
+              animKey={animKey}
             />
           ) : view === 'help' ? (
             <HelpCenter
