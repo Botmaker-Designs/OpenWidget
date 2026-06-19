@@ -108,8 +108,22 @@ Este documento cubre exclusivamente el **Chatbot Widget**. El Help Center (artí
 ## Setup técnico actual (implementación de referencia)
 
 ### Repositorios
-- **Repo activo**: https://github.com/santiagogarbers/OpenWidget (privado)
-- **Git config**: `user.name = Santiago Garbers` / `user.email = santiagogarbers@botmaker.io`
+- **Repo activo**: https://github.com/santiagogarbers/OpenWidget (redirige a Botmaker-Designs/OpenWidget)
+- **Repo org**: https://github.com/Botmaker-Designs/OpenWidget
+- **Git config**: `user.name = Santiago Garbers` / `user.email = santiago.garbers@botmaker.io`
+- **Remote local**: `origin → https://github.com/santiagogarbers/OpenWidget.git`
+
+### Deploy
+- **Plataforma**: Vercel
+- **URL producción**: https://open-widget.vercel.app
+- **Proyecto Vercel**: `santiagogarbers-5160s-projects/open-widget`
+- **Deploy manual**: `npx vercel --prod --yes` (desde el directorio del proyecto, con `gh` y `vercel` CLI instalados)
+- **Deploy automático**: conectado al repo de GitHub — cada push a `main` triggerea un deploy
+- **Nota Vercel**: el email del commit debe coincidir con un email verificado en la cuenta de GitHub; usar siempre `santiago.garbers@botmaker.io`
+
+### Herramientas instaladas
+- **GitHub CLI** (`gh`): instalado en `C:\Program Files\GitHub CLI`, autenticado como `santiagogarbers`
+- **Vercel CLI**: disponible vía `npx vercel`, autenticado en `santiagogarbers-5160s-projects`
 
 ### Stack
 - **Vite + React 19** (sin TypeScript), puerto dev: 5173
@@ -198,7 +212,7 @@ Usuario habla
 
 **CSS fix para quitar aura del orb**: `.cw-orb > span:first-child { box-shadow: none !important; }`
 
-**Filtro cyan cuando el bot habla**: `filter: 'sepia(1) saturate(6) hue-rotate(160deg)'`
+**Filtro orb cuando el bot habla**: `filter: 'none'` (por defecto del orb — el cyan era `hue-rotate(160deg)`, el azul era `hue-rotate(195deg)`)
 
 ### Patrón "latest function ref" (evita stale closures en RAF/timers)
 ```js
