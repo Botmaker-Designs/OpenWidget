@@ -70,9 +70,10 @@ export function ChatWidget({ config: configOverrides = {} }) {
   const [view, setView]             = useState('home')
   const [sessions, setSessions]     = useState([])
   const [activeSessionId, setActiveSessionId] = useState(null)
-  const [isTyping, setIsTyping]       = useState(false)
-  const [typingMode, setTypingMode]   = useState('writing')
+  const [isTyping, setIsTyping]         = useState(false)
+  const [typingMode, setTypingMode]     = useState('writing')
   const [typingStates, setTypingStates] = useState(null)
+  const [notification, setNotification] = useState(null)
   const [unreadCount, setUnreadCount] = useState(0)
   const [loggedInUser, setLoggedInUser] = useState(null)
   const [incomingCall, setIncomingCall]   = useState(null)
@@ -188,7 +189,13 @@ export function ChatWidget({ config: configOverrides = {} }) {
         streamText(sid, response.text)
       }
 
-      if (!isOpen) setUnreadCount(c => c + 1)
+      if (!isOpen) {
+        setUnreadCount(c => c + 1)
+        const preview = response.type === 'fallback'
+          ? (config.fallbackMessage ?? 'No pude procesar tu consulta.')
+          : response.text
+        setNotification({ text: preview, senderName: config.botName, avatar: config.botAvatar ?? null })
+      }
     }, 5000)
   }
 
@@ -238,6 +245,10 @@ export function ChatWidget({ config: configOverrides = {} }) {
               ? { ...s, messages: [...s.messages, camilaMsg], timestamp: 'Ahora', unread: !isViewingThisChat }
               : s
           ))
+          if (!isOpen) {
+            setUnreadCount(c => c + 1)
+            setNotification({ text: camilaMsg.text, senderName: agent.name, avatar: agent.avatar })
+          }
         }, 6000)
       }, 2000)
     }, 2500)
@@ -278,6 +289,10 @@ export function ChatWidget({ config: configOverrides = {} }) {
           updateLastMessage(sid, msg => ({ ...msg, type: 'text' }))
         }
       }, 18)
+      if (!isOpen) {
+        setUnreadCount(c => c + 1)
+        setNotification({ text: responseText, senderName: config.botName, avatar: config.botAvatar ?? null })
+      }
     }, 5000)
   }
 
@@ -293,6 +308,7 @@ export function ChatWidget({ config: configOverrides = {} }) {
   const handleBackFromHelp = () => setView('sessions')
 
   const handleOpen = () => {
+    setNotification(null)
     setIsOpen(o => {
       if (!o) setView('home')
       return !o
@@ -426,6 +442,8 @@ export function ChatWidget({ config: configOverrides = {} }) {
         unreadCount={unreadCount}
         position={config.position}
         onClick={handleOpen}
+        notification={!isOpen ? notification : null}
+        onDismissNotification={() => setNotification(null)}
       />
     </div>
   )
