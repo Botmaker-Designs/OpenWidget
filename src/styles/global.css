@@ -1,0 +1,27 @@
+@import './variables.css';
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+@keyframes cw-slide-up {
+  from { opacity: 0; transform: translateY(16px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes cw-fade-in {
+  from { opacity: 0; transform: translate(-50%, -48%) scale(0.97); }
+  to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+.cw-widget {
+  font-family: var(--cw-font-family);
+  font-size: var(--cw-font-size);
+  color: var(--cw-text);
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: var(--cw-z-index);
+}
