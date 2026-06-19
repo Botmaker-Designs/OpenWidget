@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { BotmakerLogo } from './BotmakerLogo'
 
 const styles = {
   button: (position) => ({
@@ -107,14 +108,15 @@ export function FloatingButton({ isOpen, unreadCount = 0, position = 'bottom-rig
           bottom: 92px;
           ${isRight ? 'right: 16px;' : 'left: 16px;'}
           max-width: 280px;
-          background: #1a1a1a;
-          color: #fff;
+          background: #ffffff;
+          color: #111827;
           border-radius: 16px;
           padding: 10px 14px;
           display: flex;
           align-items: center;
           gap: 10px;
-          box-shadow: 0 4px 20px rgba(0,0,0,0.22);
+          box-shadow: 0 4px 24px rgba(0,0,0,0.12), 0 1px 4px rgba(0,0,0,0.06);
+          border: 1px solid #f0f0f0;
           cursor: pointer;
           z-index: var(--cw-z-index);
           opacity: 0;
@@ -129,7 +131,7 @@ export function FloatingButton({ isOpen, unreadCount = 0, position = 'bottom-rig
         }
         .cw-notif-avatar {
           width: 36px; height: 36px; border-radius: 50%;
-          background: #333; flex-shrink: 0;
+          background: #f3f4f6; flex-shrink: 0;
           display: flex; align-items: center; justify-content: center;
           overflow: hidden;
         }
@@ -138,6 +140,7 @@ export function FloatingButton({ isOpen, unreadCount = 0, position = 'bottom-rig
         .cw-notif-text {
           font-size: 13px; font-weight: 500; line-height: 1.3;
           white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+          color: #111827;
         }
         .cw-notif-meta {
           font-size: 11px; color: #9ca3af; margin-top: 2px;
@@ -153,7 +156,7 @@ export function FloatingButton({ isOpen, unreadCount = 0, position = 'bottom-rig
           <div className="cw-notif-avatar">
             {notifData.avatar
               ? <img src={notifData.avatar} alt={notifData.senderName} />
-              : <BotIcon />
+              : <BotmakerLogo size={22} />
             }
           </div>
           <div className="cw-notif-body">
@@ -180,13 +183,3 @@ export function FloatingButton({ isOpen, unreadCount = 0, position = 'bottom-rig
   )
 }
 
-function BotIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-      <rect x="3" y="3" width="7" height="7" rx="1" fill="#6b7280"/>
-      <rect x="14" y="3" width="7" height="7" rx="1" fill="#6b7280"/>
-      <rect x="3" y="14" width="7" height="7" rx="1" fill="#6b7280"/>
-      <rect x="14" y="14" width="7" height="7" rx="1" fill="#6b7280"/>
-    </svg>
-  )
-}

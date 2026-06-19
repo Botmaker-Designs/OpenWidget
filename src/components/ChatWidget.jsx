@@ -86,9 +86,11 @@ export function ChatWidget({ config: configOverrides = {} }) {
   const streamingRef  = useRef(null)
   const viewRef       = useRef(view)
   const activeSidRef  = useRef(activeSessionId)
+  const isOpenRef     = useRef(isOpen)
 
   useEffect(() => { viewRef.current = view }, [view])
   useEffect(() => { activeSidRef.current = activeSessionId }, [activeSessionId])
+  useEffect(() => { isOpenRef.current = isOpen }, [isOpen])
 
   useEffect(() => {
     const root = document.documentElement
@@ -189,7 +191,7 @@ export function ChatWidget({ config: configOverrides = {} }) {
         streamText(sid, response.text)
       }
 
-      if (!isOpen) {
+      if (!isOpenRef.current) {
         setUnreadCount(c => c + 1)
         const preview = response.type === 'fallback'
           ? (config.fallbackMessage ?? 'No pude procesar tu consulta.')
@@ -245,7 +247,7 @@ export function ChatWidget({ config: configOverrides = {} }) {
               ? { ...s, messages: [...s.messages, camilaMsg], timestamp: 'Ahora', unread: !isViewingThisChat }
               : s
           ))
-          if (!isOpen) {
+          if (!isOpenRef.current) {
             setUnreadCount(c => c + 1)
             setNotification({ text: camilaMsg.text, senderName: agent.name, avatar: agent.avatar })
           }
@@ -289,7 +291,7 @@ export function ChatWidget({ config: configOverrides = {} }) {
           updateLastMessage(sid, msg => ({ ...msg, type: 'text' }))
         }
       }, 18)
-      if (!isOpen) {
+      if (!isOpenRef.current) {
         setUnreadCount(c => c + 1)
         setNotification({ text: responseText, senderName: config.botName, avatar: config.botAvatar ?? null })
       }
