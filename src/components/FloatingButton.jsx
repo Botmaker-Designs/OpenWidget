@@ -125,8 +125,8 @@ export function FloatingButton({ isOpen, unreadCount = 0, position = 'bottom-rig
           animation: cw-fab-pulse 2.4s cubic-bezier(0.2,0,0.6,1) infinite;
           pointer-events: none;
         }
-        .cw-fab:hover        { transform: scale(1.1)  !important; box-shadow: 0 6px 20px rgba(0,0,0,0.16), 0 12px 40px rgba(37,99,235,0.38), inset 0 1px 0 rgba(255,255,255,0.28) !important; }
-        .cw-fab:active       { transform: scale(0.94) !important; box-shadow: 0 2px 8px rgba(0,0,0,0.12), 0 4px 16px rgba(37,99,235,0.2), inset 0 1px 0 rgba(255,255,255,0.22) !important; }
+        .cw-fab:hover        { transform: scale(1.1)  !important; box-shadow: 0 6px 20px rgba(0,0,0,0.16), 0 12px 40px rgba(37,99,235,0.38), inset 0 1px 0 rgba(255,255,255,0.28) !important; transition: transform 220ms cubic-bezier(0,0,0.2,1), box-shadow 220ms ease !important; }
+        .cw-fab:active       { transform: scale(0.94) !important; box-shadow: 0 2px 8px rgba(0,0,0,0.12), 0 4px 16px rgba(37,99,235,0.2), inset 0 1px 0 rgba(255,255,255,0.22) !important; transition: transform 110ms ease-in, box-shadow 110ms ease !important; }
         .cw-notif {
           position: fixed;
           bottom: 92px;
