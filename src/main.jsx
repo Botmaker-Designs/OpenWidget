@@ -4,7 +4,7 @@ import { ChatWidget } from './components/ChatWidget'
 import { DemoPanel } from './components/DemoPanel'
 
 const BASE_CONFIG = {
-  botName: 'Asistente Dev',
+  botName: 'Botsy AI',
   primaryColor: '#2563eb',
   welcomeMessage: '¡Hola, {{nombre}}! ¿En qué puedo ayudarte hoy?',
   user: { nombre: 'Santiago' },

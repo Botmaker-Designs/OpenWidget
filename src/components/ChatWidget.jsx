@@ -230,7 +230,7 @@ export function ChatWidget({ config: configOverrides = {} }) {
     markFallbackActed(sid)
     addMessage(sid, { id: nextId++, role: 'system', type: 'transferring' })
 
-    // Simula conexión con agente después de 2.5s
+    // Simula conexión con agente después de 6s
     setTimeout(() => {
       const now = formatTime(new Date())
       // Elimina el mensaje de transferencia antes de mostrar el ingreso del agente
@@ -269,7 +269,7 @@ export function ChatWidget({ config: configOverrides = {} }) {
           }
         }, 6000)
       }, 2000)
-    }, 2500)
+    }, 6000)
   }
 
   const handleLeaveMessage = () => {

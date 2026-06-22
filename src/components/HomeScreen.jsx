@@ -74,9 +74,9 @@ export function HomeScreen({ onClose, isExpanded, onToggleExpand, onNewChat, onT
         .cw-home-card:active { background: #e0ecff !important; }
         .cw-home-recent:hover { background: #f9fafb !important; border-color: #d1d5db !important; }
         .cw-home-recent:active { background: #f3f4f6 !important; }
-        .cw-home-faq-row:hover { background: #eaecef !important; }
-        .cw-home-faq-row:active { background: #e2e4e8 !important; }
-        .cw-home-faq-row:last-child { border-bottom: none !important; }
+        .cw-home-faq-row:hover { background: #f9fafb !important; }
+        .cw-home-faq-row:active { background: #f3f4f6 !important; }
+        .cw-login-btn:hover { background: rgba(255,255,255,0.12) !important; border-radius: 8px; }
         .cw-tab-item { transition: color 120ms ease; }
         .cw-tab-item:hover  { color: #374151 !important; }
         .cw-tab-item.active:hover { color: var(--cw-primary-dark) !important; }
@@ -91,16 +91,28 @@ export function HomeScreen({ onClose, isExpanded, onToggleExpand, onNewChat, onT
             <BotmakerLogo size={42} white />
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            {loggedInUser ? (
-              <div style={userChipStyle}>
-                <UserAvatarIcon initial={loggedInUser.name.charAt(0).toUpperCase()} />
-                <span style={userChipNameStyle}>{loggedInUser.name.split(' ')[0]}</span>
-              </div>
-            ) : (
-              <button style={loginBtnStyle} onClick={onLoginClick}>
+            {!loggedInUser && (
+              <button className="cw-login-btn" style={loginBtnStyle} onClick={onLoginClick}>
                 Ingresar
               </button>
             )}
+            <div style={{ display: 'flex', alignItems: 'center', marginRight: 4 }}>
+              {AGENT_AVATARS.map((src, i) => (
+                <img
+                  key={i}
+                  src={src}
+                  alt=""
+                  style={{
+                    width: 26, height: 26, borderRadius: '50%',
+                    objectFit: 'cover',
+                    border: 'none',
+                    marginLeft: i === 0 ? 0 : -7,
+                    position: 'relative',
+                    zIndex: AGENT_AVATARS.length - i,
+                  }}
+                />
+              ))}
+            </div>
             <button style={heroBtnStyle} onClick={onToggleExpand} aria-label={isExpanded ? 'Contraer' : 'Expandir'}>
               {isExpanded ? <ContractIcon /> : <ExpandIcon />}
             </button>
@@ -111,8 +123,13 @@ export function HomeScreen({ onClose, isExpanded, onToggleExpand, onNewChat, onT
         </div>
 
         <div style={heroTextStyle}>
-          {userName && <p style={greetingStyle}>¡Hola! {userName}</p>}
-          <h1 style={headingStyle}>¿Cómo podemos<br />ayudarte?</h1>
+          {loggedInUser ? (
+            <h1 style={headingStyle}>
+              <span style={{ fontWeight: 300 }}>Hola {loggedInUser.name.split(' ')[0]},</span><br />¿cómo podemos ayudarte?
+            </h1>
+          ) : (
+            <h1 style={headingStyle}>¿Cómo podemos<br />ayudarte?</h1>
+          )}
         </div>
 
       </div>
@@ -145,17 +162,24 @@ export function HomeScreen({ onClose, isExpanded, onToggleExpand, onNewChat, onT
                 <div style={{ ...cardIconStyle, zIndex: 2, position: 'relative' }}>
                   <BotmakerLogo size={22} />
                 </div>
-                <img
-                  src={AGENT_AVATARS[0]}
-                  alt=""
-                  style={{
-                    width: 38, height: 38, borderRadius: '50%',
-                    border: '2.5px solid #fff',
-                    objectFit: 'cover',
-                    marginLeft: -10,
-                    position: 'relative', zIndex: 1,
-                  }}
-                />
+                <div style={{ position: 'relative', marginLeft: -10, zIndex: 1, flexShrink: 0 }}>
+                  <img
+                    src={AGENT_AVATARS[0]}
+                    alt=""
+                    style={{
+                      width: 38, height: 38, borderRadius: '50%',
+                      border: '2.5px solid #fff',
+                      objectFit: 'cover',
+                      display: 'block',
+                    }}
+                  />
+                  <span style={{
+                    position: 'absolute', bottom: 1, right: 1,
+                    width: 10, height: 10, borderRadius: '50%',
+                    background: '#22c55e',
+                    border: '2px solid #fff',
+                  }} />
+                </div>
               </div>
               <div style={{ flex: 1, textAlign: 'left' }}>
                 <div style={{ fontWeight: 500, fontSize: 14, color: '#111827' }}>Iniciar nueva conversación</div>
@@ -170,39 +194,42 @@ export function HomeScreen({ onClose, isExpanded, onToggleExpand, onNewChat, onT
 
         {/* FAQ */}
         <div style={faqSectionStyle}>
-          {/* Buscador */}
-          <div style={searchWrapStyle}>
-            <input
-              style={searchInputStyle}
-              placeholder="Buscar ayuda"
-              value={query}
-              onChange={e => setQuery(e.target.value)}
-            />
-            {query
-              ? <button style={clearBtnStyle} onClick={() => setQuery('')}>×</button>
-              : <SearchIcon />
-            }
-          </div>
+          <p style={faqTitleStyle}>Preguntas frecuentes</p>
+          <div style={faqUnifiedStyle}>
+            {/* Buscador */}
+            <div style={searchWrapStyle}>
+              <input
+                style={searchInputStyle}
+                placeholder="Buscar ayuda"
+                value={query}
+                onChange={e => setQuery(e.target.value)}
+              />
+              {query
+                ? <button style={clearBtnStyle} onClick={() => setQuery('')}>×</button>
+                : <SearchIcon />
+              }
+            </div>
 
-          {/* Artículos */}
-          <div style={articlesWrapStyle}>
-            {filteredArticles.length === 0 ? (
-              <p style={emptyStyle}>Sin resultados para "{query}"</p>
-            ) : (
-              filteredArticles.map(a => (
-                <button
-                  key={a.id}
-                  className="cw-home-faq-row"
-                  style={faqRowStyle}
-                  onClick={() => onAskArticle?.(a)}
-                >
-                  <span style={{ flex: 1, fontSize: 13, color: '#374151', textAlign: 'left', lineHeight: 1.4 }}>
-                    {a.title}
-                  </span>
-                  <ChevronIcon color="#c0c4cc" />
-                </button>
-              ))
-            )}
+            {/* Artículos */}
+            <div style={articlesWrapStyle}>
+              {filteredArticles.length === 0 ? (
+                <p style={emptyStyle}>Sin resultados para "{query}"</p>
+              ) : (
+                filteredArticles.map(a => (
+                  <button
+                    key={a.id}
+                    className="cw-home-faq-row"
+                    style={faqRowStyle}
+                    onClick={() => onAskArticle?.(a)}
+                  >
+                    <span style={{ flex: 1, fontSize: 13, color: '#374151', textAlign: 'left', lineHeight: 1.4 }}>
+                      {a.title}
+                    </span>
+                    <ChevronIcon color="#c0c4cc" />
+                  </button>
+                ))
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -225,7 +252,7 @@ export function HomeScreen({ onClose, isExpanded, onToggleExpand, onNewChat, onT
 function RecentMessage({ session, onSelect }) {
   const lastMsg  = session.messages.filter(m => m.text).at(-1)
   const preview  = lastMsg?.text ?? '...'
-  const name     = session.agent?.name ?? lastMsg?.senderName ?? 'Asistente'
+  const name     = session.agent?.name ?? lastMsg?.senderName ?? 'Botsy AI'
   const avatar   = session.agent?.avatar ?? null
   const unread   = !!session.unread
 
@@ -461,16 +488,15 @@ const heroBtnStyle = {
 
 const loginBtnStyle = {
   height: 28,
-  padding: '0 12px',
-  borderRadius: 14,
-  border: '1.5px solid rgba(255,255,255,0.35)',
-  background: 'rgba(255,255,255,0.12)',
+  padding: '0 4px',
+  border: 'none',
+  background: 'transparent',
   color: '#fff',
   fontSize: 12, fontWeight: 600,
   cursor: 'pointer',
   fontFamily: 'var(--cw-font-family)',
-  transition: 'background 120ms',
   whiteSpace: 'nowrap',
+  transition: 'background 150ms',
 }
 
 const userChipStyle = {
@@ -558,14 +584,32 @@ const faqSectionStyle = {
   margin: '12px 14px 0',
 }
 
+const faqTitleStyle = {
+  margin: '0 0 8px',
+  fontSize: 11,
+  fontWeight: 600,
+  color: '#9ca3af',
+  letterSpacing: '0.06em',
+  textTransform: 'uppercase',
+}
+
+const faqUnifiedStyle = {
+  background: '#fff',
+  borderRadius: 12,
+  overflow: 'hidden',
+  border: '1.5px solid #e5e7eb',
+  boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+  padding: 8,
+}
+
 const searchWrapStyle = {
   display: 'flex',
   alignItems: 'center',
   gap: 8,
-  padding: '12px 14px',
+  padding: '10px 12px',
   background: '#f4f6f8',
-  borderRadius: 12,
-  marginBottom: 8,
+  borderRadius: 8,
+  marginBottom: 4,
 }
 
 const searchInputStyle = {
@@ -590,9 +634,6 @@ const clearBtnStyle = {
 }
 
 const articlesWrapStyle = {
-  background: '#f4f6f8',
-  borderRadius: 12,
-  overflow: 'hidden',
 }
 
 const emptyStyle = {
@@ -608,7 +649,7 @@ const faqRowStyle = {
   gap: 10,
   padding: '14px 14px',
   border: 'none',
-  borderBottom: '1px solid #e9ebee',
+  borderRadius: 8,
   background: 'transparent',
   cursor: 'pointer',
   fontFamily: 'var(--cw-font-family)',
