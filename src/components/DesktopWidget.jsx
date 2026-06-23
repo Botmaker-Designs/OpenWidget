@@ -337,7 +337,7 @@ export function DesktopWidget({ onClose, config: configOverrides = {} }) {
           </div>
 
           {/* Messages */}
-          <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', ...WA_BG_STYLE }}>
+          <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', ...WA_BG_STYLE, position: 'relative' }}>
             <MessageList
               messages={displayMessages}
               isTyping={isHistoryView ? false : isTyping}
@@ -351,24 +351,23 @@ export function DesktopWidget({ onClose, config: configOverrides = {} }) {
               agentName={isHistoryView ? selectedSession.name : agentSession?.name}
               isMobile={isMobile}
             />
+            {/* Mini video widget flotante — absolutamente posicionado sobre los mensajes */}
+            {activeVideoCall && videoMinimized && (
+              <MiniVideoWidget
+                agent={activeVideoCall}
+                seconds={videoSeconds}
+                isMobile={isMobile}
+                onRestore={() => setVideoMinimized(false)}
+                onHangUp={() => {
+                  const a = activeVideoCall
+                  const mins = Math.floor(videoSeconds / 60), secs = videoSeconds % 60
+                  setActiveVideoCall(null)
+                  setVideoMinimized(false)
+                  addMessage({ id: nextDesktopId++, role: 'bot', type: 'text', text: `Videollamada finalizada (${mins > 0 ? `${mins}m ` : ''}${secs}s). ¿Pudimos resolver tu consulta?`, createdAt: new Date(), senderName: a.name, senderType: 'Agente' })
+                }}
+              />
+            )}
           </div>
-
-          {/* Mini video widget — visible cuando está minimizado */}
-          {activeVideoCall && videoMinimized && (
-            <MiniVideoWidget
-              agent={activeVideoCall}
-              seconds={videoSeconds}
-              isMobile={isMobile}
-              onRestore={() => setVideoMinimized(false)}
-              onHangUp={() => {
-                const a = activeVideoCall
-                const mins = Math.floor(videoSeconds / 60), secs = videoSeconds % 60
-                setActiveVideoCall(null)
-                setVideoMinimized(false)
-                addMessage({ id: nextDesktopId++, role: 'bot', type: 'text', text: `Videollamada finalizada (${mins > 0 ? `${mins}m ` : ''}${secs}s). ¿Pudimos resolver tu consulta?`, createdAt: new Date(), senderName: a.name, senderType: 'Agente' })
-              }}
-            />
-          )}
 
           {/* Input — solo en sesión activa */}
           {isHistoryView ? (
@@ -917,7 +916,7 @@ function CloseIcon() {
 function MiniVideoWidget({ agent, seconds, isMobile, onRestore, onHangUp }) {
   const fmt = s => `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`
   return (
-    <div style={{ flexShrink: 0, display: 'flex', justifyContent: 'flex-end', padding: isMobile ? '6px 14px 0' : '6px 12px 0' }}>
+    <div style={{ position: 'absolute', bottom: 12, right: 12, zIndex: 5 }}>
       <div
         onClick={onRestore}
         title="Maximizar videollamada"
