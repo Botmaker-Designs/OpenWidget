@@ -88,10 +88,35 @@ export function ChatWidget({ config: configOverrides = {} }) {
   const viewRef       = useRef(view)
   const activeSidRef  = useRef(activeSessionId)
   const isOpenRef     = useRef(isOpen)
+  const shellRef      = useRef(null)
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768)
 
   useEffect(() => { viewRef.current = view }, [view])
   useEffect(() => { activeSidRef.current = activeSessionId }, [activeSessionId])
   useEffect(() => { isOpenRef.current = isOpen }, [isOpen])
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768)
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
+
+  useEffect(() => {
+    const vv = window.visualViewport
+    if (!vv || !isMobile || !isOpen) return
+    const update = () => {
+      if (!shellRef.current) return
+      shellRef.current.style.height = `${vv.height}px`
+      shellRef.current.style.top    = `${vv.offsetTop}px`
+    }
+    vv.addEventListener('resize', update)
+    vv.addEventListener('scroll', update)
+    update()
+    return () => {
+      vv.removeEventListener('resize', update)
+      vv.removeEventListener('scroll', update)
+    }
+  }, [isMobile, isOpen])
 
   useEffect(() => {
     const root = document.documentElement
@@ -342,7 +367,7 @@ export function ChatWidget({ config: configOverrides = {} }) {
   return (
     <div className="cw-widget">
       {isOpen && (
-        <div style={panelShell(config.position, isExpanded)}>
+        <div ref={shellRef} style={panelShell(config.position, isExpanded, isMobile)}>
           {view === 'login' ? (
             <LoginScreen
               onLogin={(user) => { setLoggedInUser(user); setView('home') }}
@@ -420,6 +445,7 @@ export function ChatWidget({ config: configOverrides = {} }) {
               onAddVoiceMessage={(msg) => addMessage(activeSessionId, { id: nextId++, createdAt: new Date(), senderName: config.botName, senderType: 'Asistente IA', ...msg })}
               onStreamVoiceBot={(text) => streamText(activeSessionId, text)}
               onTabChange={handleTabChange}
+              isMobile={isMobile}
             />
           )}
 
@@ -468,39 +494,55 @@ export function ChatWidget({ config: configOverrides = {} }) {
           )}
         </div>
       )}
-      <FloatingButton
-        isOpen={isOpen}
-        unreadCount={unreadCount}
-        position={config.position}
-        onClick={handleOpen}
-        notification={!isOpen ? notification : null}
-        onDismissNotification={() => setNotification(null)}
-      />
+      {(!isOpen || !isMobile) && (
+        <FloatingButton
+          isOpen={isOpen}
+          unreadCount={unreadCount}
+          position={config.position}
+          onClick={handleOpen}
+          notification={!isOpen ? notification : null}
+          onDismissNotification={() => setNotification(null)}
+        />
+      )}
     </div>
   )
 }
 
-const panelShell = (position, isExpanded) => ({
-  position: 'fixed',
-  background: 'var(--cw-bg)',
-  borderRadius: isExpanded ? 16 : 'var(--cw-border-radius)',
-  boxShadow: 'var(--cw-shadow)',
-  display: 'flex',
-  flexDirection: 'column',
-  overflow: 'hidden',
-  zIndex: 'var(--cw-z-index)',
-  transition: 'width 320ms ease, height 320ms ease, border-radius 320ms ease',
-  bottom: 96,
-  ...(position === 'bottom-left' ? { left: 24 } : { right: 24 }),
-  animation: 'cw-slide-up 220ms cubic-bezier(0.22, 1, 0.36, 1) forwards',
-  ...(isExpanded ? {
-    width: 'min(680px, 94vw)',
-    height: 'min(720px, calc(100vh - 120px))',
-  } : {
-    width: 'var(--cw-panel-width)',
-    height: 'var(--cw-panel-height)',
-  }),
-})
+const panelShell = (position, isExpanded, isMobile = false) => {
+  if (isMobile) {
+    return {
+      position: 'fixed',
+      inset: 0,
+      background: 'var(--cw-bg)',
+      display: 'flex',
+      flexDirection: 'column',
+      overflow: 'hidden',
+      zIndex: 10000,
+      animation: 'cw-slide-up 280ms cubic-bezier(0.22, 1, 0.36, 1) forwards',
+    }
+  }
+  return {
+    position: 'fixed',
+    background: 'var(--cw-bg)',
+    borderRadius: isExpanded ? 16 : 'var(--cw-border-radius)',
+    boxShadow: 'var(--cw-shadow)',
+    display: 'flex',
+    flexDirection: 'column',
+    overflow: 'hidden',
+    zIndex: 'var(--cw-z-index)',
+    transition: 'width 320ms ease, height 320ms ease, border-radius 320ms ease',
+    bottom: 96,
+    ...(position === 'bottom-left' ? { left: 24 } : { right: 24 }),
+    animation: 'cw-slide-up 220ms cubic-bezier(0.22, 1, 0.36, 1) forwards',
+    ...(isExpanded ? {
+      width: 'min(680px, 94vw)',
+      height: 'min(720px, calc(100vh - 120px))',
+    } : {
+      width: 'var(--cw-panel-width)',
+      height: 'var(--cw-panel-height)',
+    }),
+  }
+}
 
 function darken(hex) {
   const n = parseInt(hex.replace('#', ''), 16)

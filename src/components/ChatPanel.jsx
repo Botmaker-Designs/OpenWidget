@@ -12,7 +12,14 @@ const TAB_ITEMS = [
   { key: 'agents',   label: 'Mis Agentes', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><circle cx="9" cy="7" r="4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg> },
 ]
 
-export function ChatPanel({ config, messages, isTyping, typingMode, typingStates, onSend, onQuickReply, onEscalate, onLeaveMessage, onClose, agentSession, isExpanded, onToggleExpand, onAddVoiceMessage, onStreamVoiceBot, onTabChange, sessions = [], onSelectSession }) {
+const WA_BG_MOBILE = {
+  backgroundColor: '#f0ece4',
+  backgroundImage: 'linear-gradient(rgba(255,255,255,0.55), rgba(255,255,255,0.55)), url(/chat-bg.jpg)',
+  backgroundSize: '380px',
+  backgroundRepeat: 'repeat',
+}
+
+export function ChatPanel({ config, messages, isTyping, typingMode, typingStates, onSend, onQuickReply, onEscalate, onLeaveMessage, onClose, agentSession, isExpanded, onToggleExpand, onAddVoiceMessage, onStreamVoiceBot, onTabChange, sessions = [], onSelectSession, isMobile = false }) {
   const [voiceMode, setVoiceMode] = useState(false)
   const [historyOpen, setHistoryOpen] = useState(false)
 
@@ -43,19 +50,38 @@ export function ChatPanel({ config, messages, isTyping, typingMode, typingStates
         onToggleExpand={onToggleExpand}
         onClose={onClose}
         onOpenHistory={() => setHistoryOpen(true)}
+        isMobile={isMobile}
       />
-      <MessageList
-        messages={messages}
-        isTyping={isTyping}
-        typingMode={typingMode}
-        typingStates={typingStates}
-        quickReplies={config.quickReplies}
-        onQuickReply={onQuickReply}
-        onEscalate={onEscalate}
-        onLeaveMessage={onLeaveMessage}
-        fallbackText={config.fallbackMessage}
-        agentName={agentSession?.name}
-      />
+
+      {isMobile ? (
+        <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', ...WA_BG_MOBILE }}>
+          <MessageList
+            messages={messages}
+            isTyping={isTyping}
+            typingMode={typingMode}
+            typingStates={typingStates}
+            quickReplies={config.quickReplies}
+            onQuickReply={onQuickReply}
+            onEscalate={onEscalate}
+            onLeaveMessage={onLeaveMessage}
+            fallbackText={config.fallbackMessage}
+            agentName={agentSession?.name}
+          />
+        </div>
+      ) : (
+        <MessageList
+          messages={messages}
+          isTyping={isTyping}
+          typingMode={typingMode}
+          typingStates={typingStates}
+          quickReplies={config.quickReplies}
+          onQuickReply={onQuickReply}
+          onEscalate={onEscalate}
+          onLeaveMessage={onLeaveMessage}
+          fallbackText={config.fallbackMessage}
+          agentName={agentSession?.name}
+        />
+      )}
 
       {voiceMode ? (
         <VoiceChat
@@ -68,10 +94,12 @@ export function ChatPanel({ config, messages, isTyping, typingMode, typingStates
           onSend={onSend}
           disabled={isTyping}
           onVoice={() => setVoiceMode(true)}
+          isMobile={isMobile}
+          wrapStyle={isMobile ? { ...WA_BG_MOBILE, flexShrink: 0, minHeight: 'unset' } : undefined}
         />
       )}
 
-      <div style={tabBarStyle}>
+      <div style={{ ...tabBarStyle, ...(isMobile && { paddingBottom: 'max(14px, env(safe-area-inset-bottom))' }) }}>
         {TAB_ITEMS.map(t => (
           <button
             key={t.key}
@@ -140,7 +168,7 @@ function HistoryRow({ session, onSelect }) {
   )
 }
 
-function PanelHeader({ config, agentSession, isExpanded, onToggleExpand, onClose, onOpenHistory }) {
+function PanelHeader({ config, agentSession, isExpanded, onToggleExpand, onClose, onOpenHistory, isMobile = false }) {
   const isAgent  = !!agentSession
   const name     = isAgent ? agentSession.name   : config.botName
   const avatar   = isAgent ? agentSession.avatar : config.botAvatar
@@ -169,9 +197,11 @@ function PanelHeader({ config, agentSession, isExpanded, onToggleExpand, onClose
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <button className="cw-header-btn" aria-label={isExpanded ? 'Contraer' : 'Expandir'} onClick={onToggleExpand}>
-            {isExpanded ? <ContractIcon /> : <ExpandIcon />}
-          </button>
+          {!isMobile && (
+            <button className="cw-header-btn" aria-label={isExpanded ? 'Contraer' : 'Expandir'} onClick={onToggleExpand}>
+              {isExpanded ? <ContractIcon /> : <ExpandIcon />}
+            </button>
+          )}
           <button className="cw-header-btn" aria-label="Cerrar" onClick={onClose}>
             <CloseIcon />
           </button>
