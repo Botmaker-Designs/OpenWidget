@@ -959,7 +959,7 @@ const shellStyle = {
   position: 'fixed',
   inset: 0,
   zIndex: 10000,
-  background: '#f0f2f5',
+  background: '#fff',
   display: 'flex',
   alignItems: 'stretch',
   justifyContent: 'center',

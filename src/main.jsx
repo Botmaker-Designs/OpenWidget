@@ -67,7 +67,7 @@ function App() {
 
 function DesktopSpinner({ fading = false }) {
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 10001, background: '#f0f2f5', display: 'flex', alignItems: 'center', justifyContent: 'center', animation: fading ? 'dw-spinner-out 350ms ease forwards' : 'dw-spinner-in 150ms ease forwards' }}>
+    <div style={{ position: 'fixed', inset: 0, zIndex: 10001, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', animation: fading ? 'dw-spinner-out 350ms ease forwards' : 'dw-spinner-in 150ms ease forwards' }}>
       <style>{`
         @keyframes dw-spin        { to   { transform: rotate(360deg); } }
         @keyframes dw-spinner-in  { from { opacity: 0; } to { opacity: 1; } }
