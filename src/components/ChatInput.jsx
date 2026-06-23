@@ -5,18 +5,22 @@ import { EmojiPicker } from './EmojiPicker'
 const MAX_ATTACHMENTS = 3
 const REC_BAR_COUNT = 28
 
-export function ChatInput({ onSend, disabled, onVoice, voiceMode, wrapStyle, onSendAudio }) {
+export function ChatInput({ onSend, disabled, onVoice, voiceMode, wrapStyle, onSendAudio, isMobile = false }) {
   const [text, setText]               = useState('')
   const [attachments, setAttachments] = useState([])
   const [isRecording, setIsRecording] = useState(false)
   const [recordSeconds, setRecordSeconds] = useState(0)
   const [isPaused, setIsPaused]       = useState(false)
   const [recBars, setRecBars]         = useState(() => Array(REC_BAR_COUNT).fill(4))
+  const [plusMenuOpen, setPlusMenuOpen] = useState(false)
+  const [emojiOpen, setEmojiOpen]     = useState(false)
+  const [dragging, setDragging]       = useState(false)
   const textareaRef  = useRef(null)
   const fileRef      = useRef(null)
   const analyserRef  = useRef(null)
   const streamRef    = useRef(null)
   const rafRef       = useRef(null)
+  const plusMenuRef  = useRef(null)
 
   const handleSend = () => {
     const trimmed = text.trim()
@@ -24,7 +28,10 @@ export function ChatInput({ onSend, disabled, onVoice, voiceMode, wrapStyle, onS
     onSend(trimmed, attachments)
     setText('')
     setAttachments([])
-    textareaRef.current?.focus()
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto'
+      textareaRef.current?.focus()
+    }
   }
 
   const handleKeyDown = (e) => {
@@ -48,7 +55,6 @@ export function ChatInput({ onSend, disabled, onVoice, voiceMode, wrapStyle, onS
     e.target.value = ''
   }
 
-  // Cada imagen nueva arranca su propio timer de 2s
   useEffect(() => {
     const loading = attachments.filter(a => a.loading)
     if (!loading.length) return
@@ -122,6 +128,18 @@ export function ChatInput({ onSend, disabled, onVoice, voiceMode, wrapStyle, onS
     return () => { if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = null } }
   }, [isRecording, isPaused])
 
+  // Click-outside for plus menu
+  useEffect(() => {
+    if (!plusMenuOpen) return
+    const close = (e) => {
+      if (plusMenuRef.current && !plusMenuRef.current.contains(e.target)) {
+        setPlusMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', close)
+    return () => document.removeEventListener('mousedown', close)
+  }, [plusMenuOpen])
+
   const fmtRecTime = (s) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`
   const startRecording  = () => { setIsRecording(true); setRecordSeconds(0); setIsPaused(false) }
   const cancelRecording = () => { setIsRecording(false); setRecordSeconds(0); setIsPaused(false) }
@@ -129,9 +147,6 @@ export function ChatInput({ onSend, disabled, onVoice, voiceMode, wrapStyle, onS
     onSendAudio?.({ duration: Math.max(1, recordSeconds) })
     setIsRecording(false); setRecordSeconds(0); setIsPaused(false)
   }
-
-  const [dragging, setDragging]     = useState(false)
-  const [emojiOpen, setEmojiOpen]   = useState(false)
 
   const handleDragOver = (e) => {
     e.preventDefault()
@@ -158,6 +173,36 @@ export function ChatInput({ onSend, disabled, onVoice, voiceMode, wrapStyle, onS
   const canAdd  = attachments.length < MAX_ATTACHMENTS && !disabled
   const canSend = (text.trim().length > 0 || attachments.length > 0) && !disabled
   const hasContent = attachments.length > 0 || text.length > 0
+
+  const handleMobileTextChange = (e) => {
+    setText(e.target.value)
+    const ta = e.target
+    ta.style.height = 'auto'
+    ta.style.height = Math.min(ta.scrollHeight, 120) + 'px'
+  }
+
+  const PILL_MENU_ITEMS = [
+    {
+      label: 'Cámara',
+      icon: <CameraMenuIcon />,
+      action: () => { fileRef.current?.click(); setPlusMenuOpen(false) },
+    },
+    {
+      label: 'Fotos',
+      icon: <PhotosMenuIcon />,
+      action: () => { fileRef.current?.click(); setPlusMenuOpen(false) },
+    },
+    {
+      label: 'Archivos',
+      icon: <FilesMenuIcon />,
+      action: () => { fileRef.current?.click(); setPlusMenuOpen(false) },
+    },
+    {
+      label: 'Emoji',
+      icon: <EmojiMenuIcon />,
+      action: () => { setEmojiOpen(o => !o); setPlusMenuOpen(false) },
+    },
+  ]
 
   return (
     <>
@@ -206,6 +251,18 @@ export function ChatInput({ onSend, disabled, onVoice, voiceMode, wrapStyle, onS
           flex: 1; overflow-y: auto; width: 100%;
         }
         .cw-textarea::placeholder { color: #9ca3af; }
+        .cw-textarea-pill {
+          border: none; outline: none; resize: none;
+          background: transparent;
+          font-family: var(--cw-font-family);
+          font-size: 16px; color: var(--cw-text);
+          line-height: 1.45;
+          padding: 0;
+          flex: 1; overflow-y: hidden;
+          width: 100%;
+          max-height: 120px;
+        }
+        .cw-textarea-pill::placeholder { color: #9ca3af; }
         .cw-action-row {
           display: flex; align-items: center;
           padding: 6px 10px 8px; gap: 2px;
@@ -262,6 +319,33 @@ export function ChatInput({ onSend, disabled, onVoice, voiceMode, wrapStyle, onS
           font-size: 11px; color: #9ca3af;
           font-family: var(--cw-font-family);
         }
+        .cw-pill-menu-item {
+          display: flex; align-items: center; gap: 14px;
+          width: 100%; padding: 12px 16px;
+          border: none; background: transparent;
+          font-size: 16px; color: #111827;
+          font-family: var(--cw-font-family);
+          cursor: pointer; text-align: left;
+          transition: background 100ms;
+        }
+        .cw-pill-menu-item:hover { background: #f3f4f6; }
+        .cw-pill-menu-item:first-child { border-radius: 16px 16px 0 0; }
+        .cw-pill-menu-item:last-child { border-radius: 0 0 16px 16px; }
+        .cw-pill-blue-btn {
+          width: 36px; height: 36px; border-radius: 50%;
+          border: none; background: var(--cw-primary); color: #fff;
+          cursor: pointer; display: flex; align-items: center; justify-content: center;
+          flex-shrink: 0; transition: transform 80ms;
+        }
+        .cw-pill-blue-btn:active { transform: scale(0.92); }
+        .cw-pill-blue-btn:disabled { opacity: 0.4; cursor: default; }
+        .cw-pill-icon-btn {
+          width: 34px; height: 34px; border-radius: 50%;
+          border: none; background: transparent; color: #9ca3af;
+          cursor: pointer; display: flex; align-items: center; justify-content: center;
+          flex-shrink: 0;
+        }
+        .cw-pill-icon-btn:disabled { opacity: 0.4; cursor: default; }
       `}</style>
 
       <input
@@ -274,113 +358,309 @@ export function ChatInput({ onSend, disabled, onVoice, voiceMode, wrapStyle, onS
       />
 
       <div className="cw-input-wrap" style={wrapStyle}>
-        <div
-          className={`cw-input-box${!isRecording && hasContent ? ' has-content' : ''}${!isRecording && dragging ? ' dragging' : ''}`}
-          onDragOver={!isRecording ? handleDragOver : undefined}
-          onDragLeave={!isRecording ? handleDragLeave : undefined}
-          onDrop={!isRecording ? handleDrop : undefined}
-        >
-          {isRecording ? (
-            <div style={{ flex: 1, display: 'flex', alignItems: 'center', padding: '0 14px', gap: 10 }}>
-              <button className="cw-rec-icon-btn" onClick={cancelRecording} title="Cancelar"><RecTrashIcon /></button>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexShrink: 0 }}>
-                <span className="cw-reddot" style={{ width: 9, height: 9, borderRadius: '50%', background: '#ef4444', display: 'block', flexShrink: 0 }} />
-                <span style={{ fontSize: 14, fontVariantNumeric: 'tabular-nums', color: '#374151', minWidth: 30 }}>{fmtRecTime(recordSeconds)}</span>
-              </div>
-              <div style={{ flex: 1, display: 'flex', alignItems: 'flex-end', gap: 2, height: 32, overflow: 'hidden' }}>
-                {recBars.map((h, i) => (
-                  <div key={i} className="cw-rec-bar" style={{ height: h }} />
+
+        {/* ── MOBILE PILL LAYOUT ── */}
+        {isMobile ? (
+          <div ref={plusMenuRef} style={{ padding: '8px 12px 14px', position: 'relative' }}>
+
+            {/* Plus menu popover */}
+            {plusMenuOpen && (
+              <div style={{
+                position: 'absolute', bottom: 'calc(100% + 4px)', left: 12,
+                background: '#fff', borderRadius: 16,
+                boxShadow: '0 4px 24px rgba(0,0,0,0.18)',
+                minWidth: 200, zIndex: 20, overflow: 'hidden',
+              }}>
+                {PILL_MENU_ITEMS.map(item => (
+                  <button key={item.label} className="cw-pill-menu-item" onClick={item.action}>
+                    <div style={{
+                      width: 44, height: 44, borderRadius: '50%',
+                      background: '#f3f4f6',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      flexShrink: 0,
+                    }}>
+                      {item.icon}
+                    </div>
+                    {item.label}
+                  </button>
                 ))}
               </div>
-              <button className="cw-rec-icon-btn" onClick={() => setIsPaused(p => !p)} title={isPaused ? 'Continuar' : 'Pausar'}>
-                {isPaused ? <RecPlayIcon /> : <RecPauseIcon />}
-              </button>
-              <button onClick={sendAudio} title="Enviar audio" style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--cw-primary)', border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <RecSendArrowIcon />
-              </button>
-            </div>
-          ) : (
-            <>
-              {/* Drag overlay */}
-              {dragging && (
-                <div className="cw-drop-overlay">
-                  <DropIcon />
-                  Soltá para adjuntar
+            )}
+
+            {/* Emoji picker (mobile) */}
+            {emojiOpen && (
+              <div style={{ position: 'absolute', bottom: 'calc(100% + 4px)', left: 12, zIndex: 20 }}>
+                <EmojiPicker
+                  onSelect={(emoji) => { setText(t => t + emoji); textareaRef.current?.focus() }}
+                  onClose={() => setEmojiOpen(false)}
+                />
+              </div>
+            )}
+
+            {/* Recording pill */}
+            {isRecording ? (
+              <div style={{
+                background: '#ebebeb', borderRadius: 24,
+                display: 'flex', alignItems: 'center',
+                padding: '6px 8px 6px 10px', gap: 8,
+              }}>
+                <button className="cw-rec-icon-btn" onClick={cancelRecording} title="Cancelar"><RecTrashIcon /></button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexShrink: 0 }}>
+                  <span className="cw-reddot" style={{ width: 9, height: 9, borderRadius: '50%', background: '#ef4444', display: 'block', flexShrink: 0 }} />
+                  <span style={{ fontSize: 14, fontVariantNumeric: 'tabular-nums', color: '#374151', minWidth: 30 }}>{fmtRecTime(recordSeconds)}</span>
                 </div>
-              )}
-
-              {/* Thumbnails */}
-              {attachments.length > 0 && (
-                <div style={{ display: 'flex', gap: 8, padding: '10px 12px 4px', flexWrap: 'wrap' }}>
-                  {attachments.map(a => (
-                    <div key={a.id} style={{ position: 'relative', width: 80, height: 70, borderRadius: 8, overflow: 'hidden', flexShrink: 0 }}>
-                      {a.loading ? (
-                        <div style={{
-                          width: '100%', height: '100%',
-                          background: 'linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%)',
-                          backgroundSize: '200% 100%',
-                          animation: 'cw-skeleton 1.2s ease-in-out infinite',
-                        }} />
-                      ) : (
-                        <img src={a.url} alt={a.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      )}
-                      <button className="cw-thumb-remove" onClick={() => removeAttachment(a.id)} aria-label="Quitar">
-                        <RemoveIcon />
-                      </button>
-                    </div>
-                  ))}
+                <div style={{ flex: 1, display: 'flex', alignItems: 'flex-end', gap: 2, height: 28, overflow: 'hidden' }}>
+                  {recBars.map((h, i) => <div key={i} className="cw-rec-bar" style={{ height: h }} />)}
                 </div>
-              )}
-
-              <textarea
-                ref={textareaRef}
-                className="cw-textarea"
-                rows={1}
-                value={text}
-                onChange={e => setText(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Escribí tu mensaje..."
-                disabled={disabled}
-              />
-
-              <div className="cw-action-row">
-                <button className="cw-action-btn" title={canAdd ? 'Adjuntar imagen' : `Máximo ${MAX_ATTACHMENTS} imágenes`} disabled={!canAdd} onClick={() => fileRef.current?.click()}>
-                  <AttachIcon />
+                <button className="cw-rec-icon-btn" onClick={() => setIsPaused(p => !p)} title={isPaused ? 'Continuar' : 'Pausar'}>
+                  {isPaused ? <RecPlayIcon /> : <RecPauseIcon />}
                 </button>
-                <div style={{ position: 'relative' }}>
-                  <button className="cw-action-btn" title="Emoji" disabled={disabled} onClick={() => setEmojiOpen(o => !o)}>
-                    <EmojiIcon />
+                <button onClick={sendAudio} className="cw-pill-blue-btn" title="Enviar audio">
+                  <RecSendArrowIcon />
+                </button>
+              </div>
+            ) : (
+              /* Normal pill */
+              <div style={{
+                background: '#ebebeb', borderRadius: 24,
+                display: 'flex', flexDirection: 'column',
+              }}>
+                {/* Attachment thumbnails */}
+                {attachments.length > 0 && (
+                  <div style={{ display: 'flex', gap: 8, padding: '10px 14px 4px', flexWrap: 'wrap' }}>
+                    {attachments.map(a => (
+                      <div key={a.id} style={{ position: 'relative', width: 80, height: 70, borderRadius: 10, overflow: 'hidden', flexShrink: 0 }}>
+                        {a.loading ? (
+                          <div style={{
+                            width: '100%', height: '100%',
+                            background: 'linear-gradient(90deg, #d1d5db 25%, #e5e7eb 50%, #d1d5db 75%)',
+                            backgroundSize: '200% 100%',
+                            animation: 'cw-skeleton 1.2s ease-in-out infinite',
+                          }} />
+                        ) : (
+                          <img src={a.url} alt={a.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        )}
+                        <button className="cw-thumb-remove" onClick={() => removeAttachment(a.id)} aria-label="Quitar">
+                          <RemoveIcon />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Input row */}
+                <div style={{ display: 'flex', alignItems: 'center', padding: '7px 6px 7px 8px', gap: 2 }}>
+                  {/* + button */}
+                  <button
+                    onClick={() => setPlusMenuOpen(o => !o)}
+                    style={{
+                      width: 36, height: 36, borderRadius: '50%',
+                      border: 'none', background: 'transparent',
+                      color: '#374151', cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      flexShrink: 0,
+                    }}
+                    aria-label="Adjuntar"
+                  >
+                    <PlusIcon />
                   </button>
-                  {emojiOpen && (
-                    <EmojiPicker
-                      onSelect={(emoji) => { setText(t => t + emoji); textareaRef.current?.focus() }}
-                      onClose={() => setEmojiOpen(false)}
-                    />
+
+                  {/* Textarea */}
+                  <textarea
+                    ref={textareaRef}
+                    className="cw-textarea-pill"
+                    rows={1}
+                    value={text}
+                    onChange={handleMobileTextChange}
+                    onKeyDown={handleKeyDown}
+                    onFocus={() => setPlusMenuOpen(false)}
+                    placeholder="Mensaje"
+                    disabled={disabled}
+                  />
+
+                  {/* Mic outline (only when no text) */}
+                  {text.length === 0 && (
+                    <button
+                      className="cw-pill-icon-btn"
+                      onClick={startRecording}
+                      disabled={disabled}
+                      title="Grabar audio"
+                    >
+                      <AudioMicIcon />
+                    </button>
                   )}
-                </div>
-                <button className="cw-action-btn" title="GIF" disabled={disabled}><GifIcon /></button>
-                <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <button className="cw-action-btn" title="Grabar audio" disabled={disabled} onClick={startRecording}><AudioMicIcon /></button>
-                  {canSend
-                    ? <button className="cw-send-btn" style={{ marginLeft: 0 }} onClick={handleSend} aria-label="Enviar"><SendIcon /></button>
-                    : <button
-                        className="cw-send-btn"
-                        onClick={onVoice}
-                        disabled={disabled}
-                        aria-label="Activar Voice Chat"
-                        style={{ marginLeft: 0, background: '#dbeafe', color: '#2563eb' }}
-                      >
-                        <MicIcon />
-                      </button>
-                  }
+
+                  {/* Blue circle: waveform when empty, send arrow when has content */}
+                  <button
+                    className="cw-pill-blue-btn"
+                    onClick={canSend ? handleSend : onVoice}
+                    disabled={!canSend && disabled}
+                    aria-label={canSend ? 'Enviar' : 'Activar Voice Chat'}
+                    style={{ marginRight: 2 }}
+                  >
+                    {canSend ? <SendIcon /> : <MicIcon />}
+                  </button>
                 </div>
               </div>
-            </>
-          )}
-        </div>
+            )}
+          </div>
+        ) : (
+
+          /* ── DESKTOP BOX LAYOUT ── */
+          <div
+            className={`cw-input-box${!isRecording && hasContent ? ' has-content' : ''}${!isRecording && dragging ? ' dragging' : ''}`}
+            onDragOver={!isRecording ? handleDragOver : undefined}
+            onDragLeave={!isRecording ? handleDragLeave : undefined}
+            onDrop={!isRecording ? handleDrop : undefined}
+          >
+            {isRecording ? (
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', padding: '0 14px', gap: 10 }}>
+                <button className="cw-rec-icon-btn" onClick={cancelRecording} title="Cancelar"><RecTrashIcon /></button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexShrink: 0 }}>
+                  <span className="cw-reddot" style={{ width: 9, height: 9, borderRadius: '50%', background: '#ef4444', display: 'block', flexShrink: 0 }} />
+                  <span style={{ fontSize: 14, fontVariantNumeric: 'tabular-nums', color: '#374151', minWidth: 30 }}>{fmtRecTime(recordSeconds)}</span>
+                </div>
+                <div style={{ flex: 1, display: 'flex', alignItems: 'flex-end', gap: 2, height: 32, overflow: 'hidden' }}>
+                  {recBars.map((h, i) => (
+                    <div key={i} className="cw-rec-bar" style={{ height: h }} />
+                  ))}
+                </div>
+                <button className="cw-rec-icon-btn" onClick={() => setIsPaused(p => !p)} title={isPaused ? 'Continuar' : 'Pausar'}>
+                  {isPaused ? <RecPlayIcon /> : <RecPauseIcon />}
+                </button>
+                <button onClick={sendAudio} title="Enviar audio" style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--cw-primary)', border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <RecSendArrowIcon />
+                </button>
+              </div>
+            ) : (
+              <>
+                {dragging && (
+                  <div className="cw-drop-overlay">
+                    <DropIcon />
+                    Soltá para adjuntar
+                  </div>
+                )}
+
+                {attachments.length > 0 && (
+                  <div style={{ display: 'flex', gap: 8, padding: '10px 12px 4px', flexWrap: 'wrap' }}>
+                    {attachments.map(a => (
+                      <div key={a.id} style={{ position: 'relative', width: 80, height: 70, borderRadius: 8, overflow: 'hidden', flexShrink: 0 }}>
+                        {a.loading ? (
+                          <div style={{
+                            width: '100%', height: '100%',
+                            background: 'linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%)',
+                            backgroundSize: '200% 100%',
+                            animation: 'cw-skeleton 1.2s ease-in-out infinite',
+                          }} />
+                        ) : (
+                          <img src={a.url} alt={a.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        )}
+                        <button className="cw-thumb-remove" onClick={() => removeAttachment(a.id)} aria-label="Quitar">
+                          <RemoveIcon />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <textarea
+                  ref={textareaRef}
+                  className="cw-textarea"
+                  rows={1}
+                  value={text}
+                  onChange={e => setText(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Escribí tu mensaje..."
+                  disabled={disabled}
+                />
+
+                <div className="cw-action-row">
+                  <button className="cw-action-btn" title={canAdd ? 'Adjuntar imagen' : `Máximo ${MAX_ATTACHMENTS} imágenes`} disabled={!canAdd} onClick={() => fileRef.current?.click()}>
+                    <AttachIcon />
+                  </button>
+                  <div style={{ position: 'relative' }}>
+                    <button className="cw-action-btn" title="Emoji" disabled={disabled} onClick={() => setEmojiOpen(o => !o)}>
+                      <EmojiIcon />
+                    </button>
+                    {emojiOpen && (
+                      <EmojiPicker
+                        onSelect={(emoji) => { setText(t => t + emoji); textareaRef.current?.focus() }}
+                        onClose={() => setEmojiOpen(false)}
+                      />
+                    )}
+                  </div>
+                  <button className="cw-action-btn" title="GIF" disabled={disabled}><GifIcon /></button>
+                  <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <button className="cw-action-btn" title="Grabar audio" disabled={disabled} onClick={startRecording}><AudioMicIcon /></button>
+                    {canSend
+                      ? <button className="cw-send-btn" style={{ marginLeft: 0 }} onClick={handleSend} aria-label="Enviar"><SendIcon /></button>
+                      : <button
+                          className="cw-send-btn"
+                          onClick={onVoice}
+                          disabled={disabled}
+                          aria-label="Activar Voice Chat"
+                          style={{ marginLeft: 0, background: '#dbeafe', color: '#2563eb' }}
+                        >
+                          <MicIcon />
+                        </button>
+                    }
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        )}
 
       </div>
     </>
+  )
+}
+
+/* ── Icons ── */
+
+function PlusIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+      <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"/>
+    </svg>
+  )
+}
+
+function CameraMenuIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <circle cx="12" cy="13" r="4" stroke="currentColor" strokeWidth="2"/>
+    </svg>
+  )
+}
+
+function PhotosMenuIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+      <rect x="3" y="3" width="18" height="18" rx="3" stroke="currentColor" strokeWidth="2"/>
+      <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/>
+      <path d="M21 15l-5-5L5 21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  )
+}
+
+function FilesMenuIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+      <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  )
+}
+
+function EmojiMenuIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+      <path d="M8 14s1.5 2 4 2 4-2 4-2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+      <line x1="9" y1="9" x2="9.01" y2="9" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
+      <line x1="15" y1="9" x2="15.01" y2="9" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
+    </svg>
   )
 }
 

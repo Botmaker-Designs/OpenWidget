@@ -394,6 +394,7 @@ export function DesktopWidget({ onClose, config: configOverrides = {} }) {
               disabled={isTyping}
               onVoice={() => setVoiceMode(true)}
               wrapStyle={inputWrapStyle}
+              isMobile={isMobile}
             />
           )}
 
