@@ -995,7 +995,7 @@ const chatColStyle = {
 
 const WA_BG_STYLE = {
   backgroundColor: '#f0ece4',
-  backgroundImage: 'linear-gradient(rgba(255,255,255,0.45), rgba(255,255,255,0.45)), url(/chat-bg.jpg)',
+  backgroundImage: 'linear-gradient(rgba(255,255,255,0.55), rgba(255,255,255,0.55)), url(/chat-bg.jpg)',
   backgroundSize: '380px',
   backgroundRepeat: 'repeat',
 }
