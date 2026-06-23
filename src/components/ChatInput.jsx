@@ -400,7 +400,7 @@ export function ChatInput({ onSend, disabled, onVoice, voiceMode, wrapStyle, onS
             {/* Recording pill */}
             {isRecording ? (
               <div style={{
-                background: '#ebebeb', borderRadius: 24,
+                background: '#fff', borderRadius: 24,
                 display: 'flex', alignItems: 'center',
                 padding: '6px 8px 6px 10px', gap: 8,
               }}>
@@ -422,7 +422,7 @@ export function ChatInput({ onSend, disabled, onVoice, voiceMode, wrapStyle, onS
             ) : (
               /* Normal pill */
               <div style={{
-                background: '#ebebeb', borderRadius: 24,
+                background: '#fff', borderRadius: 24,
                 display: 'flex', flexDirection: 'column',
               }}>
                 {/* Attachment thumbnails */}
