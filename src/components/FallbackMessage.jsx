@@ -1,4 +1,5 @@
-export function FallbackMessage({ text, onEscalate, onLeaveMessage, acted }) {
+export function FallbackMessage({ text, onEscalate, onLeaveMessage, acted, isMobile = false }) {
+  const btnSize = isMobile ? 16 : 13
   return (
     <>
       <style>{`
@@ -9,7 +10,7 @@ export function FallbackMessage({ text, onEscalate, onLeaveMessage, acted }) {
           background: #fff;
           color: var(--cw-text);
           font-family: var(--cw-font-family);
-          font-size: 13px;
+          font-size: ${btnSize}px;
           font-weight: 500;
           cursor: pointer;
           transition: border-color 120ms, background 120ms, color 120ms;
@@ -27,15 +28,14 @@ export function FallbackMessage({ text, onEscalate, onLeaveMessage, acted }) {
           background: transparent;
           color: #d1d5db;
           font-family: var(--cw-font-family);
-          font-size: 13px;
+          font-size: ${btnSize}px;
           cursor: not-allowed;
           white-space: nowrap;
         }
       `}</style>
 
       <div style={wrapStyle}>
-        {/* Burbuja de texto normal */}
-        <div style={bubbleStyle}>{text}</div>
+        <div style={{ ...bubbleStyle, fontSize: isMobile ? 18 : 14 }}>{text}</div>
 
         {!acted && (
           <div style={actionsStyle}>
@@ -44,9 +44,6 @@ export function FallbackMessage({ text, onEscalate, onLeaveMessage, acted }) {
             </button>
             <button className="cw-fallback-action" onClick={onLeaveMessage}>
               Dejar un mensaje
-            </button>
-            <button className="cw-fallback-action-stub" disabled>
-              Ver artículos relacionados
             </button>
           </div>
         )}

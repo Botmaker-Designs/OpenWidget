@@ -20,7 +20,7 @@ function pickSequence(states) {
   return shuffled.slice(0, count)
 }
 
-export function TypingIndicator({ agentName, states }) {
+export function TypingIndicator({ agentName, states, isMobile = false }) {
   const sequence  = useRef(pickSequence(states))
   const [idx, setIdx]         = useState(0)
   const [visible, setVisible] = useState(true)
@@ -64,7 +64,7 @@ export function TypingIndicator({ agentName, states }) {
           100% { background-position:  200% center; }
         }
         .cw-typing-text {
-          font-size: 13px;
+          font-size: ${isMobile ? 17 : 13}px;
           font-weight: 500;
           background: linear-gradient(
             90deg,

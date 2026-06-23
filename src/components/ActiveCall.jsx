@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 
-export function ActiveCall({ agent, onHangUp }) {
+export function ActiveCall({ agent, onHangUp, isMobile = false }) {
   const [seconds, setSeconds] = useState(0)
   const [muted, setMuted]     = useState(false)
   const [speaker, setSpeaker] = useState(true)
@@ -37,35 +37,35 @@ export function ActiveCall({ agent, onHangUp }) {
 
         {/* Avatar + identidad */}
         <div style={avatarWrapStyle}>
-          <img src={agent.avatar} alt={agent.name} className="cw-speaking" style={avatarStyle} />
+          <img src={agent.avatar} alt={agent.name} className="cw-speaking" style={{ ...avatarStyle, width: isMobile ? 140 : 96, height: isMobile ? 140 : 96 }} />
           <span style={dotStyle} />
         </div>
 
-        <p style={nameStyle}>{agent.name}</p>
-        <p style={roleStyle}>Agente de soporte</p>
+        <p style={{ ...nameStyle, fontSize: isMobile ? 32 : 22 }}>{agent.name}</p>
+        <p style={{ ...roleStyle, fontSize: isMobile ? 18 : 13 }}>Agente de soporte</p>
 
         {/* Timer + estado */}
-        <p style={timerStyle}>{fmt(seconds)}</p>
-        <p style={statusStyle}>En llamada</p>
+        <p style={{ ...timerStyle, fontSize: isMobile ? 28 : 18 }}>{fmt(seconds)}</p>
+        <p style={{ ...statusStyle, fontSize: isMobile ? 15 : 11 }}>En llamada</p>
 
         {/* Botones */}
         <div style={actionsRowStyle}>
           <div style={actionWrapStyle}>
-            <button className="cw-call-action" style={actionBtnStyle(muted)} onClick={() => setMuted(m => !m)}>
+            <button className="cw-call-action" style={{ ...actionBtnStyle(muted), width: isMobile ? 76 : 52, height: isMobile ? 76 : 52 }} onClick={() => setMuted(m => !m)}>
               {muted ? <MicOffIcon /> : <MicIcon />}
             </button>
-            <span style={actionLabelStyle}>{muted ? 'Activar mic' : 'Silenciar'}</span>
+            <span style={{ ...actionLabelStyle, fontSize: isMobile ? 15 : 11 }}>{muted ? 'Activar mic' : 'Silenciar'}</span>
           </div>
 
-          <button className="cw-hangup-btn" style={hangUpStyle} onClick={() => onHangUp(seconds)}>
+          <button className="cw-hangup-btn" style={{ ...hangUpStyle, width: isMobile ? 90 : 64, height: isMobile ? 90 : 64 }} onClick={() => onHangUp(seconds)}>
             <PhoneOffIcon />
           </button>
 
           <div style={actionWrapStyle}>
-            <button className="cw-call-action" style={actionBtnStyle(!speaker)} onClick={() => setSpeaker(s => !s)}>
+            <button className="cw-call-action" style={{ ...actionBtnStyle(!speaker), width: isMobile ? 76 : 52, height: isMobile ? 76 : 52 }} onClick={() => setSpeaker(s => !s)}>
               {speaker ? <SpeakerIcon /> : <SpeakerOffIcon />}
             </button>
-            <span style={actionLabelStyle}>{speaker ? 'Altavoz' : 'Auricular'}</span>
+            <span style={{ ...actionLabelStyle, fontSize: isMobile ? 15 : 11 }}>{speaker ? 'Altavoz' : 'Auricular'}</span>
           </div>
         </div>
 
@@ -116,8 +116,8 @@ function SpeakerOffIcon() {
 
 function PhoneOffIcon() {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-      <path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.34 1.85.573 2.81.7a2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.42 19.42 0 0 1-3.33-2.67M6.34 6.34A19.79 19.79 0 0 0 3.06 12a19.79 19.79 0 0 0 3.07 8.63A2 2 0 0 0 8.31 22h3a2 2 0 0 0 1.72-2 13.4 13.4 0 0 0-.7-2.81 2 2 0 0 0-.45-2.11L10.68 13.31M23 1 1 23" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="white" style={{ transform: 'rotate(135deg)' }}>
+      <path d="M6.62 10.79a15.05 15.05 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.01-.25c1.12.37 2.33.57 3.58.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1.02L6.62 10.79z"/>
     </svg>
   )
 }

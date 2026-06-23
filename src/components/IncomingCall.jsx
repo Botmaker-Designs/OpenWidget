@@ -1,4 +1,5 @@
-export function IncomingCall({ agent, onAccept, onDecline }) {
+export function IncomingCall({ agent, onAccept, onDecline, isMobile = false }) {
+  const btnSize = isMobile ? 86 : 60
   return (
     <div style={overlayStyle}>
       <style>{`
@@ -15,21 +16,21 @@ export function IncomingCall({ agent, onAccept, onDecline }) {
       `}</style>
 
       <div style={cardStyle}>
-        <p style={subtitleStyle}>Llamada entrante</p>
+        <p style={{ ...subtitleStyle, fontSize: isMobile ? 17 : 13 }}>Llamada entrante</p>
 
         <div style={avatarWrapStyle}>
-          <img src={agent.avatar} alt={agent.name} style={avatarStyle} />
+          <img src={agent.avatar} alt={agent.name} style={{ ...avatarStyle, width: isMobile ? 112 : 72, height: isMobile ? 112 : 72 }} />
           <span style={onlineDotStyle} />
         </div>
 
-        <p style={nameStyle}>{agent.name}</p>
-        <p style={roleStyle}>Agente de soporte</p>
+        <p style={{ ...nameStyle, fontSize: isMobile ? 28 : 18 }}>{agent.name}</p>
+        <p style={{ ...roleStyle, fontSize: isMobile ? 17 : 13 }}>Agente de soporte</p>
 
         <div style={actionsStyle}>
-          <button className="cw-call-decline" style={declineBtnStyle} onClick={onDecline}>
+          <button className="cw-call-decline" style={{ ...declineBtnStyle, width: btnSize, height: btnSize }} onClick={onDecline}>
             <PhoneOffIcon />
           </button>
-          <button className="cw-call-accept" style={acceptBtnStyle} onClick={onAccept}>
+          <button className="cw-call-accept" style={{ ...acceptBtnStyle, width: btnSize, height: btnSize }} onClick={onAccept}>
             <PhoneIcon />
           </button>
         </div>
@@ -48,8 +49,8 @@ function PhoneIcon() {
 
 function PhoneOffIcon() {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-      <path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.34 1.85.573 2.81.7a2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.42 19.42 0 0 1-3.33-2.67M6.34 6.34A19.79 19.79 0 0 0 3.06 12a19.79 19.79 0 0 0 3.07 8.63A2 2 0 0 0 8.31 22h3a2 2 0 0 0 1.72-2 13.4 13.4 0 0 0-.7-2.81 2 2 0 0 0-.45-2.11L10.68 13.31M23 1 1 23" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="white" style={{ transform: 'rotate(135deg)' }}>
+      <path d="M6.62 10.79a15.05 15.05 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.01-.25c1.12.37 2.33.57 3.58.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1.02L6.62 10.79z"/>
     </svg>
   )
 }

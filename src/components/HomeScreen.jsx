@@ -96,23 +96,6 @@ export function HomeScreen({ onClose, isExpanded, onToggleExpand, onNewChat, onT
                 Ingresar
               </button>
             )}
-            <div style={{ display: 'flex', alignItems: 'center', marginRight: 4 }}>
-              {AGENT_AVATARS.map((src, i) => (
-                <img
-                  key={i}
-                  src={src}
-                  alt=""
-                  style={{
-                    width: 26, height: 26, borderRadius: '50%',
-                    objectFit: 'cover',
-                    border: 'none',
-                    marginLeft: i === 0 ? 0 : -7,
-                    position: 'relative',
-                    zIndex: AGENT_AVATARS.length - i,
-                  }}
-                />
-              ))}
-            </div>
             <button style={heroBtnStyle} onClick={onToggleExpand} aria-label={isExpanded ? 'Contraer' : 'Expandir'}>
               {isExpanded ? <ContractIcon /> : <ExpandIcon />}
             </button>
@@ -258,7 +241,7 @@ function RecentMessage({ session, onSelect }) {
 
   return (
     <button className="cw-home-recent" style={recentCardStyle} onClick={onSelect}>
-      <p style={recentLabelStyle}>Mensaje reciente</p>
+      <p style={recentLabelStyle}>Sesión en curso</p>
       <div style={recentRowStyle}>
         <div style={recentAvatarWrapStyle}>
           {avatar

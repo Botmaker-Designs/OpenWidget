@@ -76,7 +76,7 @@ export function ChatWidget({ config: configOverrides = {} }) {
   const [typingStates, setTypingStates] = useState(null)
   const [notification, setNotification] = useState(null)
   const [unreadCount, setUnreadCount] = useState(0)
-  const [loggedInUser, setLoggedInUser] = useState(null)
+  const [loggedInUser, setLoggedInUser] = useState({ name: 'Santiago' })
   const [incomingCall, setIncomingCall]   = useState(null)
   const [activeCall, setActiveCall]       = useState(null)
   const [activeVideoCall, setActiveVideoCall] = useState(null)
@@ -316,14 +316,17 @@ export function ChatWidget({ config: configOverrides = {} }) {
 
   const handleTabChange = (tab) => {
     if (tab === 'home')     setView('home')
-    if (tab === 'messages') setView('sessions')
+    if (tab === 'messages') {
+      if (sessions.length > 0) openSession(sessions[0].id)
+      else startNewChat()
+    }
     if (tab === 'help')     setView('help')
     if (tab === 'agents')   setView('agents')
   }
 
   const handleClose = () => setIsOpen(false)
-  const handleBack  = () => { setView('sessions'); setAgentSession(null) }
-  const handleBackFromHelp = () => setView('sessions')
+  const handleBack  = () => { setView('home'); setAgentSession(null) }
+  const handleBackFromHelp = () => setView('home')
 
   const handleOpen = () => {
     setNotification(null)
@@ -409,12 +412,14 @@ export function ChatWidget({ config: configOverrides = {} }) {
               onEscalate={handleEscalate}
               onLeaveMessage={handleLeaveMessage}
               onClose={handleClose}
-              onBack={handleBack}
               agentSession={agentSession}
+              sessions={sessions}
+              onSelectSession={openSession}
               isExpanded={isExpanded}
               onToggleExpand={() => setIsExpanded(e => !e)}
               onAddVoiceMessage={(msg) => addMessage(activeSessionId, { id: nextId++, createdAt: new Date(), senderName: config.botName, senderType: 'Asistente IA', ...msg })}
               onStreamVoiceBot={(text) => streamText(activeSessionId, text)}
+              onTabChange={handleTabChange}
             />
           )}
 
