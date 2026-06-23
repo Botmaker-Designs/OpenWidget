@@ -57,6 +57,7 @@ export function DesktopWidget({ onClose, config: configOverrides = {} }) {
   const [videoSeconds, setVideoSeconds]       = useState(0)
 
   const streamingRef  = useRef(null)
+  const shellRef      = useRef(null)
 
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768)
   useEffect(() => {
@@ -79,6 +80,24 @@ export function DesktopWidget({ onClose, config: configOverrides = {} }) {
     document.body.style.overflow = 'hidden'
     return () => { document.body.style.overflow = '' }
   }, [])
+
+  // Visual viewport tracking — keeps the shell fitting the visible area when keyboard opens on mobile
+  useEffect(() => {
+    const vv = window.visualViewport
+    if (!vv || !isMobile) return
+    const update = () => {
+      if (!shellRef.current) return
+      shellRef.current.style.height  = `${vv.height}px`
+      shellRef.current.style.top     = `${vv.offsetTop}px`
+    }
+    vv.addEventListener('resize', update)
+    vv.addEventListener('scroll', update)
+    update()
+    return () => {
+      vv.removeEventListener('resize', update)
+      vv.removeEventListener('scroll', update)
+    }
+  }, [isMobile])
 
   // Video call seconds counter (runs while active, resets on close)
   useEffect(() => {
@@ -251,7 +270,7 @@ export function DesktopWidget({ onClose, config: configOverrides = {} }) {
   }
 
   return (
-    <div style={{ ...shellStyle, padding: isMobile ? 0 : 12 }}>
+    <div ref={shellRef} style={{ ...shellStyle, padding: isMobile ? 0 : 12 }}>
       {isMobile && <style>{`
           .cw-textarea { font-size: 18px !important; }
           .cw-input-box { border-radius: 20px !important; }
@@ -374,7 +393,7 @@ export function DesktopWidget({ onClose, config: configOverrides = {} }) {
               onSendAudio={handleSendAudio}
               disabled={isTyping}
               onVoice={() => setVoiceMode(true)}
-              wrapStyle={{ ...inputWrapStyle, minHeight: isMobile ? 160 : 'unset' }}
+              wrapStyle={inputWrapStyle}
             />
           )}
 
