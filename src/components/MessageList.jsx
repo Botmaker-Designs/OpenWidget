@@ -106,9 +106,9 @@ function FileMessage({ message, isMobile, onOpenLightbox }) {
   return (
     <div style={bubbleWrap(message.role)}>
       <div style={{ maxWidth: '78%' }}>
-        <div style={{ overflow: 'hidden', padding: isMobile ? '10px 14px 7px' : '8px 12px 5px', borderRadius: isUser ? '16px 16px 4px 16px' : '16px 16px 16px 4px', background: isUser ? 'var(--cw-bg-message-user)' : 'var(--cw-bg-message-bot)', boxShadow: '0 1px 2px rgba(0,0,0,0.08)' }}>
+        <div style={{ overflow: 'hidden', padding: '8px 12px 5px', borderRadius: isUser ? '16px 16px 4px 16px' : '16px 16px 16px 4px', background: isUser ? 'var(--cw-bg-message-user)' : 'var(--cw-bg-message-bot)', boxShadow: '0 1px 2px rgba(0,0,0,0.08)' }}>
           {message.text && (
-            <div style={{ fontSize: isMobile ? 17 : 14, lineHeight: 1.45, marginBottom: 8, color: isUser ? 'var(--cw-text-message-user)' : 'var(--cw-text)' }}>
+            <div style={{ fontSize: 14, lineHeight: 1.45, marginBottom: 8, color: isUser ? 'var(--cw-text-message-user)' : 'var(--cw-text)' }}>
               {message.text}
             </div>
           )}
@@ -130,7 +130,7 @@ function FileMessage({ message, isMobile, onOpenLightbox }) {
               <div style={{ fontSize: fs - 2, color: '#6b7280', marginTop: 2 }}>{message.file.size} · PDF</div>
             </div>
             <div style={{ color: '#9ca3af', display: 'flex', flexShrink: 0 }}>
-              <svg width={isMobile ? 18 : 15} height={isMobile ? 18 : 15} viewBox="0 0 24 24" fill="none">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
@@ -166,9 +166,9 @@ function AudioMessage({ message, isRead, isMobile }) {
 
   const progress  = elapsed / dur
   const fmtDur    = (s) => `${Math.floor(s / 60)}:${Math.floor(s % 60).toString().padStart(2, '0')}`
-  const btnSize   = isMobile ? 52 : 42
-  const iconSize  = isMobile ? 16 : 14
-  const fontSize  = isMobile ? 13 : 11
+  const btnSize   = 34
+  const iconSize  = 12
+  const fontSize  = 11
 
   return (
     <div style={bubbleWrap(message.role)}>
@@ -178,7 +178,7 @@ function AudioMessage({ message, isRead, isMobile }) {
           padding: isMobile ? '10px 14px 8px' : '8px 12px 6px',
           borderRadius: isUser ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
           background: isUser ? 'var(--cw-bg-message-user)' : 'var(--cw-bg-message-bot)',
-          minWidth: isMobile ? 210 : 185,
+          minWidth: 185,
           boxShadow: '0 1px 2px rgba(0,0,0,0.08)',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -191,12 +191,12 @@ function AudioMessage({ message, isRead, isMobile }) {
                 : <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: 2 }}><path d="M8 5v14l11-7z"/></svg>
               }
             </button>
-            <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 2, height: isMobile ? 28 : 22 }}>
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 2, height: 22 }}>
               {AUDIO_WAVEFORM.map((h, i) => {
                 const barPct = i / AUDIO_WAVEFORM.length
                 const played = barPct < progress
                 return (
-                  <div key={i} style={{ width: 3, height: Math.max(3, h * (isMobile ? 0.9 : 0.7)), borderRadius: 2, flexShrink: 0, transition: 'background 60ms', background: isUser ? (played ? 'rgba(0,0,0,0.55)' : 'rgba(0,0,0,0.22)') : (played ? 'var(--cw-primary)' : '#d1d5db') }} />
+                  <div key={i} style={{ width: 3, height: Math.max(3, h * 0.7), borderRadius: 2, flexShrink: 0, transition: 'background 60ms', background: isUser ? (played ? 'rgba(0,0,0,0.55)' : 'rgba(0,0,0,0.22)') : (played ? 'var(--cw-primary)' : '#d1d5db') }} />
                 )
               })}
             </div>
@@ -512,7 +512,7 @@ const bubbleStyle = (isUser, isMobile = false) => ({
   borderRadius: isUser ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
   background: isUser ? 'var(--cw-bg-message-user)' : 'var(--cw-bg-message-bot)',
   color: isUser ? 'var(--cw-text-message-user)' : 'var(--cw-text)',
-  fontSize: isMobile ? 18 : 14,
+  fontSize: 14,
   lineHeight: 1.5,
   wordBreak: 'break-word',
   width: 'fit-content',
@@ -527,7 +527,7 @@ const metaStyle = (isUser, isMobile = false) => ({
   display: 'flex',
   alignItems: 'center',
   gap: 3,
-  fontSize: isMobile ? 12 : 11,
+  fontSize: 11,
   color: isUser ? 'rgba(0,0,0,0.45)' : '#9ca3af',
   whiteSpace: 'nowrap',
   userSelect: 'none',

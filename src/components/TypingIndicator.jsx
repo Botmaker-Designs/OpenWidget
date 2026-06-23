@@ -64,7 +64,7 @@ export function TypingIndicator({ agentName, states, isMobile = false }) {
           100% { background-position:  200% center; }
         }
         .cw-typing-text {
-          font-size: ${isMobile ? 17 : 13}px;
+          font-size: 13px;
           font-weight: 500;
           background: linear-gradient(
             90deg,

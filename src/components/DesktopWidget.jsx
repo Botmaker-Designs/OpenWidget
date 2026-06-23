@@ -324,8 +324,8 @@ export function DesktopWidget({ onClose, config: configOverrides = {} }) {
                   {!isHistoryView && <OnlineBadge />}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 700, fontSize: isMobile ? 20 : 15, color: '#111827', lineHeight: 1.2 }}>{displayName}</div>
-                  <div style={{ fontSize: isMobile ? 16 : 12, color: isHistoryView ? '#9ca3af' : '#6b7280', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  <div style={{ fontWeight: 700, fontSize: 15, color: '#111827', lineHeight: 1.2 }}>{displayName}</div>
+                  <div style={{ fontSize: 12, color: isHistoryView ? '#9ca3af' : '#6b7280', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {displaySubtitle}
                   </div>
                 </div>
@@ -581,10 +581,10 @@ function DWSessionsPanel({ activeName, activeAvatar, activeIsAgent, activeLastMs
           <SessAvatar src={activeAvatar} name={activeName} isAgent={activeIsAgent} size={isMobile ? 52 : 38} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 2 }}>
-              <span style={{ fontWeight: 600, fontSize: isMobile ? 18 : 14, color: '#111827' }}>{activeName}</span>
-              <span style={{ fontSize: isMobile ? 14 : 11, color: '#2563eb', fontWeight: 500, flexShrink: 0 }}>Ahora</span>
+              <span style={{ fontWeight: 600, fontSize: 14, color: '#111827' }}>{activeName}</span>
+              <span style={{ fontSize: 11, color: '#2563eb', fontWeight: 500, flexShrink: 0 }}>Ahora</span>
             </div>
-            <div style={{ fontSize: isMobile ? 16 : 12, color: '#6b7280', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <div style={{ fontSize: 12, color: '#6b7280', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {activeLastMsg || 'Conversación iniciada'}
             </div>
           </div>
@@ -615,8 +615,8 @@ function DWSessionsPanel({ activeName, activeAvatar, activeIsAgent, activeLastMs
               <SessAvatar src={s.avatar} name={s.name} isAgent={s.isAgent} size={isMobile ? 52 : 38} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 2 }}>
-                  <span style={{ fontWeight: 500, fontSize: isMobile ? 18 : 14, color: '#9ca3af' }}>{s.name}</span>
-                  <span style={{ fontSize: isMobile ? 14 : 11, color: '#d1d5db', flexShrink: 0 }}>{s.time}</span>
+                  <span style={{ fontWeight: 500, fontSize: 14, color: '#9ca3af' }}>{s.name}</span>
+                  <span style={{ fontSize: 11, color: '#d1d5db', flexShrink: 0 }}>{s.time}</span>
                 </div>
                 <div style={{ fontSize: isMobile ? 16 : 12, color: '#d1d5db', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {s.lastMsg}
@@ -683,21 +683,21 @@ function DWInfoPanel({ onClose, name, avatar, isAgent, subtitle, messages, confi
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: isMobile ? '16px 18px' : '14px 16px', borderBottom: '1px solid #f3f4f6', flexShrink: 0 }}>
           <button
             onClick={onClose}
-            style={{ width: isMobile ? 38 : 32, height: isMobile ? 38 : 32, border: 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6b7280', borderRadius: '50%', flexShrink: 0 }}
+            style={{ width: 32, height: 32, border: 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6b7280', borderRadius: '50%', flexShrink: 0 }}
           >
             <BackIcon />
           </button>
-          <span style={{ fontSize: isMobile ? 21 : 16, fontWeight: 700, color: '#111827' }}>Info. del contacto</span>
+          <span style={{ fontSize: 16, fontWeight: 700, color: '#111827' }}>Info. del contacto</span>
         </div>
 
         {/* Profile */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: isMobile ? '32px 20px 24px' : '28px 20px 20px', borderBottom: '1px solid #f3f4f6', flexShrink: 0 }}>
-          <InfoAvatar src={avatar} name={name} isAgent={isAgent} size={isMobile ? 120 : 80} />
-          <div style={{ marginTop: 14, fontWeight: 700, fontSize: isMobile ? 28 : 20, color: '#111827' }}>{name}</div>
-          <div style={{ marginTop: 4, fontSize: isMobile ? 17 : 13, color: '#6b7280' }}>{role}</div>
+          <InfoAvatar src={avatar} name={name} isAgent={isAgent} size={80} />
+          <div style={{ marginTop: 14, fontWeight: 700, fontSize: 20, color: '#111827' }}>{name}</div>
+          <div style={{ marginTop: 4, fontSize: 13, color: '#6b7280' }}>{role}</div>
           <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
             <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e', display: 'inline-block', flexShrink: 0 }} />
-            <span style={{ fontSize: isMobile ? 17 : 13, color: '#22c55e', fontWeight: 500 }}>En línea</span>
+            <span style={{ fontSize: 13, color: '#22c55e', fontWeight: 500 }}>En línea</span>
           </div>
         </div>
 
@@ -711,22 +711,22 @@ function DWInfoPanel({ onClose, name, avatar, isAgent, subtitle, messages, confi
 
         {/* About / contact */}
         <div style={{ padding: '16px 20px', borderBottom: '1px solid #f3f4f6', flexShrink: 0 }}>
-          <div style={{ fontSize: isMobile ? 15 : 11, color: '#6b7280', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>Sobre nosotros</div>
-          <div style={{ fontSize: isMobile ? 16 : 13, color: '#374151', lineHeight: 1.5, marginBottom: 14 }}>
+          <div style={{ fontSize: 11, color: '#6b7280', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>Sobre nosotros</div>
+          <div style={{ fontSize: 13, color: '#374151', lineHeight: 1.5, marginBottom: 14 }}>
             Plataforma líder de automatización conversacional con IA para empresas en Latinoamérica. Atención 24/7 en todos tus canales.
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 12 : 8 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <span style={{ color: '#9ca3af', flexShrink: 0, display: 'flex' }}><GlobeIcon /></span>
-              <span style={{ fontSize: isMobile ? 15 : 13, color: '#2563eb' }}>www.botmaker.com</span>
+              <span style={{ fontSize: 13, color: '#2563eb' }}>www.botmaker.com</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <span style={{ color: '#9ca3af', flexShrink: 0, display: 'flex' }}><PhoneIcon /></span>
-              <span style={{ fontSize: isMobile ? 15 : 13, color: '#374151' }}>+54 11 5263-4000</span>
+              <span style={{ fontSize: 13, color: '#374151' }}>+54 11 5263-4000</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <span style={{ color: '#9ca3af', flexShrink: 0, display: 'flex' }}><MailIcon /></span>
-              <span style={{ fontSize: isMobile ? 15 : 13, color: '#2563eb' }}>hola@botmaker.com</span>
+              <span style={{ fontSize: 13, color: '#2563eb' }}>hola@botmaker.com</span>
             </div>
           </div>
         </div>

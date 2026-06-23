@@ -1,5 +1,5 @@
 export function FallbackMessage({ text, onEscalate, onLeaveMessage, acted, isMobile = false }) {
-  const btnSize = isMobile ? 16 : 13
+  const btnSize = 13
   return (
     <>
       <style>{`
@@ -35,7 +35,7 @@ export function FallbackMessage({ text, onEscalate, onLeaveMessage, acted, isMob
       `}</style>
 
       <div style={wrapStyle}>
-        <div style={{ ...bubbleStyle, fontSize: isMobile ? 18 : 14 }}>{text}</div>
+        <div style={bubbleStyle}>{text}</div>
 
         {!acted && (
           <div style={actionsStyle}>
