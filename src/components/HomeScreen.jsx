@@ -121,9 +121,10 @@ export function HomeScreen({ onClose, isExpanded, onToggleExpand, onNewChat, onT
       <div key={`body-${animKey}`} className="cw-anim-body" style={bodyStyle}>
         {/* Card de chat */}
         <div style={sectionStyle}>
-          {sessions.length > 0 ? (
-            <RecentMessage session={sessions[0]} onSelect={() => onSelectSession?.(sessions[0].id)} />
-          ) : chatCardVariant === 'hours' ? (
+          {(() => { const open = sessions.find(s => !s.closed); return open ? (
+            <RecentMessage session={open} onSelect={() => onSelectSession?.(open.id)} />
+          ) : null })()}
+          {!sessions.find(s => !s.closed) && (chatCardVariant === 'hours' ? (
             <button className="cw-home-card" style={chatCardStyle} onClick={onNewChat}>
               <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
                 <div style={{ ...cardIconStyle, position: 'relative' }}>
@@ -140,39 +141,48 @@ export function HomeScreen({ onClose, isExpanded, onToggleExpand, onNewChat, onT
               <ChevronIcon color="#9ca3af" />
             </button>
           ) : (
-            <button className="cw-home-card" style={chatCardStyle} onClick={onNewChat}>
-              <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-                <div style={{ ...cardIconStyle, zIndex: 2, position: 'relative' }}>
+            <button className="cw-home-card" style={{ ...chatCardStyle, flexDirection: 'column', alignItems: 'flex-start', gap: 0 }} onClick={onNewChat}>
+              {/* Fila superior: icono + título+subtítulo + chevron */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%' }}>
+                <div style={{ ...cardIconStyle, flexShrink: 0 }}>
                   <BotmakerLogo size={22} />
                 </div>
-                <div style={{ position: 'relative', marginLeft: -10, zIndex: 1, flexShrink: 0 }}>
-                  <img
-                    src={AGENT_AVATARS[0]}
-                    alt=""
-                    style={{
-                      width: 38, height: 38, borderRadius: '50%',
-                      border: '2.5px solid #fff',
-                      objectFit: 'cover',
-                      display: 'block',
-                    }}
-                  />
-                  <span style={{
-                    position: 'absolute', bottom: 1, right: 1,
-                    width: 10, height: 10, borderRadius: '50%',
-                    background: '#22c55e',
-                    border: '2px solid #fff',
-                  }} />
+                <div style={{ flex: 1, textAlign: 'left' }}>
+                  <div style={{ fontWeight: 600, fontSize: 14, color: '#111827' }}>
+                    Iniciar nueva conversación
+                  </div>
+                  <div style={{ fontSize: 13, color: '#6b7280', marginTop: 2, lineHeight: 1.4 }}>
+                    Nuestro agente y equipo están disponibles
+                  </div>
                 </div>
+                <ChevronIcon color="#9ca3af" />
               </div>
-              <div style={{ flex: 1, textAlign: 'left' }}>
-                <div style={{ fontWeight: 500, fontSize: 14, color: '#111827' }}>Iniciar nueva conversación</div>
-                <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>
-                  Nuestro agente y equipo están disponibles
+              {/* Separador */}
+              <div style={{ width: '100%', height: 1, background: '#f3f4f6', margin: '12px 0' }} />
+              {/* Fila de avatares */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                  {AGENT_AVATARS.map((src, i) => (
+                    <img
+                      key={i}
+                      src={src}
+                      alt=""
+                      style={{
+                        width: 24, height: 24, borderRadius: '50%',
+                        border: '2px solid #fff',
+                        objectFit: 'cover',
+                        marginLeft: i === 0 ? 0 : -7,
+                        position: 'relative',
+                        zIndex: AGENT_AVATARS.length - i,
+                        display: 'block',
+                      }}
+                    />
+                  ))}
                 </div>
+                <span style={{ fontSize: 13, color: '#6b7280' }}>Agentes disponibles para atención</span>
               </div>
-              <ChevronIcon color="#9ca3af" />
             </button>
-          )}
+          ))}
         </div>
 
         {/* FAQ */}
@@ -243,11 +253,14 @@ function RecentMessage({ session, onSelect }) {
     <button className="cw-home-recent" style={recentCardStyle} onClick={onSelect}>
       <p style={recentLabelStyle}>Sesión en curso</p>
       <div style={recentRowStyle}>
-        <div style={recentAvatarWrapStyle}>
-          {avatar
-            ? <img src={avatar} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            : <BotmakerLogo size={20} />
-          }
+        <div style={{ position: 'relative', flexShrink: 0 }}>
+          <div style={recentAvatarWrapStyle}>
+            {avatar
+              ? <img src={avatar} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              : <BotmakerLogo size={20} />
+            }
+          </div>
+          <span style={{ position: 'absolute', bottom: -2, right: -2, width: 11, height: 11, borderRadius: '50%', background: '#22c55e', border: '2px solid #fff' }} />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>

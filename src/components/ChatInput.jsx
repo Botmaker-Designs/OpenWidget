@@ -216,7 +216,7 @@ export function ChatInput({ onSend, disabled, onVoice, voiceMode, wrapStyle, onS
           flex-shrink: 0;
           display: flex;
           flex-direction: column;
-          min-height: 188px;
+          min-height: 110px;
         }
         .cw-input-box {
           flex: 1;

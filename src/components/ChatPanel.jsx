@@ -19,9 +19,8 @@ const WA_BG_MOBILE = {
   backgroundRepeat: 'repeat',
 }
 
-export function ChatPanel({ config, messages, isTyping, typingMode, typingStates, onSend, onQuickReply, onEscalate, onLeaveMessage, onClose, agentSession, isExpanded, onToggleExpand, onAddVoiceMessage, onStreamVoiceBot, onTabChange, sessions = [], onSelectSession, isMobile = false }) {
+export function ChatPanel({ config, messages, isTyping, typingMode, typingStates, onSend, onQuickReply, onEscalate, onLeaveMessage, onClose, agentSession, isExpanded, onToggleExpand, onAddVoiceMessage, onStreamVoiceBot, onTabChange, sessions = [], onSelectSession, isMobile = false, historyOpen = false, onToggleHistory, isClosed = false }) {
   const [voiceMode, setVoiceMode] = useState(false)
-  const [historyOpen, setHistoryOpen] = useState(false)
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', position: 'relative', overflow: 'hidden' }}>
@@ -49,8 +48,10 @@ export function ChatPanel({ config, messages, isTyping, typingMode, typingStates
         isExpanded={isExpanded}
         onToggleExpand={onToggleExpand}
         onClose={onClose}
-        onOpenHistory={() => setHistoryOpen(true)}
+        historyOpen={historyOpen}
+        onToggleHistory={onToggleHistory}
         isMobile={isMobile}
+        isClosed={isClosed}
       />
 
       {isMobile ? (
@@ -83,7 +84,12 @@ export function ChatPanel({ config, messages, isTyping, typingMode, typingStates
         />
       )}
 
-      {voiceMode ? (
+      {isClosed ? (
+        <div style={closedBannerStyle}>
+          <LockIcon />
+          <span>Esta conversación está cerrada</span>
+        </div>
+      ) : voiceMode ? (
         <VoiceChat
           onAddMessage={onAddVoiceMessage}
           onStreamBot={onStreamVoiceBot}
@@ -113,29 +119,6 @@ export function ChatPanel({ config, messages, isTyping, typingMode, typingStates
         ))}
       </div>
 
-      {/* History drawer */}
-      <div style={drawerOverlayStyle(historyOpen)} onClick={() => setHistoryOpen(false)} />
-      <div style={drawerStyle(historyOpen)}>
-        <div style={drawerHeaderStyle}>
-          <span style={{ fontWeight: 700, fontSize: 15, color: '#111827' }}>Historial</span>
-          <button className="cw-header-btn" onClick={() => setHistoryOpen(false)} aria-label="Cerrar historial">
-            <CloseIcon />
-          </button>
-        </div>
-        <div style={{ flex: 1, overflowY: 'auto' }}>
-          {sessions.length === 0 ? (
-            <p style={{ textAlign: 'center', color: '#9ca3af', fontSize: 13, marginTop: 32 }}>Sin conversaciones anteriores</p>
-          ) : (
-            sessions.map(s => (
-              <HistoryRow
-                key={s.id}
-                session={s}
-                onSelect={() => { setHistoryOpen(false); onSelectSession?.(s.id) }}
-              />
-            ))
-          )}
-        </div>
-      </div>
     </div>
   )
 }
@@ -168,7 +151,7 @@ function HistoryRow({ session, onSelect }) {
   )
 }
 
-function PanelHeader({ config, agentSession, isExpanded, onToggleExpand, onClose, onOpenHistory, isMobile = false }) {
+function PanelHeader({ config, agentSession, isExpanded, onToggleExpand, onClose, historyOpen, onToggleHistory, isMobile = false, isClosed = false }) {
   const isAgent  = !!agentSession
   const name     = isAgent ? agentSession.name   : config.botName
   const avatar   = isAgent ? agentSession.avatar : config.botAvatar
@@ -177,13 +160,13 @@ function PanelHeader({ config, agentSession, isExpanded, onToggleExpand, onClose
   return (
     <div style={headerStyle}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <button className="cw-header-btn" aria-label="Historial" onClick={onOpenHistory}>
+        <button className={`cw-header-btn${historyOpen ? ' active' : ''}`} aria-label="Historial" onClick={onToggleHistory}>
           <HistoryIcon />
         </button>
 
         <div style={{ position: 'relative', flexShrink: 0 }}>
           <Avatar src={avatar} name={name} isAgent={isAgent} />
-          {isAgent && <OnlineBadge />}
+          {!isClosed && <OnlineBadge />}
         </div>
 
         <div style={{ flex: 1, minWidth: 0 }}>
@@ -305,30 +288,6 @@ const tabItemStyle = (active) => ({
   fontFamily: 'var(--cw-font-family)',
   padding: '4px 12px',
 })
-const drawerOverlayStyle = (open) => ({
-  position: 'absolute', inset: 0,
-  background: 'rgba(0,0,0,0.18)',
-  zIndex: 10,
-  opacity: open ? 1 : 0,
-  pointerEvents: open ? 'auto' : 'none',
-  transition: 'opacity 260ms ease',
-})
-const drawerStyle = (open) => ({
-  position: 'absolute', top: 0, left: 0,
-  width: '85%', height: '100%',
-  background: '#fff',
-  borderRight: '1px solid #e5e7eb',
-  zIndex: 11,
-  display: 'flex', flexDirection: 'column',
-  transform: open ? 'translateX(0)' : 'translateX(-100%)',
-  transition: 'transform 280ms cubic-bezier(0.4, 0, 0.2, 1)',
-})
-const drawerHeaderStyle = {
-  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-  padding: '14px 14px 12px',
-  borderBottom: '1px solid #f3f4f6',
-  flexShrink: 0,
-}
 const historyRowStyle = {
   display: 'flex', alignItems: 'center', gap: 10,
   width: '100%', padding: '12px 16px',
@@ -342,4 +301,22 @@ const historyAvatarStyle = {
   background: '#f3f4f6', flexShrink: 0,
   display: 'flex', alignItems: 'center', justifyContent: 'center',
   overflow: 'hidden',
+}
+const closedBannerStyle = {
+  display: 'flex', alignItems: 'center', justifyContent: 'center',
+  gap: 8, padding: '14px 16px',
+  borderTop: '1px solid #f3f4f6',
+  background: '#fafafa',
+  color: '#9ca3af', fontSize: 13,
+  fontFamily: 'var(--cw-font-family)',
+  flexShrink: 0,
+}
+
+function LockIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+      <rect x="3" y="11" width="18" height="11" rx="2" stroke="currentColor" strokeWidth="2"/>
+      <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+    </svg>
+  )
 }

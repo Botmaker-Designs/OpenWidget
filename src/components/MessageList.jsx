@@ -108,7 +108,7 @@ function FileMessage({ message, isMobile, onOpenLightbox }) {
       <div style={{ maxWidth: '78%' }}>
         <div style={{ overflow: 'hidden', padding: '8px 12px 5px', borderRadius: isUser ? '16px 16px 4px 16px' : '16px 16px 16px 4px', background: isUser ? 'var(--cw-bg-message-user)' : 'var(--cw-bg-message-bot)', boxShadow: '0 1px 2px rgba(0,0,0,0.08)' }}>
           {message.text && (
-            <div style={{ fontSize: 15, lineHeight: 1.45, marginBottom: 8, color: isUser ? 'var(--cw-text-message-user)' : 'var(--cw-text)' }}>
+            <div style={{ fontSize: 14, lineHeight: 1.45, marginBottom: 8, color: isUser ? 'var(--cw-text-message-user)' : 'var(--cw-text)' }}>
               {message.text}
             </div>
           )}
@@ -512,7 +512,7 @@ const bubbleStyle = (isUser, isMobile = false) => ({
   borderRadius: isUser ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
   background: isUser ? 'var(--cw-bg-message-user)' : 'var(--cw-bg-message-bot)',
   color: isUser ? 'var(--cw-text-message-user)' : 'var(--cw-text)',
-  fontSize: 15,
+  fontSize: 14,
   lineHeight: 1.5,
   wordBreak: 'break-word',
   width: 'fit-content',

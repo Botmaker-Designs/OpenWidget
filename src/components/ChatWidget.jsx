@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useConfig } from '../hooks/useConfig'
 import { useFallbackLog } from '../hooks/useFallbackLog'
 import { FloatingButton } from './FloatingButton'
+import { BotmakerLogo } from './BotmakerLogo'
 import { ChatPanel } from './ChatPanel'
 import { SessionsList } from './SessionsList'
 import { HelpCenter } from './HelpCenter'
@@ -69,7 +70,7 @@ export function ChatWidget({ config: configOverrides = {} }) {
   const [animKey, setAnimKey]       = useState(0)
   const [isExpanded, setIsExpanded] = useState(true)
   const [view, setView]             = useState('home')
-  const [sessions, setSessions]     = useState([])
+  const [sessions, setSessions]     = useState(INITIAL_DEMO_SESSIONS)
   const [activeSessionId, setActiveSessionId] = useState(null)
   const [isTyping, setIsTyping]         = useState(false)
   const [typingMode, setTypingMode]     = useState('writing')
@@ -80,6 +81,8 @@ export function ChatWidget({ config: configOverrides = {} }) {
   const [incomingCall, setIncomingCall]   = useState(null)
   const [activeCall, setActiveCall]       = useState(null)
   const [activeVideoCall, setActiveVideoCall] = useState(null)
+  const [historyOpen, setHistoryOpen] = useState(false)
+  const [sidebarQuery, setSidebarQuery] = useState('')
 
   // Agente activo de la sesión corriente
   const [agentSession, setAgentSession] = useState(null)
@@ -94,6 +97,8 @@ export function ChatWidget({ config: configOverrides = {} }) {
   useEffect(() => { viewRef.current = view }, [view])
   useEffect(() => { activeSidRef.current = activeSessionId }, [activeSessionId])
   useEffect(() => { isOpenRef.current = isOpen }, [isOpen])
+  useEffect(() => { if (view !== 'chat') setHistoryOpen(false) }, [view])
+  useEffect(() => { if (!historyOpen) setSidebarQuery('') }, [historyOpen])
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768)
@@ -366,134 +371,306 @@ export function ChatWidget({ config: configOverrides = {} }) {
 
   return (
     <div className="cw-widget">
-      {isOpen && (
-        <div ref={shellRef} style={panelShell(config.position, isExpanded, isMobile)}>
-          {view === 'login' ? (
-            <LoginScreen
-              onLogin={(user) => { setLoggedInUser(user); setView('home') }}
-              onBack={() => setView('home')}
-            />
-          ) : view === 'agents' ? (
-            <MyAgents
-              onClose={handleClose}
-              isExpanded={isExpanded}
-              onToggleExpand={() => setIsExpanded(e => !e)}
-              onTabChange={handleTabChange}
-              onStartChat={(agent) => {
-                const sessionId = nextId++
-                const welcomeMsg = { id: nextId++, role: 'bot', type: 'text', text: `Hola, soy ${agent.name} y voy a ayudarte con tu reclamo. Contame qué pasó.`, createdAt: new Date(), senderName: agent.name, senderType: 'Agente' }
-                setSessions(prev => [{ id: sessionId, messages: [welcomeMsg], timestamp: 'Ahora', startedAt: new Date(), agent: { name: agent.name, avatar: agent.avatar, status: agent.status } }, ...prev])
-                setActiveSessionId(sessionId)
-                setAgentSession({ name: agent.name, avatar: agent.avatar, status: agent.status })
-                setView('chat')
-              }}
-            />
-          ) : view === 'home' ? (
-            <HomeScreen
-              onClose={handleClose}
-              isExpanded={isExpanded}
-              onToggleExpand={() => setIsExpanded(e => !e)}
-              onNewChat={startNewChat}
-              onTabChange={handleTabChange}
-              userName={config.user?.name}
-              loggedInUser={loggedInUser}
-              onLoginClick={() => setView('login')}
-              onAskArticle={handleAskArticle}
-              chatCardVariant={config.chatCardVariant}
-              businessHours={config.businessHours}
-              sessions={sessions}
-              onSelectSession={openSession}
-              animKey={animKey}
-            />
-          ) : view === 'help' ? (
-            <HelpCenter
-              onClose={handleClose}
-              isExpanded={isExpanded}
-              onToggleExpand={() => setIsExpanded(e => !e)}
-              onTabChange={handleTabChange}
-            />
-          ) : view === 'sessions' ? (
-            <SessionsList
-              sessions={sessions}
-              botName={config.botName}
-              botAvatar={config.botAvatar}
-              onSelectSession={openSession}
-              onNewChat={startNewChat}
-              onClose={handleClose}
-              isExpanded={isExpanded}
-              onToggleExpand={() => setIsExpanded(e => !e)}
-              typingSessionId={isTyping ? activeSessionId : null}
-              onTabChange={handleTabChange}
-            />
-          ) : (
-            <ChatPanel
-              config={config}
-              messages={activeMessages}
-              isTyping={isTyping}
-              typingMode={typingMode}
-              typingStates={typingStates}
-              onSend={addUserMessage}
-              onQuickReply={(opt) => addUserMessage(opt.label)}
-              onEscalate={handleEscalate}
-              onLeaveMessage={handleLeaveMessage}
-              onClose={handleClose}
-              agentSession={agentSession}
-              sessions={sessions}
-              onSelectSession={openSession}
-              isExpanded={isExpanded}
-              onToggleExpand={() => setIsExpanded(e => !e)}
-              onAddVoiceMessage={(msg) => addMessage(activeSessionId, { id: nextId++, createdAt: new Date(), senderName: config.botName, senderType: 'Asistente IA', ...msg })}
-              onStreamVoiceBot={(text) => streamText(activeSessionId, text)}
-              onTabChange={handleTabChange}
-              isMobile={isMobile}
-            />
-          )}
+      {isOpen && isMobile && (
+        <div ref={shellRef} style={mobileShellStyle}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0, position: 'relative' }}>
+            {view === 'login' ? (
+              <LoginScreen
+                onLogin={(user) => { setLoggedInUser(user); setView('home') }}
+                onBack={() => setView('home')}
+              />
+            ) : view === 'agents' ? (
+              <MyAgents
+                onClose={handleClose}
+                isExpanded={isExpanded}
+                onToggleExpand={() => setIsExpanded(e => !e)}
+                onTabChange={handleTabChange}
+                onStartChat={(agent) => {
+                  const sessionId = nextId++
+                  const welcomeMsg = { id: nextId++, role: 'bot', type: 'text', text: `Hola, soy ${agent.name} y voy a ayudarte con tu reclamo. Contame qué pasó.`, createdAt: new Date(), senderName: agent.name, senderType: 'Agente' }
+                  setSessions(prev => [{ id: sessionId, messages: [welcomeMsg], timestamp: 'Ahora', startedAt: new Date(), agent: { name: agent.name, avatar: agent.avatar, status: agent.status } }, ...prev])
+                  setActiveSessionId(sessionId)
+                  setAgentSession({ name: agent.name, avatar: agent.avatar, status: agent.status })
+                  setView('chat')
+                }}
+              />
+            ) : view === 'home' ? (
+              <HomeScreen
+                onClose={handleClose}
+                isExpanded={isExpanded}
+                onToggleExpand={() => setIsExpanded(e => !e)}
+                onNewChat={startNewChat}
+                onTabChange={handleTabChange}
+                userName={config.user?.name}
+                loggedInUser={loggedInUser}
+                onLoginClick={() => setView('login')}
+                onAskArticle={handleAskArticle}
+                chatCardVariant={config.chatCardVariant}
+                businessHours={config.businessHours}
+                sessions={sessions}
+                onSelectSession={openSession}
+                animKey={animKey}
+              />
+            ) : view === 'help' ? (
+              <HelpCenter
+                onClose={handleClose}
+                isExpanded={isExpanded}
+                onToggleExpand={() => setIsExpanded(e => !e)}
+                onTabChange={handleTabChange}
+              />
+            ) : view === 'sessions' ? (
+              <SessionsList
+                sessions={sessions}
+                botName={config.botName}
+                botAvatar={config.botAvatar}
+                onSelectSession={openSession}
+                onNewChat={startNewChat}
+                onClose={handleClose}
+                isExpanded={isExpanded}
+                onToggleExpand={() => setIsExpanded(e => !e)}
+                typingSessionId={isTyping ? activeSessionId : null}
+                onTabChange={handleTabChange}
+              />
+            ) : (
+              <ChatPanel
+                config={config}
+                messages={activeMessages}
+                isTyping={isTyping}
+                typingMode={typingMode}
+                typingStates={typingStates}
+                onSend={addUserMessage}
+                onQuickReply={(opt) => addUserMessage(opt.label)}
+                onEscalate={handleEscalate}
+                onLeaveMessage={handleLeaveMessage}
+                onClose={handleClose}
+                agentSession={agentSession}
+                sessions={sessions}
+                onSelectSession={openSession}
+                isExpanded={isExpanded}
+                onToggleExpand={() => setIsExpanded(e => !e)}
+                onAddVoiceMessage={(msg) => addMessage(activeSessionId, { id: nextId++, createdAt: new Date(), senderName: config.botName, senderType: 'Asistente IA', ...msg })}
+                onStreamVoiceBot={(text) => streamText(activeSessionId, text)}
+                onTabChange={handleTabChange}
+                isMobile={isMobile}
+                historyOpen={historyOpen}
+                onToggleHistory={() => setHistoryOpen(h => !h)}
+                isClosed={!!sessions.find(s => s.id === activeSessionId)?.closed}
+              />
+            )}
 
-          {incomingCall && (
-            <IncomingCall
-              agent={incomingCall}
-              onAccept={() => {
-                const agent = incomingCall
-                setIncomingCall(null)
-                setActiveCall(agent)
-              }}
-              onDecline={() => {
-                const agent = incomingCall
-                setIncomingCall(null)
-                addMessage(activeSessionId, { id: nextId++, role: 'bot', type: 'text', text: 'Entendido, sin problema. Si necesitás algo más estoy por acá.', createdAt: new Date(), senderName: agent.name, senderType: 'Agente' })
-              }}
-            />
-          )}
+            {incomingCall && (
+              <IncomingCall
+                agent={incomingCall}
+                onAccept={() => {
+                  const agent = incomingCall
+                  setIncomingCall(null)
+                  setActiveCall(agent)
+                }}
+                onDecline={() => {
+                  const agent = incomingCall
+                  setIncomingCall(null)
+                  addMessage(activeSessionId, { id: nextId++, role: 'bot', type: 'text', text: 'Entendido, sin problema. Si necesitás algo más estoy por acá.', createdAt: new Date(), senderName: agent.name, senderType: 'Agente' })
+                }}
+              />
+            )}
 
-          {activeCall && (
-            <ActiveCall
-              agent={activeCall}
-              onHangUp={(duration) => {
-                const agent = activeCall
-                const mins = Math.floor(duration / 60)
-                const secs = duration % 60
-                const label = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`
-                setActiveCall(null)
-                addMessage(activeSessionId, { id: nextId++, role: 'bot', type: 'text', text: `Llamada finalizada (${label}). ¿Pudimos resolver tu consulta?`, createdAt: new Date(), senderName: agent.name, senderType: 'Agente' })
-              }}
-            />
-          )}
+            {activeCall && (
+              <ActiveCall
+                agent={activeCall}
+                onHangUp={(duration) => {
+                  const agent = activeCall
+                  const mins = Math.floor(duration / 60)
+                  const secs = duration % 60
+                  const label = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`
+                  setActiveCall(null)
+                  addMessage(activeSessionId, { id: nextId++, role: 'bot', type: 'text', text: `Llamada finalizada (${label}). ¿Pudimos resolver tu consulta?`, createdAt: new Date(), senderName: agent.name, senderType: 'Agente' })
+                }}
+              />
+            )}
 
-          {activeVideoCall && (
-            <ActiveVideoCall
-              agent={activeVideoCall}
-              onHangUp={(duration) => {
-                const agent = activeVideoCall
-                const mins = Math.floor(duration / 60)
-                const secs = duration % 60
-                const label = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`
-                setActiveVideoCall(null)
-                addMessage(activeSessionId, { id: nextId++, role: 'bot', type: 'text', text: `Videollamada finalizada (${label}). ¿Pudimos resolver tu consulta?`, createdAt: new Date(), senderName: agent.name, senderType: 'Agente' })
-              }}
-            />
-          )}
+            {activeVideoCall && (
+              <ActiveVideoCall
+                agent={activeVideoCall}
+                onHangUp={(duration) => {
+                  const agent = activeVideoCall
+                  const mins = Math.floor(duration / 60)
+                  const secs = duration % 60
+                  const label = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`
+                  setActiveVideoCall(null)
+                  addMessage(activeSessionId, { id: nextId++, role: 'bot', type: 'text', text: `Videollamada finalizada (${label}). ¿Pudimos resolver tu consulta?`, createdAt: new Date(), senderName: agent.name, senderType: 'Agente' })
+                }}
+              />
+            )}
+          </div>
         </div>
       )}
+
+      {isOpen && !isMobile && (
+        <div style={outerWrapperStyle(config.position, isExpanded)}>
+          {/* Sidebar — sibling del shell, nunca lo mueve */}
+          {view === 'chat' && historyOpen && (
+            <div style={sidebarCardStyle()}>
+              <style>{`.cw-sidebar-row:hover { background: #f9fafb !important; } .cw-sidebar-row:active { background: #f3f4f6 !important; }`}</style>
+              {/* Header */}
+              <div style={sidebarHeaderStyle}>
+                <span style={{ fontWeight: 700, fontSize: 15, color: '#111827', fontFamily: 'var(--cw-font-family)' }}>Conversaciones</span>
+              </div>
+              {/* Buscador */}
+              <div style={{ padding: '8px 12px 10px', borderBottom: '1px solid #f3f4f6', flexShrink: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#f4f6f8', borderRadius: 8, padding: '7px 10px' }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, color: '#9ca3af' }}>
+                    <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2"/>
+                    <path d="M21 21l-4.35-4.35" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                  </svg>
+                  <input
+                    style={{ border: 'none', outline: 'none', background: 'transparent', fontSize: 13, color: '#111827', fontFamily: 'var(--cw-font-family)', flex: 1, width: 0 }}
+                    placeholder="Buscar..."
+                    value={sidebarQuery}
+                    onChange={e => setSidebarQuery(e.target.value)}
+                  />
+                </div>
+              </div>
+              {/* Lista */}
+              <div style={{ flex: 1, overflowY: 'auto', scrollbarWidth: 'thin', scrollbarColor: '#e5e7eb transparent' }}>
+                {(() => {
+                  const q = sidebarQuery.toLowerCase()
+                  const matches = s => !q || (s.agent?.name ?? 'Botsy AI').toLowerCase().includes(q) || (s.messages?.at(-1)?.text ?? '').toLowerCase().includes(q)
+                  const active  = sessions.filter(s => !s.closed && matches(s))
+                  const history = sessions.filter(s =>  s.closed && matches(s))
+                  return (
+                    <>
+                      {active.length > 0 && (
+                        <>
+                          <div style={sidebarSectionLabel}>EN CURSO</div>
+                          {active.map(s => <SidebarSessionRow key={s.id} session={s} isActive={s.id === activeSessionId} onSelect={() => openSession(s.id)} />)}
+                        </>
+                      )}
+                      {history.length > 0 && (
+                        <>
+                          <div style={sidebarSectionLabel}>HISTORIAL</div>
+                          {history.map(s => <SidebarSessionRow key={s.id} session={s} isActive={s.id === activeSessionId} onSelect={() => openSession(s.id)} />)}
+                        </>
+                      )}
+                      {active.length === 0 && history.length === 0 && (
+                        <p style={{ textAlign: 'center', color: '#9ca3af', fontSize: 13, marginTop: 32, fontFamily: 'var(--cw-font-family)' }}>Sin resultados</p>
+                      )}
+                    </>
+                  )
+                })()}
+              </div>
+            </div>
+          )}
+
+          {/* Chat shell — posición y tamaño fijos, nunca cambian */}
+          <div ref={shellRef} style={desktopShellStyle(isExpanded)}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0, position: 'relative' }}>
+              {view === 'login' ? (
+                <LoginScreen
+                  onLogin={(user) => { setLoggedInUser(user); setView('home') }}
+                  onBack={() => setView('home')}
+                />
+              ) : view === 'agents' ? (
+                <MyAgents
+                  onClose={handleClose}
+                  isExpanded={isExpanded}
+                  onToggleExpand={() => setIsExpanded(e => !e)}
+                  onTabChange={handleTabChange}
+                  onStartChat={(agent) => {
+                    const sessionId = nextId++
+                    const welcomeMsg = { id: nextId++, role: 'bot', type: 'text', text: `Hola, soy ${agent.name} y voy a ayudarte con tu reclamo. Contame qué pasó.`, createdAt: new Date(), senderName: agent.name, senderType: 'Agente' }
+                    setSessions(prev => [{ id: sessionId, messages: [welcomeMsg], timestamp: 'Ahora', startedAt: new Date(), agent: { name: agent.name, avatar: agent.avatar, status: agent.status } }, ...prev])
+                    setActiveSessionId(sessionId)
+                    setAgentSession({ name: agent.name, avatar: agent.avatar, status: agent.status })
+                    setView('chat')
+                  }}
+                />
+              ) : view === 'home' ? (
+                <HomeScreen
+                  onClose={handleClose}
+                  isExpanded={isExpanded}
+                  onToggleExpand={() => setIsExpanded(e => !e)}
+                  onNewChat={startNewChat}
+                  onTabChange={handleTabChange}
+                  userName={config.user?.name}
+                  loggedInUser={loggedInUser}
+                  onLoginClick={() => setView('login')}
+                  onAskArticle={handleAskArticle}
+                  chatCardVariant={config.chatCardVariant}
+                  businessHours={config.businessHours}
+                  sessions={sessions}
+                  onSelectSession={openSession}
+                  animKey={animKey}
+                />
+              ) : view === 'help' ? (
+                <HelpCenter
+                  onClose={handleClose}
+                  isExpanded={isExpanded}
+                  onToggleExpand={() => setIsExpanded(e => !e)}
+                  onTabChange={handleTabChange}
+                />
+              ) : view === 'sessions' ? (
+                <SessionsList
+                  sessions={sessions}
+                  botName={config.botName}
+                  botAvatar={config.botAvatar}
+                  onSelectSession={openSession}
+                  onNewChat={startNewChat}
+                  onClose={handleClose}
+                  isExpanded={isExpanded}
+                  onToggleExpand={() => setIsExpanded(e => !e)}
+                  typingSessionId={isTyping ? activeSessionId : null}
+                  onTabChange={handleTabChange}
+                />
+              ) : (
+                <ChatPanel
+                  config={config}
+                  messages={activeMessages}
+                  isTyping={isTyping}
+                  typingMode={typingMode}
+                  typingStates={typingStates}
+                  onSend={addUserMessage}
+                  onQuickReply={(opt) => addUserMessage(opt.label)}
+                  onEscalate={handleEscalate}
+                  onLeaveMessage={handleLeaveMessage}
+                  onClose={handleClose}
+                  agentSession={agentSession}
+                  sessions={sessions}
+                  onSelectSession={openSession}
+                  isExpanded={isExpanded}
+                  onToggleExpand={() => setIsExpanded(e => !e)}
+                  onAddVoiceMessage={(msg) => addMessage(activeSessionId, { id: nextId++, createdAt: new Date(), senderName: config.botName, senderType: 'Asistente IA', ...msg })}
+                  onStreamVoiceBot={(text) => streamText(activeSessionId, text)}
+                  onTabChange={handleTabChange}
+                  isMobile={false}
+                  historyOpen={historyOpen}
+                  onToggleHistory={() => setHistoryOpen(h => !h)}
+                  isClosed={!!sessions.find(s => s.id === activeSessionId)?.closed}
+                />
+              )}
+              {incomingCall && (
+                <IncomingCall
+                  agent={incomingCall}
+                  onAccept={() => { const agent = incomingCall; setIncomingCall(null); setActiveCall(agent) }}
+                  onDecline={() => { const agent = incomingCall; setIncomingCall(null); addMessage(activeSessionId, { id: nextId++, role: 'bot', type: 'text', text: 'Entendido, sin problema. Si necesitás algo más estoy por acá.', createdAt: new Date(), senderName: agent.name, senderType: 'Agente' }) }}
+                />
+              )}
+              {activeCall && (
+                <ActiveCall
+                  agent={activeCall}
+                  onHangUp={(duration) => { const agent = activeCall; const mins = Math.floor(duration / 60); const secs = duration % 60; const label = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`; setActiveCall(null); addMessage(activeSessionId, { id: nextId++, role: 'bot', type: 'text', text: `Llamada finalizada (${label}). ¿Pudimos resolver tu consulta?`, createdAt: new Date(), senderName: agent.name, senderType: 'Agente' }) }}
+                />
+              )}
+              {activeVideoCall && (
+                <ActiveVideoCall
+                  agent={activeVideoCall}
+                  onHangUp={(duration) => { const agent = activeVideoCall; const mins = Math.floor(duration / 60); const secs = duration % 60; const label = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`; setActiveVideoCall(null); addMessage(activeSessionId, { id: nextId++, role: 'bot', type: 'text', text: `Videollamada finalizada (${label}). ¿Pudimos resolver tu consulta?`, createdAt: new Date(), senderName: agent.name, senderType: 'Agente' }) }}
+                />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {(!isOpen || !isMobile) && (
         <FloatingButton
           isOpen={isOpen}
@@ -508,40 +685,188 @@ export function ChatWidget({ config: configOverrides = {} }) {
   )
 }
 
-const panelShell = (position, isExpanded, isMobile = false) => {
-  if (isMobile) {
-    return {
-      position: 'fixed',
-      inset: 0,
-      background: 'var(--cw-bg)',
-      display: 'flex',
-      flexDirection: 'column',
-      overflow: 'hidden',
-      zIndex: 10000,
-      animation: 'cw-slide-up 280ms cubic-bezier(0.22, 1, 0.36, 1) forwards',
-    }
-  }
-  return {
-    position: 'fixed',
-    background: 'var(--cw-bg)',
-    borderRadius: isExpanded ? 16 : 'var(--cw-border-radius)',
-    boxShadow: 'var(--cw-shadow)',
-    display: 'flex',
-    flexDirection: 'column',
-    overflow: 'hidden',
-    zIndex: 'var(--cw-z-index)',
-    transition: 'width 320ms ease, height 320ms ease, border-radius 320ms ease',
-    bottom: 96,
-    ...(position === 'bottom-left' ? { left: 24 } : { right: 24 }),
-    animation: 'cw-slide-up 220ms cubic-bezier(0.22, 1, 0.36, 1) forwards',
-    ...(isExpanded ? {
-      width: 'min(680px, 94vw)',
-      height: 'min(720px, calc(100vh - 120px))',
-    } : {
-      width: 'var(--cw-panel-width)',
-      height: 'var(--cw-panel-height)',
-    }),
-  }
+// ── Demo historical sessions (pre-seeded, closed) ────────────────────────────
+const INITIAL_DEMO_SESSIONS = [
+  {
+    id: 'dh1', closed: true, timestamp: 'Ayer',
+    startedAt: new Date('2026-06-23'),
+    messages: [
+      { id: 'dh1-1', role: 'bot',  type: 'text', text: '¡Hola, Santiago! ¿En qué puedo ayudarte hoy?', createdAt: new Date('2026-06-23T10:00:00'), senderName: 'Botsy AI', senderType: 'Asistente IA' },
+      { id: 'dh1-2', role: 'user', type: 'text', text: 'Quería consultar el estado de mi cuenta.', createdAt: new Date('2026-06-23T10:01:00') },
+      { id: 'dh1-3', role: 'bot',  type: 'text', text: 'Tu cuenta está activa y al día. No tenés deudas pendientes ni pagos vencidos.', createdAt: new Date('2026-06-23T10:01:30'), senderName: 'Botsy AI', senderType: 'Asistente IA' },
+      { id: 'dh1-4', role: 'user', type: 'text', text: 'Perfecto, muchas gracias.', createdAt: new Date('2026-06-23T10:02:00') },
+      { id: 'dh1-5', role: 'bot',  type: 'text', text: 'Gracias por contactarnos. ¿Hay algo más en que pueda ayudarte?', createdAt: new Date('2026-06-23T10:02:10'), senderName: 'Botsy AI', senderType: 'Asistente IA' },
+    ],
+  },
+  {
+    id: 'dh2', closed: true, timestamp: 'Lun',
+    agent: { name: 'Camila', avatar: 'https://i.pravatar.cc/160?img=47', status: 'online' },
+    startedAt: new Date('2026-06-22'),
+    messages: [
+      { id: 'dh2-1', role: 'bot',  type: 'text', text: '¡Hola! ¿En qué puedo ayudarte hoy?', createdAt: new Date('2026-06-22T14:00:00'), senderName: 'Botsy AI', senderType: 'Asistente IA' },
+      { id: 'dh2-2', role: 'user', type: 'text', text: 'Tuve un problema con una entrega.', createdAt: new Date('2026-06-22T14:01:00') },
+      { id: 'dh2-3', role: 'bot',  type: 'text', text: 'Lamentamos eso. Te conecto con un agente ahora.', createdAt: new Date('2026-06-22T14:01:20'), senderName: 'Botsy AI', senderType: 'Asistente IA' },
+      { id: 'dh2-4', role: 'system', type: 'agent_join', agentName: 'Camila', agentAvatar: 'https://i.pravatar.cc/160?img=47', timestamp: '14:02' },
+      { id: 'dh2-5', role: 'bot',  type: 'text', text: 'Hola, soy Camila. Vi tu caso — la entrega fue re-agendada para mañana en el turno mañana.', createdAt: new Date('2026-06-22T14:02:30'), senderName: 'Camila', senderType: 'Agente' },
+      { id: 'dh2-6', role: 'user', type: 'text', text: 'Gracias Camila, perfecto.', createdAt: new Date('2026-06-22T14:03:00') },
+      { id: 'dh2-7', role: 'bot',  type: 'text', text: '¡Perfecto! Me alegra que hayas podido resolver tu consulta. ¡Hasta pronto!', createdAt: new Date('2026-06-22T14:03:20'), senderName: 'Camila', senderType: 'Agente' },
+    ],
+  },
+  {
+    id: 'dh3', closed: true, timestamp: '15 jun',
+    startedAt: new Date('2026-06-15'),
+    messages: [
+      { id: 'dh3-1', role: 'user', type: 'text', text: '¿Dónde está mi pedido #48291?', createdAt: new Date('2026-06-15T09:00:00') },
+      { id: 'dh3-2', role: 'bot',  type: 'text', text: 'Tu pedido #48291 está en camino. Llegará entre el martes y el miércoles.', createdAt: new Date('2026-06-15T09:00:30'), senderName: 'Botsy AI', senderType: 'Asistente IA' },
+      { id: 'dh3-3', role: 'user', type: 'text', text: 'Gracias.', createdAt: new Date('2026-06-15T09:01:00') },
+      { id: 'dh3-4', role: 'bot',  type: 'text', text: '¡De nada! ¿Necesitás algo más?', createdAt: new Date('2026-06-15T09:01:10'), senderName: 'Botsy AI', senderType: 'Asistente IA' },
+      { id: 'dh3-5', role: 'user', type: 'text', text: 'No, es todo.', createdAt: new Date('2026-06-15T09:01:30') },
+      { id: 'dh3-6', role: 'bot',  type: 'text', text: '¡Hasta luego!', createdAt: new Date('2026-06-15T09:01:40'), senderName: 'Botsy AI', senderType: 'Asistente IA' },
+    ],
+  },
+  {
+    id: 'dh4', closed: true, timestamp: '12 jun',
+    agent: { name: 'Tomás', avatar: 'https://i.pravatar.cc/160?img=32', status: 'online' },
+    startedAt: new Date('2026-06-12'),
+    messages: [
+      { id: 'dh4-1', role: 'user', type: 'text', text: 'Quiero hacer una devolución de mi último pedido.', createdAt: new Date('2026-06-12T11:00:00') },
+      { id: 'dh4-2', role: 'bot',  type: 'text', text: 'Claro, te conecto con un agente para gestionar la devolución.', createdAt: new Date('2026-06-12T11:00:20'), senderName: 'Botsy AI', senderType: 'Asistente IA' },
+      { id: 'dh4-3', role: 'system', type: 'agent_join', agentName: 'Tomás', agentAvatar: 'https://i.pravatar.cc/160?img=32', timestamp: '11:01' },
+      { id: 'dh4-4', role: 'bot',  type: 'text', text: 'Hola, soy Tomás. Procesé la devolución de tu pedido. Verás el crédito reflejado en 3-5 días hábiles.', createdAt: new Date('2026-06-12T11:01:30'), senderName: 'Tomás', senderType: 'Agente' },
+      { id: 'dh4-5', role: 'user', type: 'text', text: 'Perfecto, gracias.', createdAt: new Date('2026-06-12T11:02:00') },
+      { id: 'dh4-6', role: 'bot',  type: 'text', text: '¡Con gusto! Que tengas un buen día.', createdAt: new Date('2026-06-12T11:02:10'), senderName: 'Tomás', senderType: 'Agente' },
+    ],
+  },
+  {
+    id: 'dh5', closed: true, timestamp: '8 jun',
+    startedAt: new Date('2026-06-08'),
+    messages: [
+      { id: 'dh5-1', role: 'bot',  type: 'text', text: '¡Hola! ¿En qué puedo ayudarte?', createdAt: new Date('2026-06-08T16:00:00'), senderName: 'Botsy AI', senderType: 'Asistente IA' },
+      { id: 'dh5-2', role: 'user', type: 'text', text: '¿Cuáles son los horarios de atención?', createdAt: new Date('2026-06-08T16:01:00') },
+      { id: 'dh5-3', role: 'bot',  type: 'text', text: 'Nuestros agentes están disponibles de lunes a viernes de 9:00 a 18:00 hs.', createdAt: new Date('2026-06-08T16:01:10'), senderName: 'Botsy AI', senderType: 'Asistente IA' },
+      { id: 'dh5-4', role: 'user', type: 'text', text: 'Gracias.', createdAt: new Date('2026-06-08T16:01:30') },
+      { id: 'dh5-5', role: 'bot',  type: 'text', text: '¿Hay algo más en que pueda ayudarte?', createdAt: new Date('2026-06-08T16:01:40'), senderName: 'Botsy AI', senderType: 'Asistente IA' },
+      { id: 'dh5-6', role: 'user', type: 'text', text: 'No, es todo. Gracias.', createdAt: new Date('2026-06-08T16:02:00') },
+      { id: 'dh5-7', role: 'bot',  type: 'text', text: '¡Hasta pronto!', createdAt: new Date('2026-06-08T16:02:10'), senderName: 'Botsy AI', senderType: 'Asistente IA' },
+    ],
+  },
+]
+
+const sidebarSectionLabel = {
+  padding: '10px 14px 4px',
+  fontSize: 10,
+  fontWeight: 700,
+  color: '#9ca3af',
+  letterSpacing: '0.06em',
+  textTransform: 'uppercase',
+  fontFamily: 'var(--cw-font-family)',
+}
+
+// ── Mobile shell (position: fixed, inset 0) ────────────────────────────────
+const mobileShellStyle = {
+  position: 'fixed',
+  inset: 0,
+  background: 'var(--cw-bg)',
+  display: 'flex',
+  flexDirection: 'column',
+  overflow: 'hidden',
+  zIndex: 10000,
+  animation: 'cw-slide-up 280ms cubic-bezier(0.22, 1, 0.36, 1) forwards',
+}
+
+// ── Desktop: outer wrapper — contiene sidebar + shell en una sola caja ─────
+const outerWrapperStyle = (position, isExpanded) => ({
+  position: 'fixed',
+  bottom: 96,
+  ...(position === 'bottom-left' ? { left: 24 } : { right: 24 }),
+  display: 'flex',
+  flexDirection: 'row',
+  alignItems: 'stretch',
+  zIndex: 'var(--cw-z-index)',
+  borderRadius: isExpanded ? 16 : 'var(--cw-border-radius)',
+  boxShadow: 'var(--cw-shadow)',
+  overflow: 'hidden',
+  animation: 'cw-slide-up 220ms cubic-bezier(0.22, 1, 0.36, 1) forwards',
+})
+
+// ── Desktop: chat shell — tamaño y posición inmutables ─────────────────────
+const desktopShellStyle = (isExpanded) => ({
+  background: 'var(--cw-bg)',
+  display: 'flex',
+  flexDirection: 'column',
+  overflow: 'hidden',
+  flexShrink: 0,
+  transition: 'width 320ms ease, height 320ms ease',
+  ...(isExpanded ? {
+    width: 'min(540px, 94vw)',
+    height: 'min(720px, calc(100vh - 120px))',
+  } : {
+    width: 'var(--cw-panel-width)',
+    height: 'var(--cw-panel-height)',
+  }),
+})
+
+// ── Sidebar — separado del shell por un borde fino ─────────────────────────
+const sidebarCardStyle = () => ({
+  width: 220,
+  flexShrink: 0,
+  display: 'flex',
+  flexDirection: 'column',
+  background: '#fff',
+  borderRight: '1px solid #f3f4f6',
+  overflow: 'hidden',
+  animation: 'cw-history-in 220ms cubic-bezier(0.22, 1, 0.36, 1)',
+})
+
+const sidebarHeaderStyle = {
+  padding: '14px 14px 12px',
+  borderBottom: '1px solid #f3f4f6',
+  flexShrink: 0,
+}
+
+function SidebarSessionRow({ session, isActive, onSelect }) {
+  const lastMsg = session.messages.filter(m => m.text).at(-1)
+  const preview = lastMsg?.text ?? '...'
+  const name    = session.agent?.name ?? 'Botsy AI'
+  const avatar  = session.agent?.avatar ?? null
+  const date    = session.startedAt
+    ? new Date(session.startedAt).toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })
+    : session.timestamp
+
+  return (
+    <button
+      className="cw-sidebar-row"
+      style={{
+        display: 'flex', alignItems: 'center', gap: 10,
+        width: '100%', padding: '11px 14px',
+        border: 'none',
+        borderLeft: isActive ? '3px solid var(--cw-primary)' : '3px solid transparent',
+        background: isActive ? '#f0f4ff' : 'transparent',
+        cursor: 'pointer', textAlign: 'left',
+        borderBottom: '1px solid #f3f4f6',
+        fontFamily: 'var(--cw-font-family)',
+        transition: 'background 120ms',
+      }}
+      onClick={onSelect}
+    >
+      <div style={{ position: 'relative', width: 34, height: 34, flexShrink: 0 }}>
+        <div style={{ width: 34, height: 34, borderRadius: '50%', background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+          {avatar
+            ? <img src={avatar} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+            : <BotmakerLogo size={16} />
+          }
+        </div>
+        {!session.closed && <span style={{ position: 'absolute', bottom: 0, right: 0, width: 9, height: 9, borderRadius: '50%', background: '#22c55e', border: '2px solid #fff' }} />}
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2 }}>
+          <span style={{ fontSize: 12, fontWeight: 600, color: '#111827' }}>{name}</span>
+          <span style={{ fontSize: 10, color: '#9ca3af', flexShrink: 0 }}>{date}</span>
+        </div>
+        <p style={{ margin: 0, fontSize: 11, color: '#6b7280', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{preview}</p>
+      </div>
+    </button>
+  )
 }
 
 function darken(hex) {

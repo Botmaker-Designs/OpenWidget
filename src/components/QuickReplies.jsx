@@ -9,7 +9,7 @@ export function QuickReplies({ options, onSelect }) {
           background: #fff;
           color: var(--cw-text);
           font-family: var(--cw-font-family);
-          font-size: 15px;
+          font-size: 14px;
           font-weight: 500;
           cursor: pointer;
           transition: border-color 120ms, background 120ms, color 120ms;
