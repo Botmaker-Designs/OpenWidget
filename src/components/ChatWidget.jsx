@@ -501,6 +501,20 @@ export function ChatWidget({ config: configOverrides = {} }) {
                 }}
               />
             )}
+          {view === 'chat' && historyOpen && (
+            <>
+              <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 20 }} onClick={() => setHistoryOpen(false)} />
+              <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 280, background: '#fff', zIndex: 21, display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '4px 0 20px rgba(0,0,0,0.15)', animation: 'cw-sidebar-mobile-in 250ms cubic-bezier(0.22,1,0.36,1)' }}>
+                <SidebarPanel
+                  sessions={sessions}
+                  activeSessionId={activeSessionId}
+                  sidebarQuery={sidebarQuery}
+                  onQueryChange={setSidebarQuery}
+                  openSession={(id) => { openSession(id); setHistoryOpen(false) }}
+                />
+              </div>
+            </>
+          )}
           </div>
         </div>
       )}
@@ -510,54 +524,13 @@ export function ChatWidget({ config: configOverrides = {} }) {
           {/* Sidebar — sibling del shell, nunca lo mueve */}
           {view === 'chat' && historyOpen && (
             <div style={sidebarCardStyle()}>
-              <style>{`.cw-sidebar-row:hover { background: #f9fafb !important; } .cw-sidebar-row:active { background: #f3f4f6 !important; }`}</style>
-              {/* Header */}
-              <div style={sidebarHeaderStyle}>
-                <span style={{ fontWeight: 700, fontSize: 15, color: '#111827', fontFamily: 'var(--cw-font-family)' }}>Conversaciones</span>
-              </div>
-              {/* Buscador */}
-              <div style={{ padding: '8px 12px 10px', borderBottom: '1px solid #f3f4f6', flexShrink: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#f4f6f8', borderRadius: 8, padding: '7px 10px' }}>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, color: '#9ca3af' }}>
-                    <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2"/>
-                    <path d="M21 21l-4.35-4.35" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                  </svg>
-                  <input
-                    style={{ border: 'none', outline: 'none', background: 'transparent', fontSize: 13, color: '#111827', fontFamily: 'var(--cw-font-family)', flex: 1, width: 0 }}
-                    placeholder="Buscar..."
-                    value={sidebarQuery}
-                    onChange={e => setSidebarQuery(e.target.value)}
-                  />
-                </div>
-              </div>
-              {/* Lista */}
-              <div style={{ flex: 1, overflowY: 'auto', scrollbarWidth: 'thin', scrollbarColor: '#e5e7eb transparent' }}>
-                {(() => {
-                  const q = sidebarQuery.toLowerCase()
-                  const matches = s => !q || (s.agent?.name ?? 'Botsy AI').toLowerCase().includes(q) || (s.messages?.at(-1)?.text ?? '').toLowerCase().includes(q)
-                  const active  = sessions.filter(s => !s.closed && matches(s))
-                  const history = sessions.filter(s =>  s.closed && matches(s))
-                  return (
-                    <>
-                      {active.length > 0 && (
-                        <>
-                          <div style={sidebarSectionLabel}>EN CURSO</div>
-                          {active.map(s => <SidebarSessionRow key={s.id} session={s} isActive={s.id === activeSessionId} onSelect={() => openSession(s.id)} />)}
-                        </>
-                      )}
-                      {history.length > 0 && (
-                        <>
-                          <div style={sidebarSectionLabel}>HISTORIAL</div>
-                          {history.map(s => <SidebarSessionRow key={s.id} session={s} isActive={s.id === activeSessionId} onSelect={() => openSession(s.id)} />)}
-                        </>
-                      )}
-                      {active.length === 0 && history.length === 0 && (
-                        <p style={{ textAlign: 'center', color: '#9ca3af', fontSize: 13, marginTop: 32, fontFamily: 'var(--cw-font-family)' }}>Sin resultados</p>
-                      )}
-                    </>
-                  )
-                })()}
-              </div>
+              <SidebarPanel
+                sessions={sessions}
+                activeSessionId={activeSessionId}
+                sidebarQuery={sidebarQuery}
+                onQueryChange={setSidebarQuery}
+                openSession={openSession}
+              />
             </div>
           )}
 
@@ -822,6 +795,53 @@ const sidebarHeaderStyle = {
   padding: '14px 14px 12px',
   borderBottom: '1px solid #f3f4f6',
   flexShrink: 0,
+}
+
+function SidebarPanel({ sessions, activeSessionId, sidebarQuery, onQueryChange, openSession }) {
+  const q = sidebarQuery.toLowerCase()
+  const matches = s => !q || (s.agent?.name ?? 'Botsy AI').toLowerCase().includes(q) || (s.messages?.at(-1)?.text ?? '').toLowerCase().includes(q)
+  const active  = sessions.filter(s => !s.closed && matches(s))
+  const history = sessions.filter(s =>  s.closed && matches(s))
+
+  return (
+    <>
+      <style>{`.cw-sidebar-row:hover { background: #f9fafb !important; } .cw-sidebar-row:active { background: #f3f4f6 !important; }`}</style>
+      <div style={sidebarHeaderStyle}>
+        <span style={{ fontWeight: 700, fontSize: 15, color: '#111827', fontFamily: 'var(--cw-font-family)' }}>Conversaciones</span>
+      </div>
+      <div style={{ padding: '8px 12px 10px', borderBottom: '1px solid #f3f4f6', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#f4f6f8', borderRadius: 8, padding: '7px 10px' }}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, color: '#9ca3af' }}>
+            <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2"/>
+            <path d="M21 21l-4.35-4.35" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+          </svg>
+          <input
+            style={{ border: 'none', outline: 'none', background: 'transparent', fontSize: 13, color: '#111827', fontFamily: 'var(--cw-font-family)', flex: 1, width: 0 }}
+            placeholder="Buscar..."
+            value={sidebarQuery}
+            onChange={e => onQueryChange(e.target.value)}
+          />
+        </div>
+      </div>
+      <div style={{ flex: 1, overflowY: 'auto', scrollbarWidth: 'thin', scrollbarColor: '#e5e7eb transparent' }}>
+        {active.length > 0 && (
+          <>
+            <div style={sidebarSectionLabel}>EN CURSO</div>
+            {active.map(s => <SidebarSessionRow key={s.id} session={s} isActive={s.id === activeSessionId} onSelect={() => openSession(s.id)} />)}
+          </>
+        )}
+        {history.length > 0 && (
+          <>
+            <div style={sidebarSectionLabel}>HISTORIAL</div>
+            {history.map(s => <SidebarSessionRow key={s.id} session={s} isActive={s.id === activeSessionId} onSelect={() => openSession(s.id)} />)}
+          </>
+        )}
+        {active.length === 0 && history.length === 0 && (
+          <p style={{ textAlign: 'center', color: '#9ca3af', fontSize: 13, marginTop: 32, fontFamily: 'var(--cw-font-family)' }}>Sin resultados</p>
+        )}
+      </div>
+    </>
+  )
 }
 
 function SidebarSessionRow({ session, isActive, onSelect }) {
