@@ -58,6 +58,7 @@ export function DesktopWidget({ onClose, config: configOverrides = {} }) {
   const [videoSeconds, setVideoSeconds]       = useState(0)
 
   const [panelWidth, setPanelWidth] = useState(320)
+  const [infoPanelWidth, setInfoPanelWidth] = useState(340)
   const panelDragRef = useRef({ startX: 0, startW: 320 })
 
   const streamingRef  = useRef(null)
@@ -237,6 +238,25 @@ export function DesktopWidget({ onClose, config: configOverrides = {} }) {
   const handleLeaveMessage = () => {
     markFallbackActed()
     addMessage({ id: nextDesktopId++, role: 'bot', type: 'text', text: 'Dejá tu mensaje y te responderemos a la brevedad.', createdAt: new Date(), senderName: config.botName, senderType: 'Asistente IA' })
+  }
+
+  const handleInfoResizeStart = (e) => {
+    e.preventDefault()
+    panelDragRef.current = { startX: e.clientX, startW: infoPanelWidth }
+    const onMove = (e) => {
+      const delta = panelDragRef.current.startX - e.clientX
+      setInfoPanelWidth(Math.min(520, Math.max(260, panelDragRef.current.startW + delta)))
+    }
+    const onUp = () => {
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+    }
+    document.body.style.cursor = 'col-resize'
+    document.body.style.userSelect = 'none'
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
   }
 
   const handleResizeStart = (e) => {
@@ -492,11 +512,18 @@ export function DesktopWidget({ onClose, config: configOverrides = {} }) {
           transition: 'transform 280ms cubic-bezier(0.4, 0, 0.2, 1)',
           display: 'flex', flexDirection: 'column',
         } : {
-          width: infoOpen ? 340 : 0,
+          position: 'relative',
+          width: infoOpen ? infoPanelWidth : 0,
           flexShrink: 0, overflow: 'hidden',
           transition: 'width 280ms cubic-bezier(0.4, 0, 0.2, 1)',
           borderLeft: '1px solid #f3f4f6',
         }}>
+          {infoOpen && (
+            <div
+              onMouseDown={handleInfoResizeStart}
+              style={{ position: 'absolute', top: 0, left: 0, width: 6, height: '100%', cursor: 'col-resize', zIndex: 10 }}
+            />
+          )}
           <DWInfoPanel {...infoPanelProps} />
         </div>
 
