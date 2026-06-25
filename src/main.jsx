@@ -5,7 +5,8 @@ import { DemoPanel } from './components/DemoPanel'
 import { DesktopWidget } from './components/DesktopWidget'
 
 const BASE_CONFIG = {
-  botName: 'Botsy AI',
+  botName: 'Botmaker',
+  botSubtitle: 'Centro de atención',
   primaryColor: '#2563eb',
   welcomeMessage: '¡Hola, {{nombre}}! ¿En qué puedo ayudarte hoy?',
   user: { nombre: 'Santiago' },

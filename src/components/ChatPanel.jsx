@@ -247,11 +247,8 @@ function AttendedByPill({ isAgent, agentSession, isTransferring }) {
   }
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 20, padding: '5px 10px 5px 5px', flexShrink: 0 }}>
-      <div style={{ width: 26, height: 26, borderRadius: '50%', flexShrink: 0, background: 'var(--cw-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-          <circle cx="12" cy="8" r="4" fill="rgba(255,255,255,0.95)"/>
-          <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="rgba(255,255,255,0.95)" strokeWidth="2" strokeLinecap="round"/>
-        </svg>
+      <div style={{ width: 26, height: 26, borderRadius: '50%', flexShrink: 0, background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <BotmakerLogo size={14} />
       </div>
       <div>
         <div style={{ fontSize: 10, color: '#1d4ed8', fontWeight: 500, lineHeight: 1.1 }}>Asistente</div>
