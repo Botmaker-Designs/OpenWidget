@@ -3,8 +3,6 @@ import { TypingIndicator } from './TypingIndicator'
 import { QuickReplies } from './QuickReplies'
 import { FallbackMessage } from './FallbackMessage'
 import { TransferringMessage, AgentJoinMessage } from './SystemMessage'
-import { BrandAvatar } from './BrandAvatar'
-
 function msgTime(date) {
   if (!date) return ''
   const d = new Date(date)
@@ -245,10 +243,7 @@ function Message({ message, isRead, onOpenLightbox, quickReplies, onQuickReply, 
   return (
     <div>
       <div style={bubbleWrap(message.role)}>
-        {!isUser && (
-          <BrandAvatar />
-        )}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: isUser ? 'flex-end' : 'flex-start', gap: 4, maxWidth: '72%', marginLeft: isUser ? 0 : 8 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: isUser ? 'flex-end' : 'flex-start', gap: 4, maxWidth: '72%' }}>
           {message.attachments?.length > 0 && (
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: isUser ? 'flex-end' : 'flex-start' }}>
               {message.attachments.map((a, i) => <AttachmentImage key={i} src={a.url} onOpen={onOpenLightbox} />)}
