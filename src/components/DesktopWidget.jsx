@@ -668,7 +668,7 @@ function DWSessionsPanel({ activeName, activeTitle, activeAvatar, activeIsAgent,
       </div>
 
       {/* Active session */}
-      <div style={{ flexShrink: 0, borderBottom: '1px solid #f3f4f6' }}>
+      <div style={{ flexShrink: 0 }}>
         <div style={{ padding: '8px 16px 4px' }}>
           <span style={{ fontSize: 11, color: '#6b7280', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Activa</span>
         </div>
