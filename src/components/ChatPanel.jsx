@@ -165,11 +165,7 @@ function PanelHeader({ config, agentSession, isExpanded, onToggleExpand, onClose
         </button>
 
         <div style={{ position: 'relative', flexShrink: 0 }}>
-          <BrandAvatar
-            size={40}
-            agentAvatar={isAgent ? (agentSession.avatar || null) : null}
-            agentName={isAgent ? name : null}
-          />
+          <BrandAvatar size={40} />
           {!isClosed && !isAgent && <OnlineBadge />}
         </div>
 
@@ -180,7 +176,7 @@ function PanelHeader({ config, agentSession, isExpanded, onToggleExpand, onClose
               {subtitle}
             </div>
           )}
-          {isAgent && <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2, fontWeight: 400 }}>Tiempo aprox de respuesta &lt; 3 mins</div>}
+          {isAgent && <AgentSubtitle agent={agentSession} />}
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -194,6 +190,29 @@ function PanelHeader({ config, agentSession, isExpanded, onToggleExpand, onClose
           </button>
         </div>
       </div>
+    </div>
+  )
+}
+
+function AgentSubtitle({ agent }) {
+  const av  = agent.avatar || null
+  const nm  = agent.name  || ''
+  const ini = nm.trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase() || '?'
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 3 }}>
+      <div style={{
+        width: 16, height: 16, borderRadius: '50%', overflow: 'hidden', flexShrink: 0,
+        background: av ? '#e5e7eb' : '#6b7280',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        {av
+          ? <img src={av} alt={nm} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          : <span style={{ fontSize: 7, fontWeight: 800, color: '#fff', letterSpacing: '-0.01em' }}>{ini}</span>
+        }
+      </div>
+      <span style={{ fontSize: 12, color: '#6b7280', whiteSpace: 'nowrap' }}>
+        Agente · &lt; 3 mins de espera
+      </span>
     </div>
   )
 }

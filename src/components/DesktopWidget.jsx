@@ -326,9 +326,14 @@ export function DesktopWidget({ onClose, config: configOverrides = {} }) {
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontWeight: 700, fontSize: 15, color: '#111827', lineHeight: 1.2 }}>{displayName}</div>
-                  <div style={{ fontSize: 12, color: isHistoryView ? '#9ca3af' : '#6b7280', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {displaySubtitle}
-                  </div>
+                  {displayIsAgent && !isHistoryView
+                    ? <DWAgentSubtitle name={displayName} avatar={displayAvatar} />
+                    : (
+                      <div style={{ fontSize: 12, color: isHistoryView ? '#9ca3af' : '#6b7280', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {displaySubtitle}
+                      </div>
+                    )
+                  }
                 </div>
               </div>
               <button className="dw-hdr-btn" aria-label="Cerrar" onClick={onClose}>
@@ -873,12 +878,29 @@ function CloseIconSmall() {
 }
 
 function PanelAvatar({ src, name, isAgent, size = 40 }) {
+  return <BrandAvatar size={size} />
+}
+
+function DWAgentSubtitle({ name, avatar }) {
+  const av  = avatar || null
+  const nm  = name   || ''
+  const ini = nm.trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase() || '?'
   return (
-    <BrandAvatar
-      size={size}
-      agentAvatar={isAgent ? src : null}
-      agentName={isAgent ? name : null}
-    />
+    <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 3 }}>
+      <div style={{
+        width: 16, height: 16, borderRadius: '50%', overflow: 'hidden', flexShrink: 0,
+        background: av ? '#e5e7eb' : '#6b7280',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        {av
+          ? <img src={av} alt={nm} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          : <span style={{ fontSize: 7, fontWeight: 800, color: '#fff', letterSpacing: '-0.01em' }}>{ini}</span>
+        }
+      </div>
+      <span style={{ fontSize: 12, color: '#6b7280', whiteSpace: 'nowrap' }}>
+        Agente · &lt; 3 mins de espera
+      </span>
+    </div>
   )
 }
 
