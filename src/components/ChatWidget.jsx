@@ -884,7 +884,7 @@ function SidebarSessionRow({ session, isActive, onSelect }) {
         agentName={avatar ? null : (name !== 'Botsy AI' ? name : null)}
       />
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
           <span style={{ fontSize: 11, fontWeight: 600, color: '#111827' }}>{session.title || deriveTitle(session.messages)}</span>
           <span style={{ fontSize: 10, color: '#9ca3af', flexShrink: 0 }}>{date}</span>
         </div>
