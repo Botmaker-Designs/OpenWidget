@@ -871,7 +871,7 @@ function SidebarSessionRow({ session, isActive, onSelect }) {
         borderRadius: 10,
         background: isActive ? '#eff6ff' : 'transparent',
         cursor: 'pointer', textAlign: 'left',
-        marginBottom: 2,
+        marginBottom: 5,
         fontFamily: 'var(--cw-font-family)',
         transition: 'background 120ms',
       }}

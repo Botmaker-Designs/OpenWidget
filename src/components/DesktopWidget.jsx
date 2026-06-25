@@ -563,7 +563,7 @@ function DWSessionsPanel({ activeName, activeTitle, activeAvatar, activeIsAgent,
           display: flex; align-items: center; gap: 10px;
           padding: 10px 10px; cursor: pointer;
           border-radius: 10px;
-          margin: 0 6px 2px;
+          margin: 0 6px 5px;
           transition: background 120ms;
         }
         .dw-sess-row:hover { background: #f3f4f6; }
