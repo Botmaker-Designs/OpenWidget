@@ -602,7 +602,7 @@ function DWSessionsPanel({ activeName, activeTitle, activeAvatar, activeIsAgent,
           <span style={{ fontSize: 11, color: '#6b7280', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Activa</span>
         </div>
         <div className={`dw-sess-row${selectedId === 'active' ? ' active' : ''}`} onClick={onSelectActive}>
-          <SessAvatar src={activeAvatar} name={activeName} isAgent={activeIsAgent} size={isMobile ? 52 : 38} />
+          <SessAvatar src={activeAvatar} name={activeName} isAgent={activeIsAgent} size={isMobile ? 56 : 42} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 2 }}>
               <span style={{ fontWeight: 600, fontSize: 13, color: '#111827' }}>{activeTitle || activeName}</span>
@@ -636,7 +636,7 @@ function DWSessionsPanel({ activeName, activeTitle, activeAvatar, activeIsAgent,
         ) : (
           filtered.map(s => (
             <div key={s.id} className={`dw-sess-row${selectedId === s.id ? ' active' : ''}`} onClick={() => onSelectPast(s)}>
-              <SessAvatar src={s.avatar} name={s.name} isAgent={s.isAgent} size={isMobile ? 52 : 38} />
+              <SessAvatar src={s.avatar} name={s.name} isAgent={s.isAgent} size={isMobile ? 56 : 42} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 2 }}>
                   <span style={{ fontWeight: 600, fontSize: 13, color: '#111827' }}>{s.title}</span>

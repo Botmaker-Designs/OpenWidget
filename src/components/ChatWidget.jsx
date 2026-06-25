@@ -878,8 +878,8 @@ function SidebarSessionRow({ session, isActive, onSelect }) {
       onClick={onSelect}
     >
       <BrandAvatar
-        size={34}
-        pipSize={16}
+        size={38}
+        pipSize={17}
         agentAvatar={avatar}
         agentName={avatar ? null : (name !== 'Botsy AI' ? name : null)}
       />
