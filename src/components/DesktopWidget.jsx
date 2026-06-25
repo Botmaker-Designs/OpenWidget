@@ -561,11 +561,12 @@ function DWSessionsPanel({ activeName, activeTitle, activeAvatar, activeIsAgent,
       <style>{`
         .dw-sess-row {
           display: flex; align-items: center; gap: 10px;
-          padding: 10px 16px; cursor: pointer;
-          border-bottom: 1px solid #f9fafb;
+          padding: 10px 10px; cursor: pointer;
+          border-radius: 10px;
+          margin: 0 6px 2px;
           transition: background 120ms;
         }
-        .dw-sess-row:hover { background: #f9fafb; }
+        .dw-sess-row:hover { background: #f3f4f6; }
         .dw-sess-row.active { background: #eff6ff; }
         .dw-sess-row.active:hover { background: #dbeafe; }
         .dw-sess-search {

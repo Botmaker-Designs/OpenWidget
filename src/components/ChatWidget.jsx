@@ -806,7 +806,7 @@ function SidebarPanel({ sessions, activeSessionId, sidebarQuery, onQueryChange, 
 
   return (
     <>
-      <style>{`.cw-sidebar-row:hover { background: #f9fafb !important; } .cw-sidebar-row:active { background: #f3f4f6 !important; }`}</style>
+      <style>{`.cw-sidebar-row:hover { background: #f3f4f6 !important; } .cw-sidebar-row:active { background: #e9eaec !important; }`}</style>
       <div style={sidebarHeaderStyle}>
         <span style={{ fontWeight: 700, fontSize: 15, color: '#111827', fontFamily: 'var(--cw-font-family)' }}>Conversaciones</span>
       </div>
@@ -824,7 +824,7 @@ function SidebarPanel({ sessions, activeSessionId, sidebarQuery, onQueryChange, 
           />
         </div>
       </div>
-      <div style={{ flex: 1, overflowY: 'auto', scrollbarWidth: 'thin', scrollbarColor: '#e5e7eb transparent' }}>
+      <div style={{ flex: 1, overflowY: 'auto', scrollbarWidth: 'thin', scrollbarColor: '#e5e7eb transparent', padding: '4px 6px' }}>
         {active.length > 0 && (
           <>
             <div style={sidebarSectionLabel}>EN CURSO</div>
@@ -866,12 +866,12 @@ function SidebarSessionRow({ session, isActive, onSelect }) {
       className="cw-sidebar-row"
       style={{
         display: 'flex', alignItems: 'center', gap: 10,
-        width: '100%', padding: '11px 14px',
+        width: '100%', padding: '10px 10px',
         border: 'none',
-        borderLeft: isActive ? '3px solid var(--cw-primary)' : '3px solid transparent',
-        background: isActive ? '#f0f4ff' : 'transparent',
+        borderRadius: 10,
+        background: isActive ? '#eff6ff' : 'transparent',
         cursor: 'pointer', textAlign: 'left',
-        borderBottom: '1px solid #f3f4f6',
+        marginBottom: 2,
         fontFamily: 'var(--cw-font-family)',
         transition: 'background 120ms',
       }}
