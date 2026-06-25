@@ -256,6 +256,7 @@ export function DesktopWidget({ onClose, config: configOverrides = {} }) {
 
   const sessionsPanelProps = {
     activeName: name, activeAvatar: avatar, activeIsAgent: isAgent,
+    activeTitle: deriveTitle(messages),
     activeLastMsg: messages.filter(m => m.role !== 'system').at(-1)?.text ?? '',
     activeUnread: unreadCount,
     selectedId: selectedSession?.id ?? 'active',
@@ -479,7 +480,7 @@ export function DesktopWidget({ onClose, config: configOverrides = {} }) {
 
 const PAST_SESSIONS = [
   {
-    id: 'ps1', name: 'Botsy AI', isAgent: false, avatar: null,
+    id: 'ps1', title: 'Estado de mi cuenta', name: 'Botsy AI', isAgent: false, avatar: null,
     lastMsg: 'Gracias por contactarnos. ¿Hay algo más en que pueda ayudarte?', time: 'Ayer',
     messages: [
       { id: 1, role: 'bot',  type: 'text', text: '¡Hola, Santiago! ¿En qué puedo ayudarte hoy?', createdAt: new Date(), senderName: 'Botsy AI', senderType: 'Asistente IA' },
@@ -492,7 +493,7 @@ const PAST_SESSIONS = [
     ],
   },
   {
-    id: 'ps2', name: 'Camila', isAgent: true, avatar: 'https://i.pravatar.cc/160?img=47',
+    id: 'ps2', title: 'Cobro duplicado en servicio', name: 'Camila', isAgent: true, avatar: 'https://i.pravatar.cc/160?img=47',
     lastMsg: '¡Perfecto! Me alegra que hayas podido resolver tu consulta.', time: 'Lun',
     messages: [
       { id: 1, role: 'bot',  type: 'text', text: '¡Hola! Soy Botsy. Veo que tuviste un problema con un cobro duplicado.', createdAt: new Date(), senderName: 'Botsy AI', senderType: 'Asistente IA' },
@@ -505,7 +506,7 @@ const PAST_SESSIONS = [
     ],
   },
   {
-    id: 'ps3', name: 'Botsy AI', isAgent: false, avatar: null,
+    id: 'ps3', title: 'Seguimiento pedido #48291', name: 'Botsy AI', isAgent: false, avatar: null,
     lastMsg: 'Tu pedido #48291 está en camino. Llegará mañana entre 10 y 14hs.', time: '15 jun',
     messages: [
       { id: 1, role: 'bot',  type: 'text', text: '¡Hola, Santiago! ¿En qué puedo ayudarte?', createdAt: new Date(), senderName: 'Botsy AI', senderType: 'Asistente IA' },
@@ -516,7 +517,7 @@ const PAST_SESSIONS = [
     ],
   },
   {
-    id: 'ps4', name: 'Tomás', isAgent: true, avatar: 'https://i.pravatar.cc/160?img=11',
+    id: 'ps4', title: 'Devolución producto dañado', name: 'Tomás', isAgent: true, avatar: 'https://i.pravatar.cc/160?img=11',
     lastMsg: 'Procesamos el reembolso. Verás el crédito en 3-5 días hábiles.', time: '12 jun',
     messages: [
       { id: 1, role: 'bot',  type: 'text', text: '¡Hola! Entiendo que querés hacer una devolución. Dame un momento para conectarte con el equipo.', createdAt: new Date(), senderName: 'Botsy AI', senderType: 'Asistente IA' },
@@ -529,7 +530,7 @@ const PAST_SESSIONS = [
     ],
   },
   {
-    id: 'ps5', name: 'Botsy AI', isAgent: false, avatar: null,
+    id: 'ps5', title: 'Activar autenticación 2FA', name: 'Botsy AI', isAgent: false, avatar: null,
     lastMsg: '¿Hay algo más en que pueda ayudarte?', time: '8 jun',
     messages: [
       { id: 1, role: 'bot',  type: 'text', text: '¡Hola, Santiago! Soy Botsy. ¿En qué puedo ayudarte hoy?', createdAt: new Date(), senderName: 'Botsy AI', senderType: 'Asistente IA' },
@@ -541,10 +542,17 @@ const PAST_SESSIONS = [
   },
 ]
 
-function DWSessionsPanel({ activeName, activeAvatar, activeIsAgent, activeLastMsg, activeUnread, selectedId, onClose, onSelectActive, onSelectPast, isMobile }) {
+function deriveTitle(messages) {
+  const first = messages.find(m => m.role === 'user' && m.text)
+  if (!first) return 'Nueva conversación'
+  const t = first.text.trim()
+  return t.length > 38 ? t.slice(0, 36) + '…' : t
+}
+
+function DWSessionsPanel({ activeName, activeTitle, activeAvatar, activeIsAgent, activeLastMsg, activeUnread, selectedId, onClose, onSelectActive, onSelectPast, isMobile }) {
   const [search, setSearch] = useState('')
   const filtered = PAST_SESSIONS.filter(s =>
-    s.name.toLowerCase().includes(search.toLowerCase()) ||
+    s.title.toLowerCase().includes(search.toLowerCase()) ||
     s.lastMsg.toLowerCase().includes(search.toLowerCase())
   )
 
@@ -596,7 +604,7 @@ function DWSessionsPanel({ activeName, activeAvatar, activeIsAgent, activeLastMs
           <SessAvatar src={activeAvatar} name={activeName} isAgent={activeIsAgent} size={isMobile ? 52 : 38} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 2 }}>
-              <span style={{ fontWeight: 600, fontSize: 14, color: '#111827' }}>{activeName}</span>
+              <span style={{ fontWeight: 600, fontSize: 14, color: '#111827' }}>{activeTitle || activeName}</span>
               <span style={{ fontSize: 11, color: '#2563eb', fontWeight: 500, flexShrink: 0 }}>Ahora</span>
             </div>
             <div style={{ fontSize: 12, color: '#6b7280', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -630,7 +638,7 @@ function DWSessionsPanel({ activeName, activeAvatar, activeIsAgent, activeLastMs
               <SessAvatar src={s.avatar} name={s.name} isAgent={s.isAgent} size={isMobile ? 52 : 38} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 2 }}>
-                  <span style={{ fontWeight: 600, fontSize: 14, color: '#111827' }}>{s.name}</span>
+                  <span style={{ fontWeight: 600, fontSize: 14, color: '#111827' }}>{s.title}</span>
                   <span style={{ fontSize: 11, color: '#9ca3af', flexShrink: 0 }}>{s.time}</span>
                 </div>
                 <div style={{ fontSize: isMobile ? 16 : 12, color: '#6b7280', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>

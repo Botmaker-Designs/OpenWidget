@@ -662,7 +662,7 @@ export function ChatWidget({ config: configOverrides = {} }) {
 // ── Demo historical sessions (pre-seeded, closed) ────────────────────────────
 const INITIAL_DEMO_SESSIONS = [
   {
-    id: 'dh1', closed: true, timestamp: 'Ayer',
+    id: 'dh1', title: 'Estado de mi cuenta', closed: true, timestamp: 'Ayer',
     startedAt: new Date('2026-06-23'),
     messages: [
       { id: 'dh1-1', role: 'bot',  type: 'text', text: '¡Hola, Santiago! ¿En qué puedo ayudarte hoy?', createdAt: new Date('2026-06-23T10:00:00'), senderName: 'Botsy AI', senderType: 'Asistente IA' },
@@ -673,7 +673,7 @@ const INITIAL_DEMO_SESSIONS = [
     ],
   },
   {
-    id: 'dh2', closed: true, timestamp: 'Lun',
+    id: 'dh2', title: 'Problema con una entrega', closed: true, timestamp: 'Lun',
     agent: { name: 'Camila', avatar: 'https://i.pravatar.cc/160?img=47', status: 'online' },
     startedAt: new Date('2026-06-22'),
     messages: [
@@ -687,7 +687,7 @@ const INITIAL_DEMO_SESSIONS = [
     ],
   },
   {
-    id: 'dh3', closed: true, timestamp: '15 jun',
+    id: 'dh3', title: 'Pedido #48291 en camino', closed: true, timestamp: '15 jun',
     startedAt: new Date('2026-06-15'),
     messages: [
       { id: 'dh3-1', role: 'user', type: 'text', text: '¿Dónde está mi pedido #48291?', createdAt: new Date('2026-06-15T09:00:00') },
@@ -699,7 +699,7 @@ const INITIAL_DEMO_SESSIONS = [
     ],
   },
   {
-    id: 'dh4', closed: true, timestamp: '12 jun',
+    id: 'dh4', title: 'Devolución de pedido', closed: true, timestamp: '12 jun',
     agent: { name: 'Tomás', avatar: 'https://i.pravatar.cc/160?img=32', status: 'online' },
     startedAt: new Date('2026-06-12'),
     messages: [
@@ -712,7 +712,7 @@ const INITIAL_DEMO_SESSIONS = [
     ],
   },
   {
-    id: 'dh5', closed: true, timestamp: '8 jun',
+    id: 'dh5', title: 'Horarios de atención', closed: true, timestamp: '8 jun',
     startedAt: new Date('2026-06-08'),
     messages: [
       { id: 'dh5-1', role: 'bot',  type: 'text', text: '¡Hola! ¿En qué puedo ayudarte?', createdAt: new Date('2026-06-08T16:00:00'), senderName: 'Botsy AI', senderType: 'Asistente IA' },
@@ -845,6 +845,13 @@ function SidebarPanel({ sessions, activeSessionId, sidebarQuery, onQueryChange, 
   )
 }
 
+function deriveTitle(messages) {
+  const first = messages.find(m => m.role === 'user' && m.text)
+  if (!first) return 'Nueva conversación'
+  const t = first.text.trim()
+  return t.length > 38 ? t.slice(0, 36) + '…' : t
+}
+
 function SidebarSessionRow({ session, isActive, onSelect }) {
   const lastMsg = session.messages.filter(m => m.text).at(-1)
   const preview = lastMsg?.text ?? '...'
@@ -878,7 +885,7 @@ function SidebarSessionRow({ session, isActive, onSelect }) {
       />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2 }}>
-          <span style={{ fontSize: 12, fontWeight: 600, color: '#111827' }}>{name}</span>
+          <span style={{ fontSize: 12, fontWeight: 600, color: '#111827' }}>{session.title || deriveTitle(session.messages)}</span>
           <span style={{ fontSize: 10, color: '#9ca3af', flexShrink: 0 }}>{date}</span>
         </div>
         <p style={{ margin: 0, fontSize: 11, color: '#6b7280', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{preview}</p>
