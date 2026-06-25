@@ -3,7 +3,6 @@ import { TypingIndicator } from './TypingIndicator'
 import { QuickReplies } from './QuickReplies'
 import { FallbackMessage } from './FallbackMessage'
 import { TransferringMessage, AgentJoinMessage } from './SystemMessage'
-import { BotmakerLogo } from './BotmakerLogo'
 function msgTime(date) {
   if (!date) return ''
   const d = new Date(date)
@@ -216,28 +215,6 @@ function AudioMessage({ message, isRead, isMobile }) {
   )
 }
 
-function msgInitials(name) {
-  if (!name) return '?'
-  const w = name.trim().split(/\s+/)
-  return w.length === 1 ? w[0].slice(0, 2).toUpperCase() : (w[0][0] + w[1][0]).toUpperCase()
-}
-
-function MessageAvatar({ senderName, senderType }) {
-  const isAgent = senderType && senderType !== 'Asistente IA'
-  return (
-    <div style={{
-      width: 26, height: 26, borderRadius: '50%', flexShrink: 0,
-      background: isAgent ? '#6b7280' : '#f3f4f6',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-    }}>
-      {isAgent
-        ? <span style={{ fontSize: 10, fontWeight: 700, color: '#fff', userSelect: 'none', letterSpacing: '-0.01em' }}>{msgInitials(senderName)}</span>
-        : <BotmakerLogo size={13} />
-      }
-    </div>
-  )
-}
-
 function Message({ message, isRead, onOpenLightbox, quickReplies, onQuickReply, onEscalate, onLeaveMessage, fallbackText, isMobile = false }) {
   const senderName = message.senderName
   const senderType = message.senderType
@@ -265,9 +242,8 @@ function Message({ message, isRead, onOpenLightbox, quickReplies, onQuickReply, 
 
   return (
     <div>
-      <div style={{ ...bubbleWrap(message.role), gap: isUser ? 0 : 8 }}>
-        {!isUser && <MessageAvatar senderName={senderName} senderType={senderType} />}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: isUser ? 'flex-end' : 'flex-start', gap: 4, maxWidth: isUser ? '72%' : '65%' }}>
+      <div style={bubbleWrap(message.role)}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: isUser ? 'flex-end' : 'flex-start', gap: 4, maxWidth: '72%' }}>
           {message.attachments?.length > 0 && (
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: isUser ? 'flex-end' : 'flex-start' }}>
               {message.attachments.map((a, i) => <AttachmentImage key={i} src={a.url} onOpen={onOpenLightbox} />)}
