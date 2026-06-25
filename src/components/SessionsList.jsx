@@ -1,4 +1,5 @@
 import { BotmakerLogo } from './BotmakerLogo'
+import { BrandAvatar } from './BrandAvatar'
 
 export function SessionsList({ sessions, botName, botAvatar, onSelectSession, onNewChat, onClose, isExpanded, onToggleExpand, typingSessionId, onTabChange }) {
   return (
@@ -77,21 +78,11 @@ function SessionRow({ session, botName, botAvatar, onClick, isTyping }) {
       `}</style>
       <button className="cw-session-row" style={rowStyle} onClick={onClick}>
         <div style={{ position: 'relative', flexShrink: 0 }}>
-          <div className="cw-session-avatar" style={{ ...rowAvatarStyle, borderRadius: '50%' }}>
-            {agent
-              ? <img src={agent.avatar} alt={agent.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              : botAvatar
-                ? <img src={botAvatar} alt={botName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                : <BotmakerLogo size={26} />
-            }
-          </div>
-          {agent && (
-            <span style={{
-              position: 'absolute', bottom: 1, right: 1,
-              width: 10, height: 10, borderRadius: '50%',
-              background: '#22c55e', border: '2px solid #fff',
-            }} />
-          )}
+          <BrandAvatar
+            size={42}
+            agentAvatar={agent ? (agent.avatar ?? null) : null}
+            agentName={agent ? (agent.name ?? null) : null}
+          />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>

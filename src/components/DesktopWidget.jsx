@@ -7,6 +7,7 @@ import { ChatInput } from './ChatInput'
 import { VoiceChat } from './VoiceChat'
 import { BotmakerLogo } from './BotmakerLogo'
 import { HumanAvatar } from './HumanAvatar'
+import { BrandAvatar } from './BrandAvatar'
 import { IncomingCall } from './IncomingCall'
 import { ActiveCall } from './ActiveCall'
 import { ActiveVideoCall } from './ActiveVideoCall'
@@ -321,7 +322,7 @@ export function DesktopWidget({ onClose, config: configOverrides = {} }) {
               >
                 <div style={{ position: 'relative', flexShrink: 0 }}>
                   <PanelAvatar src={displayAvatar} name={displayName} isAgent={displayIsAgent} size={isMobile ? 54 : 40} />
-                  {!isHistoryView && <OnlineBadge />}
+                  {!isHistoryView && !displayIsAgent && <OnlineBadge />}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontWeight: 700, fontSize: 15, color: '#111827', lineHeight: 1.2 }}>{displayName}</div>
@@ -631,17 +632,12 @@ function DWSessionsPanel({ activeName, activeAvatar, activeIsAgent, activeLastMs
 }
 
 function SessAvatar({ src, name, isAgent, size = 40 }) {
-  const base = { width: size, height: size, borderRadius: '50%', flexShrink: 0 }
-  if (src) return <img src={src} alt={name} style={{ ...base, objectFit: 'cover' }} />
-  if (isAgent) return (
-    <div style={{ ...base, overflow: 'hidden' }}>
-      <HumanAvatar name={name} size={size} />
-    </div>
-  )
   return (
-    <div style={{ ...base, background: '#f3f4f6', border: '1.5px solid #e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <BotmakerLogo size={size * 0.55} />
-    </div>
+    <BrandAvatar
+      size={size}
+      agentAvatar={isAgent ? src : null}
+      agentName={isAgent ? name : null}
+    />
   )
 }
 
@@ -791,17 +787,13 @@ function DWInfoPanel({ onClose, name, avatar, isAgent, subtitle, messages, confi
 }
 
 function InfoAvatar({ src, name, isAgent, size = 80 }) {
-  const base = { width: size, height: size, borderRadius: '50%', flexShrink: 0 }
-  if (src) return <img src={src} alt={name} style={{ ...base, objectFit: 'cover' }} />
-  if (isAgent) return (
-    <div style={{ ...base, overflow: 'hidden' }}>
-      <HumanAvatar name={name} size={size} />
-    </div>
-  )
   return (
-    <div style={{ ...base, background: '#f3f4f6', border: '2px solid #e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <BotmakerLogo size={size * 0.55} />
-    </div>
+    <BrandAvatar
+      size={size}
+      pipSize={22}
+      agentAvatar={isAgent ? src : null}
+      agentName={isAgent ? name : null}
+    />
   )
 }
 
@@ -881,17 +873,12 @@ function CloseIconSmall() {
 }
 
 function PanelAvatar({ src, name, isAgent, size = 40 }) {
-  const base = { width: size, height: size, borderRadius: '50%', flexShrink: 0 }
-  if (src) return <img src={src} alt={name} style={{ ...base, objectFit: 'cover' }} />
-  if (isAgent) return (
-    <div style={{ ...base, overflow: 'hidden' }}>
-      <HumanAvatar name={name} size={size} />
-    </div>
-  )
   return (
-    <div style={{ ...base, background: '#fff', border: '1.5px solid #e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <BotmakerLogo size={size * 0.65} />
-    </div>
+    <BrandAvatar
+      size={size}
+      agentAvatar={isAgent ? src : null}
+      agentName={isAgent ? name : null}
+    />
   )
 }
 
