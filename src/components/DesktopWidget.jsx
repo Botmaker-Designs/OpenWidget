@@ -326,7 +326,7 @@ export function DesktopWidget({ onClose, config: configOverrides = {} }) {
               >
                 <PanelAvatar size={isMobile ? 54 : 40} />
                 <div style={{ minWidth: 0, flex: 1 }}>
-                  <div style={{ fontWeight: 700, fontSize: 15, color: '#111827', lineHeight: 1.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{name}</div>
+                  <div style={{ fontWeight: 700, fontSize: 15, color: '#111827', lineHeight: 1.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{config.botName}</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
                     {!isHistoryView && <span style={{ width: 6, height: 6, borderRadius: '50%', flexShrink: 0, background: isTransferring ? '#f59e0b' : '#22c55e' }} />}
                     <span style={{ fontSize: 11, color: isHistoryView ? '#9ca3af' : '#6b7280', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
