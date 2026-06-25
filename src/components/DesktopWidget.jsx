@@ -57,6 +57,9 @@ export function DesktopWidget({ onClose, config: configOverrides = {} }) {
   const [videoMinimized, setVideoMinimized]   = useState(false)
   const [videoSeconds, setVideoSeconds]       = useState(0)
 
+  const [panelWidth, setPanelWidth] = useState(320)
+  const panelDragRef = useRef({ startX: 0, startW: 320 })
+
   const streamingRef  = useRef(null)
   const shellRef      = useRef(null)
 
@@ -236,6 +239,25 @@ export function DesktopWidget({ onClose, config: configOverrides = {} }) {
     addMessage({ id: nextDesktopId++, role: 'bot', type: 'text', text: 'Dejá tu mensaje y te responderemos a la brevedad.', createdAt: new Date(), senderName: config.botName, senderType: 'Asistente IA' })
   }
 
+  const handleResizeStart = (e) => {
+    e.preventDefault()
+    panelDragRef.current = { startX: e.clientX, startW: panelWidth }
+    const onMove = (e) => {
+      const delta = e.clientX - panelDragRef.current.startX
+      setPanelWidth(Math.min(480, Math.max(240, panelDragRef.current.startW + delta)))
+    }
+    const onUp = () => {
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+    }
+    document.body.style.cursor = 'col-resize'
+    document.body.style.userSelect = 'none'
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+  }
+
   const isAgent   = !!agentSession
   const name      = isAgent ? agentSession.name    : (config.botName ?? 'Botsy AI')
   const avatar    = isAgent ? agentSession.avatar  : (config.botAvatar ?? null)
@@ -292,12 +314,19 @@ export function DesktopWidget({ onClose, config: configOverrides = {} }) {
           transition: 'transform 280ms cubic-bezier(0.4, 0, 0.2, 1)',
           display: 'flex', flexDirection: 'column',
         } : {
-          width: sessionsOpen ? 320 : 0,
+          position: 'relative',
+          width: sessionsOpen ? panelWidth : 0,
           flexShrink: 0, overflow: 'hidden',
           transition: 'width 280ms cubic-bezier(0.4, 0, 0.2, 1)',
           borderRight: '1px solid #f3f4f6',
         }}>
           <DWSessionsPanel {...sessionsPanelProps} isMobile={isMobile} />
+          {sessionsOpen && (
+            <div
+              onMouseDown={handleResizeStart}
+              style={{ position: 'absolute', top: 0, right: 0, width: 6, height: '100%', cursor: 'col-resize', zIndex: 10 }}
+            />
+          )}
         </div>
 
         {/* ── Chat column (flex: 1, shrinks when panels open) ── */}
@@ -557,7 +586,7 @@ function DWSessionsPanel({ activeName, activeTitle, activeAvatar, activeIsAgent,
   )
 
   return (
-    <div style={{ width: isMobile ? '100%' : 320, height: '100%', display: 'flex', flexDirection: 'column', background: '#fff', overflow: 'hidden' }}>
+    <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', background: '#fff', overflow: 'hidden' }}>
       <style>{`
         .dw-sess-row {
           display: flex; align-items: center; gap: 10px;
