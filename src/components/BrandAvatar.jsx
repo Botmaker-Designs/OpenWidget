@@ -27,11 +27,11 @@ export function BrandAvatar({ size = 36, pipSize = 18, agentAvatar = null, agent
       {/* Círculo principal — siempre la marca */}
       <div style={{
         width: size, height: size, borderRadius: '50%',
-        background: 'var(--cw-primary)',
+        background: '#f3f4f6',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         overflow: 'hidden',
       }}>
-        <BotmakerLogo size={logoSize} white />
+        <BotmakerLogo size={logoSize} />
       </div>
 
       {/* Pip — foto real o iniciales como fallback */}
