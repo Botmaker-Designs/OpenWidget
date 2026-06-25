@@ -3,6 +3,7 @@ import { TypingIndicator } from './TypingIndicator'
 import { QuickReplies } from './QuickReplies'
 import { FallbackMessage } from './FallbackMessage'
 import { TransferringMessage, AgentJoinMessage } from './SystemMessage'
+import { BrandAvatar } from './BrandAvatar'
 
 function msgTime(date) {
   if (!date) return ''
@@ -244,7 +245,13 @@ function Message({ message, isRead, onOpenLightbox, quickReplies, onQuickReply, 
   return (
     <div>
       <div style={bubbleWrap(message.role)}>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: isUser ? 'flex-end' : 'flex-start', gap: 4, maxWidth: '78%' }}>
+        {!isUser && (
+          <BrandAvatar
+            agentAvatar={null}
+            agentName={senderType !== 'Asistente IA' ? senderName : null}
+          />
+        )}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: isUser ? 'flex-end' : 'flex-start', gap: 4, maxWidth: '72%', marginLeft: isUser ? 0 : 8 }}>
           {message.attachments?.length > 0 && (
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: isUser ? 'flex-end' : 'flex-start' }}>
               {message.attachments.map((a, i) => <AttachmentImage key={i} src={a.url} onOpen={onOpenLightbox} />)}
@@ -468,10 +475,19 @@ function LbCloseIcon() {
   )
 }
 
+
 function BubbleLabel({ name, type }) {
+  const isAgent = !!type && type !== 'Asistente IA'
   return (
-    <div style={{ fontSize: 11, color: '#374151', whiteSpace: 'nowrap', paddingLeft: 2, fontWeight: 500 }}>
-      {name} · {type}
+    <div style={{
+      display: 'inline-flex', alignItems: 'center',
+      padding: '2px 8px', borderRadius: 20,
+      background: isAgent ? '#f0fdf4' : '#eff6ff',
+      fontSize: 11, fontWeight: 600,
+      color: isAgent ? '#15803d' : '#2563eb',
+      userSelect: 'none', whiteSpace: 'nowrap',
+    }}>
+      {isAgent ? `${name} · Agente` : 'Asistente IA'}
     </div>
   )
 }
@@ -504,6 +520,7 @@ const botBubbleWrap = { display: 'flex', justifyContent: 'flex-start' }
 const bubbleWrap = (role) => ({
   display: 'flex',
   justifyContent: role === 'user' ? 'flex-end' : 'flex-start',
+  alignItems: 'flex-end',
 })
 
 const bubbleStyle = (isUser, isMobile = false) => ({

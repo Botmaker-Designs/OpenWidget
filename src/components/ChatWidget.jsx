@@ -3,6 +3,7 @@ import { useConfig } from '../hooks/useConfig'
 import { useFallbackLog } from '../hooks/useFallbackLog'
 import { FloatingButton } from './FloatingButton'
 import { BotmakerLogo } from './BotmakerLogo'
+import { BrandAvatar } from './BrandAvatar'
 import { ChatPanel } from './ChatPanel'
 import { SessionsList } from './SessionsList'
 import { HelpCenter } from './HelpCenter'
@@ -869,15 +870,12 @@ function SidebarSessionRow({ session, isActive, onSelect }) {
       }}
       onClick={onSelect}
     >
-      <div style={{ position: 'relative', width: 34, height: 34, flexShrink: 0 }}>
-        <div style={{ width: 34, height: 34, borderRadius: '50%', background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-          {avatar
-            ? <img src={avatar} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
-            : <BotmakerLogo size={16} />
-          }
-        </div>
-        {!session.closed && <span style={{ position: 'absolute', bottom: 0, right: 0, width: 9, height: 9, borderRadius: '50%', background: '#22c55e', border: '2px solid #fff' }} />}
-      </div>
+      <BrandAvatar
+        size={34}
+        pipSize={16}
+        agentAvatar={avatar}
+        agentName={avatar ? null : (name !== 'Botsy AI' ? name : null)}
+      />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2 }}>
           <span style={{ fontSize: 12, fontWeight: 600, color: '#111827' }}>{name}</span>
