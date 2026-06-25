@@ -604,7 +604,7 @@ function DWSessionsPanel({ activeName, activeTitle, activeAvatar, activeIsAgent,
           <SessAvatar src={activeAvatar} name={activeName} isAgent={activeIsAgent} size={isMobile ? 52 : 38} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 2 }}>
-              <span style={{ fontWeight: 600, fontSize: 14, color: '#111827' }}>{activeTitle || activeName}</span>
+              <span style={{ fontWeight: 600, fontSize: 13, color: '#111827' }}>{activeTitle || activeName}</span>
               <span style={{ fontSize: 11, color: '#2563eb', fontWeight: 500, flexShrink: 0 }}>Ahora</span>
             </div>
             <div style={{ fontSize: 12, color: '#6b7280', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -638,7 +638,7 @@ function DWSessionsPanel({ activeName, activeTitle, activeAvatar, activeIsAgent,
               <SessAvatar src={s.avatar} name={s.name} isAgent={s.isAgent} size={isMobile ? 52 : 38} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 2 }}>
-                  <span style={{ fontWeight: 600, fontSize: 14, color: '#111827' }}>{s.title}</span>
+                  <span style={{ fontWeight: 600, fontSize: 13, color: '#111827' }}>{s.title}</span>
                   <span style={{ fontSize: 11, color: '#9ca3af', flexShrink: 0 }}>{s.time}</span>
                 </div>
                 <div style={{ fontSize: isMobile ? 16 : 12, color: '#6b7280', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>

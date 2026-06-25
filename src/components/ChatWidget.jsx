@@ -885,7 +885,7 @@ function SidebarSessionRow({ session, isActive, onSelect }) {
       />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2 }}>
-          <span style={{ fontSize: 12, fontWeight: 600, color: '#111827' }}>{session.title || deriveTitle(session.messages)}</span>
+          <span style={{ fontSize: 11, fontWeight: 600, color: '#111827' }}>{session.title || deriveTitle(session.messages)}</span>
           <span style={{ fontSize: 10, color: '#9ca3af', flexShrink: 0 }}>{date}</span>
         </div>
         <p style={{ margin: 0, fontSize: 11, color: '#6b7280', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{preview}</p>
