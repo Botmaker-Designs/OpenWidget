@@ -602,7 +602,10 @@ function DWSessionsPanel({ activeName, activeTitle, activeAvatar, activeIsAgent,
           <span style={{ fontSize: 11, color: '#6b7280', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Activa</span>
         </div>
         <div className={`dw-sess-row${selectedId === 'active' ? ' active' : ''}`} onClick={onSelectActive}>
-          <SessAvatar src={activeAvatar} name={activeName} isAgent={activeIsAgent} size={isMobile ? 56 : 42} />
+          <div style={{ position: 'relative', flexShrink: 0 }}>
+            <BrandAvatar size={isMobile ? 56 : 42} />
+            <span style={{ position: 'absolute', bottom: 1, right: 1, width: 11, height: 11, borderRadius: '50%', background: '#22c55e', border: '2px solid #fff' }} />
+          </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 2 }}>
               <span style={{ fontWeight: 600, fontSize: 13, color: '#111827' }}>{activeTitle || activeName}</span>
