@@ -247,6 +247,7 @@ export function DesktopWidget({ onClose, config: configOverrides = {} }) {
   const displayIsAgent   = isHistoryView ? selectedSession.isAgent : isAgent
   const displayMessages  = isHistoryView ? selectedSession.messages : messages
   const displaySubtitle  = isHistoryView ? 'Sesión cerrada' : subtitle
+  const isTransferring   = !isAgent && !isHistoryView && messages.some(m => m.type === 'transferring')
 
   const unreadCount = (() => {
     const lastUserIdx = messages.reduce((acc, m, i) => m.role === 'user' ? i : acc, -1)
@@ -312,30 +313,38 @@ export function DesktopWidget({ onClose, config: configOverrides = {} }) {
 
           {/* Header */}
           <div style={headerStyle}>
+            <style>{`@keyframes dw-spin{to{transform:rotate(360deg)}}.dw-spin{animation:dw-spin 0.9s linear infinite}`}</style>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <button className="dw-hdr-btn" aria-label="Conversaciones" onClick={() => setSessionsOpen(o => !o)}>
                 <ChatsListIcon />
               </button>
+
+              {/* LEFT: brand avatar + name + status */}
               <div
                 style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0, cursor: 'pointer' }}
                 onClick={() => setInfoOpen(o => !o)}
               >
-                <div style={{ position: 'relative', flexShrink: 0 }}>
-                  <PanelAvatar src={displayAvatar} name={displayName} isAgent={displayIsAgent} size={isMobile ? 54 : 40} />
-                  {!isHistoryView && !displayIsAgent && <OnlineBadge />}
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 700, fontSize: 15, color: '#111827', lineHeight: 1.2 }}>{displayName}</div>
-                  {displayIsAgent && !isHistoryView
-                    ? <DWAgentSubtitle name={displayName} avatar={displayAvatar} />
-                    : (
-                      <div style={{ fontSize: 12, color: isHistoryView ? '#9ca3af' : '#6b7280', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {displaySubtitle}
-                      </div>
-                    )
-                  }
+                <PanelAvatar size={isMobile ? 54 : 40} />
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div style={{ fontWeight: 700, fontSize: 15, color: '#111827', lineHeight: 1.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{name}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
+                    {!isHistoryView && <span style={{ width: 6, height: 6, borderRadius: '50%', flexShrink: 0, background: isTransferring ? '#f59e0b' : '#22c55e' }} />}
+                    <span style={{ fontSize: 11, color: isHistoryView ? '#9ca3af' : '#6b7280', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {isHistoryView
+                        ? 'Sesión cerrada'
+                        : isTransferring
+                          ? 'Conectando con un agente...'
+                          : isAgent
+                            ? 'Centro de atención · < 3 mins'
+                            : subtitle}
+                    </span>
+                  </div>
                 </div>
               </div>
+
+              {/* RIGHT: attended-by pill */}
+              {!isHistoryView && <DWAttendedByPill isAgent={isAgent} agentSession={agentSession} isTransferring={isTransferring} />}
+
               <button className="dw-hdr-btn" aria-label="Cerrar" onClick={onClose}>
                 <CloseIcon />
               </button>
@@ -881,25 +890,50 @@ function PanelAvatar({ src, name, isAgent, size = 40 }) {
   return <BrandAvatar size={size} />
 }
 
-function DWAgentSubtitle({ name, avatar }) {
-  const av  = avatar || null
-  const nm  = name   || ''
-  const ini = nm.trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase() || '?'
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 3 }}>
-      <div style={{
-        width: 16, height: 16, borderRadius: '50%', overflow: 'hidden', flexShrink: 0,
-        background: av ? '#e5e7eb' : '#6b7280',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-      }}>
-        {av
-          ? <img src={av} alt={nm} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          : <span style={{ fontSize: 7, fontWeight: 800, color: '#fff', letterSpacing: '-0.01em' }}>{ini}</span>
-        }
+function DWAttendedByPill({ isAgent, agentSession, isTransferring }) {
+  if (isAgent && agentSession) {
+    const av  = agentSession.avatar || null
+    const nm  = agentSession.name   || ''
+    const ini = nm.trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase() || '?'
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 20, padding: '5px 10px 5px 5px', flexShrink: 0 }}>
+        <div style={{ width: 28, height: 28, borderRadius: '50%', overflow: 'hidden', flexShrink: 0, background: av ? '#e5e7eb' : '#6b7280', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          {av ? <img src={av} alt={nm} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 10, fontWeight: 800, color: '#fff' }}>{ini}</span>}
+        </div>
+        <div>
+          <div style={{ fontSize: 10, color: '#15803d', fontWeight: 500, lineHeight: 1.1 }}>Atendido por</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: '#15803d', lineHeight: 1.2 }}>{nm}</div>
+        </div>
       </div>
-      <span style={{ fontSize: 12, color: '#6b7280', whiteSpace: 'nowrap' }}>
-        Agente · &lt; 3 mins de espera
-      </span>
+    )
+  }
+  if (isTransferring) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 20, padding: '5px 10px 5px 5px', flexShrink: 0 }}>
+        <div style={{ width: 28, height: 28, borderRadius: '50%', flexShrink: 0, background: '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <svg className="dw-spin" width="13" height="13" viewBox="0 0 24 24" fill="none">
+            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke="#fff" strokeWidth="2.5" strokeLinecap="round"/>
+          </svg>
+        </div>
+        <div>
+          <div style={{ fontSize: 10, color: '#92400e', fontWeight: 500, lineHeight: 1.1 }}>Buscando</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: '#92400e', lineHeight: 1.2 }}>agente</div>
+        </div>
+      </div>
+    )
+  }
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 20, padding: '5px 10px 5px 5px', flexShrink: 0 }}>
+      <div style={{ width: 28, height: 28, borderRadius: '50%', flexShrink: 0, background: 'var(--cw-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="8" r="4" fill="rgba(255,255,255,0.95)"/>
+          <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="rgba(255,255,255,0.95)" strokeWidth="2" strokeLinecap="round"/>
+        </svg>
+      </div>
+      <div>
+        <div style={{ fontSize: 10, color: '#1d4ed8', fontWeight: 500, lineHeight: 1.1 }}>Asistente</div>
+        <div style={{ fontSize: 12, fontWeight: 700, color: '#1d4ed8', lineHeight: 1.2 }}>IA</div>
+      </div>
     </div>
   )
 }
