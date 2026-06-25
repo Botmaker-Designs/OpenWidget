@@ -616,10 +616,10 @@ function DWSessionsPanel({ activeName, activeAvatar, activeIsAgent, activeLastMs
               <SessAvatar src={s.avatar} name={s.name} isAgent={s.isAgent} size={isMobile ? 52 : 38} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 2 }}>
-                  <span style={{ fontWeight: 500, fontSize: 14, color: '#9ca3af' }}>{s.name}</span>
-                  <span style={{ fontSize: 11, color: '#d1d5db', flexShrink: 0 }}>{s.time}</span>
+                  <span style={{ fontWeight: 600, fontSize: 14, color: '#111827' }}>{s.name}</span>
+                  <span style={{ fontSize: 11, color: '#9ca3af', flexShrink: 0 }}>{s.time}</span>
                 </div>
-                <div style={{ fontSize: isMobile ? 16 : 12, color: '#d1d5db', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <div style={{ fontSize: isMobile ? 16 : 12, color: '#6b7280', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {s.lastMsg}
                 </div>
               </div>
