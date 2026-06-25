@@ -889,9 +889,10 @@ function SidebarSessionRow({ session, isActive, onSelect }) {
           <span style={{ fontSize: 10, color: '#9ca3af', flexShrink: 0 }}>{date}</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4, overflow: 'hidden' }}>
-          {session.agent?.avatar && (
-            <img src={session.agent.avatar} alt="" style={{ width: 13, height: 13, borderRadius: '50%', flexShrink: 0, objectFit: 'cover' }} />
-          )}
+          {session.agent?.avatar
+            ? <img src={session.agent.avatar} alt="" style={{ width: 13, height: 13, borderRadius: '50%', flexShrink: 0, objectFit: 'cover' }} />
+            : <div style={{ width: 13, height: 13, borderRadius: '50%', background: '#f3f4f6', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><BotmakerLogo size={7} /></div>
+          }
           <p style={{ margin: 0, fontSize: 11, color: '#6b7280', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{preview}</p>
         </div>
       </div>

@@ -646,9 +646,10 @@ function DWSessionsPanel({ activeName, activeTitle, activeAvatar, activeIsAgent,
                   <span style={{ fontSize: 11, color: '#9ca3af', flexShrink: 0 }}>{s.time}</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4, overflow: 'hidden' }}>
-                  {s.isAgent && s.avatar && (
-                    <img src={s.avatar} alt="" style={{ width: 14, height: 14, borderRadius: '50%', flexShrink: 0, objectFit: 'cover' }} />
-                  )}
+                  {s.isAgent && s.avatar
+                    ? <img src={s.avatar} alt="" style={{ width: 14, height: 14, borderRadius: '50%', flexShrink: 0, objectFit: 'cover' }} />
+                    : <div style={{ width: 14, height: 14, borderRadius: '50%', background: '#f3f4f6', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><BotmakerLogo size={8} /></div>
+                  }
                   <span style={{ fontSize: isMobile ? 16 : 12, color: '#6b7280', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {s.lastMsg}
                   </span>
