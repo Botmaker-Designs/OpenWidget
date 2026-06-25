@@ -246,10 +246,7 @@ function Message({ message, isRead, onOpenLightbox, quickReplies, onQuickReply, 
     <div>
       <div style={bubbleWrap(message.role)}>
         {!isUser && (
-          <BrandAvatar
-            agentAvatar={null}
-            agentName={senderType !== 'Asistente IA' ? senderName : null}
-          />
+          <BrandAvatar />
         )}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: isUser ? 'flex-end' : 'flex-start', gap: 4, maxWidth: '72%', marginLeft: isUser ? 0 : 8 }}>
           {message.attachments?.length > 0 && (
