@@ -647,8 +647,8 @@ function DWSessionsPanel({ activeName, activeTitle, activeAvatar, activeIsAgent,
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4, overflow: 'hidden' }}>
                   {s.isAgent && s.avatar
-                    ? <img src={s.avatar} alt="" style={{ width: 14, height: 14, borderRadius: '50%', flexShrink: 0, objectFit: 'cover', border: '1px solid #e5e7eb' }} />
-                    : <div style={{ width: 14, height: 14, borderRadius: '50%', background: '#f3f4f6', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #e5e7eb' }}><BotmakerLogo size={8} /></div>
+                    ? <img src={s.avatar} alt="" style={{ width: 18, height: 18, borderRadius: '50%', flexShrink: 0, objectFit: 'cover', border: '1px solid #e5e7eb' }} />
+                    : <div style={{ width: 18, height: 18, borderRadius: '50%', background: '#f3f4f6', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #e5e7eb' }}><BotmakerLogo size={10} /></div>
                   }
                   <span style={{ fontSize: isMobile ? 16 : 12, color: '#6b7280', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {s.lastMsg}
