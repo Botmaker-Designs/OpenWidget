@@ -162,13 +162,13 @@ function SafariDotsBadge() {
     <span style={{
       display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
       width: 28, height: 28, borderRadius: 7,
-      background: '#636366', verticalAlign: 'middle', margin: '0 2px',
+      background: '#e5e7eb', verticalAlign: 'middle', margin: '0 2px',
       flexShrink: 0,
     }}>
       <svg width="15" height="5" viewBox="0 0 15 5" fill="none">
-        <circle cx="2.5" cy="2.5" r="2" fill="#fff"/>
-        <circle cx="7.5" cy="2.5" r="2" fill="#fff"/>
-        <circle cx="12.5" cy="2.5" r="2" fill="#fff"/>
+        <circle cx="2.5" cy="2.5" r="2" fill="#111827"/>
+        <circle cx="7.5" cy="2.5" r="2" fill="#111827"/>
+        <circle cx="12.5" cy="2.5" r="2" fill="#111827"/>
       </svg>
     </span>
   )
@@ -179,13 +179,13 @@ function SafariShareBadge() {
     <span style={{
       display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
       width: 28, height: 28, borderRadius: 7,
-      background: '#007AFF', verticalAlign: 'middle', margin: '0 2px',
+      background: '#e5e7eb', verticalAlign: 'middle', margin: '0 2px',
       flexShrink: 0,
     }}>
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-        <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
-        <polyline points="16 6 12 2 8 6" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
-        <line x1="12" y1="2" x2="12" y2="15" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" stroke="#111827" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+        <polyline points="16 6 12 2 8 6" stroke="#111827" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+        <line x1="12" y1="2" x2="12" y2="15" stroke="#111827" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
       </svg>
     </span>
   )
