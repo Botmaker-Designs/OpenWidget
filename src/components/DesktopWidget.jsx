@@ -680,8 +680,8 @@ function DWSessionsPanel({ activeName, activeTitle, activeAvatar, activeIsAgent,
             <span style={{ position: 'absolute', bottom: 1, right: 1, width: 11, height: 11, borderRadius: '50%', background: '#22c55e', border: '2px solid #fff' }} />
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 5 }}>
-              <span style={{ fontWeight: 600, fontSize: 13, color: '#111827' }}>{activeTitle || activeName}</span>
+            <div style={{ display: 'flex', alignItems: 'baseline', marginBottom: 5, gap: 6, minWidth: 0 }}>
+              <span style={{ fontWeight: 600, fontSize: 13, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>{activeTitle || activeName}</span>
               <span style={{ fontSize: 11, color: '#2563eb', fontWeight: 500, flexShrink: 0 }}>Ahora</span>
             </div>
             <div style={{ fontSize: 12, color: '#6b7280', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -714,8 +714,8 @@ function DWSessionsPanel({ activeName, activeTitle, activeAvatar, activeIsAgent,
             <div key={s.id} className={`dw-sess-row${selectedId === s.id ? ' active' : ''}`} onClick={() => onSelectPast(s)}>
               <BrandAvatar size={isMobile ? 56 : 42} />
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 5 }}>
-                  <span style={{ fontWeight: 600, fontSize: 13, color: '#111827' }}>{s.title}</span>
+                <div style={{ display: 'flex', alignItems: 'baseline', marginBottom: 5, gap: 6, minWidth: 0 }}>
+                  <span style={{ fontWeight: 600, fontSize: 13, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>{s.title}</span>
                   <span style={{ fontSize: 11, color: '#9ca3af', flexShrink: 0 }}>{s.time}</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4, overflow: 'hidden' }}>
