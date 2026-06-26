@@ -122,12 +122,8 @@ export function NotificationPrompt({ messages }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={iconWrap('#dbeafe', '#2563eb')}><BellIcon /></div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={titleStyle}>¿Querés recibir avisos?</div>
-              <div style={descStyle}>
-                {getDeviceOS() === 'android'
-                  ? 'Te notificamos cuando te responden, incluso con Chrome en segundo plano.'
-                  : 'Te notificamos cuando te responden, aunque cierres esta pestaña.'}
-              </div>
+              <div style={titleStyle}>¿Te avisamos cuando te respondan?</div>
+              <div style={descStyle}>Te mandamos un aviso solo cuando el asistente o un agente te responda en este chat.</div>
             </div>
             <button className="np-btn-primary" onClick={handleActivate}>Activar</button>
             <button className="np-btn-dismiss" onClick={() => setState('idle')} aria-label="Cerrar"><CloseIcon /></button>
