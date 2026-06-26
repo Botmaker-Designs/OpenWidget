@@ -128,6 +128,15 @@ export function DesktopWidget({ onClose, config: configOverrides = {} }) {
 
   const addMessage = (msg) => setMessages(prev => [...prev, msg])
 
+  const notifyIfHidden = (text, senderName) => {
+    if (!document.hidden) return
+    if (Notification.permission !== 'granted') return
+    new Notification(senderName || config.botName, {
+      body: text,
+      icon: window.location.origin + '/botmaker-logo.svg',
+    })
+  }
+
   const updateLastMessage = (updater) =>
     setMessages(prev => {
       const msgs = [...prev]
@@ -147,6 +156,7 @@ export function DesktopWidget({ onClose, config: configOverrides = {} }) {
       if (i >= fullText.length) {
         clearInterval(streamingRef.current)
         updateLastMessage(msg => ({ ...msg, type: 'text' }))
+        notifyIfHidden(fullText, sender.senderName)
       }
     }, 18)
   }
@@ -161,6 +171,7 @@ export function DesktopWidget({ onClose, config: configOverrides = {} }) {
       setTimeout(() => {
         setIsTyping(false)
         addMessage({ id: nextDesktopId++, role: 'bot', type: 'file', text: 'Gracias por compartirlo. Te mando la documentación relacionada:', file: { name: 'Documentacion_caso.pdf', size: '248 KB' }, createdAt: new Date(), senderName, senderType: agentSession ? 'Agente' : 'Asistente IA' })
+        notifyIfHidden('Gracias por compartirlo. Te mando la documentación relacionada:', senderName)
       }, 3200)
       return
     }
@@ -172,6 +183,7 @@ export function DesktopWidget({ onClose, config: configOverrides = {} }) {
     if (agentSession && /video/i.test(text.trim())) {
       setTimeout(() => {
         addMessage({ id: nextDesktopId++, role: 'bot', type: 'text', text: '¡Claro! Te inicio una videollamada ahora.', createdAt: new Date(), senderName: agentSession.name, senderType: 'Agente' })
+        notifyIfHidden('¡Claro! Te inicio una videollamada ahora.', agentSession.name)
         setTimeout(() => setActiveVideoCall(agentSession), 1000)
       }, 800)
       return
@@ -232,6 +244,7 @@ export function DesktopWidget({ onClose, config: configOverrides = {} }) {
         setTimeout(() => {
           setIsTyping(false)
           addMessage({ id: nextDesktopId++, role: 'bot', type: 'text', text: '¡Hola! Soy Camila. Vi tu consulta y me gustaría ayudarte mejor. ¿Te parece bien si te llamo en los próximos minutos?', createdAt: new Date(), senderName: agent.name, senderType: 'Agente' })
+          notifyIfHidden('¡Hola! Soy Camila. Vi tu consulta y me gustaría ayudarte mejor.', agent.name)
         }, 6000)
       }, 2000)
     }, 6000)
