@@ -32,9 +32,197 @@ function hasTriggered(messages) {
   return false
 }
 
+// ─── Phone illustrations ──────────────────────────────────────────────────────
+
+// Shared phone frame — renders children as screen content
+function PhoneFrame({ children }) {
+  return (
+    <svg width="160" height="300" viewBox="0 0 160 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+      {/* Body */}
+      <rect x="2" y="2" width="156" height="296" rx="24" fill="#1c1c1e" stroke="#3a3a3c" strokeWidth="1.5"/>
+      {/* Screen */}
+      <rect x="8" y="8" width="144" height="284" rx="18" fill="#f2f2f7"/>
+      {/* Dynamic island */}
+      <rect x="52" y="14" width="56" height="14" rx="7" fill="#1c1c1e"/>
+      {/* Status bar: time */}
+      <text x="22" y="24" fontSize="8" fontWeight="700" fill="#1c1c1e" fontFamily="-apple-system,sans-serif">9:41</text>
+      {/* Status bar: battery */}
+      <rect x="126" y="17" width="14" height="7" rx="2" fill="none" stroke="#1c1c1e" strokeWidth="1"/>
+      <rect x="140" y="19.5" width="2" height="2" rx="0.5" fill="#1c1c1e"/>
+      <rect x="127" y="18" width="10" height="5" rx="1" fill="#1c1c1e"/>
+      {/* Signal dots */}
+      <circle cx="118" cy="20.5" r="1.5" fill="#1c1c1e"/>
+      <circle cx="113" cy="20.5" r="1.5" fill="#1c1c1e"/>
+      <circle cx="108" cy="20.5" r="1.5" fill="#1c1c1e"/>
+      {/* Screen content slot */}
+      <foreignObject x="8" y="32" width="144" height="252">
+        <div xmlns="http://www.w3.org/1999/xhtml" style={{ width: 144, height: 252, overflow: 'hidden', borderRadius: '0 0 14px 14px', background: '#f2f2f7', position: 'relative' }}>
+          {children}
+        </div>
+      </foreignObject>
+    </svg>
+  )
+}
+
+// Step 1: Safari bottom bar with "..." highlighted
+function Step1Phone() {
+  return (
+    <PhoneFrame>
+      {/* Fake webpage */}
+      <div style={{ background: '#fff', height: 190, margin: '0 0 0 0', padding: 10 }}>
+        <div style={{ height: 8, borderRadius: 4, background: '#e5e7eb', marginBottom: 6, width: '80%' }}/>
+        <div style={{ height: 6, borderRadius: 3, background: '#f3f4f6', marginBottom: 4, width: '60%' }}/>
+        <div style={{ height: 6, borderRadius: 3, background: '#f3f4f6', marginBottom: 4, width: '90%' }}/>
+        <div style={{ height: 6, borderRadius: 3, background: '#f3f4f6', marginBottom: 12, width: '70%' }}/>
+        <div style={{ height: 50, borderRadius: 8, background: '#e0f2fe', marginBottom: 8 }}/>
+        <div style={{ height: 6, borderRadius: 3, background: '#f3f4f6', marginBottom: 4, width: '85%' }}/>
+        <div style={{ height: 6, borderRadius: 3, background: '#f3f4f6', width: '55%' }}/>
+      </div>
+      {/* Safari URL bar */}
+      <div style={{ background: '#f2f2f7', padding: '6px 8px', display: 'flex', alignItems: 'center', gap: 6, borderTop: '0.5px solid #d1d5db' }}>
+        <div style={{ flex: 1, background: '#e5e7eb', borderRadius: 8, height: 22, display: 'flex', alignItems: 'center', paddingLeft: 8 }}>
+          <div style={{ width: 40, height: 5, borderRadius: 3, background: '#9ca3af' }}/>
+        </div>
+      </div>
+      {/* Safari bottom toolbar */}
+      <div style={{ background: '#f2f2f7', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '0.5px solid #d1d5db' }}>
+        {/* Back */}
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round"/></svg>
+        {/* Forward */}
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="#d1d5db" strokeWidth="2" strokeLinecap="round"/></svg>
+        {/* Share */}
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 12v6a2 2 0 002 2h12a2 2 0 002-2v-6" stroke="#9ca3af" strokeWidth="1.8" strokeLinecap="round"/><polyline points="16 6 12 2 8 6" stroke="#9ca3af" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/><line x1="12" y1="2" x2="12" y2="14" stroke="#9ca3af" strokeWidth="1.8" strokeLinecap="round"/></svg>
+        {/* Bookmark */}
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" stroke="#9ca3af" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        {/* Three dots — highlighted */}
+        <div style={{ position: 'relative' }}>
+          <div style={{ width: 30, height: 30, borderRadius: 8, background: '#007AFF', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 0 4px rgba(0,122,255,0.25)' }}>
+            <svg width="14" height="4" viewBox="0 0 14 4" fill="none">
+              <circle cx="2" cy="2" r="1.8" fill="#fff"/>
+              <circle cx="7" cy="2" r="1.8" fill="#fff"/>
+              <circle cx="12" cy="2" r="1.8" fill="#fff"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </PhoneFrame>
+  )
+}
+
+// Step 2: Action sheet with "Compartir" highlighted
+function Step2Phone() {
+  const items = ['AirDrop', 'Mensajes', 'Mail', 'Notas']
+  return (
+    <PhoneFrame>
+      {/* Dimmed bg */}
+      <div style={{ background: 'rgba(0,0,0,0.35)', height: '100%', position: 'relative' }}>
+        {/* Action sheet */}
+        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: '#f2f2f7', borderRadius: '14px 14px 0 0', overflow: 'hidden' }}>
+          {/* App icon row */}
+          <div style={{ display: 'flex', gap: 12, padding: '14px 12px 10px', overflowX: 'hidden', justifyContent: 'center' }}>
+            {['📱','💬','📷','📋'].map((e, i) => (
+              <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 9, background: '#e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>{e}</div>
+                <div style={{ width: 24, height: 4, borderRadius: 2, background: '#d1d5db' }}/>
+              </div>
+            ))}
+          </div>
+          {/* Divider */}
+          <div style={{ height: 0.5, background: '#d1d5db', margin: '0 12px' }}/>
+          {/* "Compartir" row — highlighted */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: 'rgba(0,122,255,0.08)' }}>
+            <div style={{ width: 28, height: 28, borderRadius: 7, background: '#007AFF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M4 12v6a2 2 0 002 2h12a2 2 0 002-2v-6" stroke="#fff" strokeWidth="2" strokeLinecap="round"/><polyline points="16 6 12 2 8 6" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><line x1="12" y1="2" x2="12" y2="14" stroke="#fff" strokeWidth="2" strokeLinecap="round"/></svg>
+            </div>
+            <span style={{ fontSize: 11, fontWeight: 700, color: '#007AFF', fontFamily: '-apple-system,sans-serif' }}>Compartir</span>
+          </div>
+          {/* Other options */}
+          {['Copiar', 'Agregar marcador'].map((t, i) => (
+            <div key={i}>
+              <div style={{ height: 0.5, background: '#d1d5db', margin: '0 12px' }}/>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px' }}>
+                <div style={{ width: 28, height: 28, borderRadius: 7, background: '#e5e7eb' }}/>
+                <span style={{ fontSize: 11, color: '#374151', fontFamily: '-apple-system,sans-serif' }}>{t}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </PhoneFrame>
+  )
+}
+
+// Step 3: Share sheet with "Agregar a pantalla de inicio" highlighted
+function Step3Phone() {
+  return (
+    <PhoneFrame>
+      <div style={{ background: 'rgba(0,0,0,0.35)', height: '100%', position: 'relative' }}>
+        {/* Share sheet */}
+        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: '#f2f2f7', borderRadius: '14px 14px 0 0', overflow: 'hidden' }}>
+          {/* Drag handle */}
+          <div style={{ width: 28, height: 3, borderRadius: 2, background: '#c7c7cc', margin: '8px auto 10px' }}/>
+          {/* URL preview */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 14px 10px' }}>
+            <div style={{ width: 28, height: 28, borderRadius: 7, background: '#e5e7eb' }}/>
+            <div>
+              <div style={{ width: 70, height: 5, borderRadius: 3, background: '#374151', marginBottom: 3 }}/>
+              <div style={{ width: 90, height: 4, borderRadius: 2, background: '#9ca3af' }}/>
+            </div>
+          </div>
+          <div style={{ height: 0.5, background: '#d1d5db' }}/>
+          {/* Scrollable app icons */}
+          <div style={{ display: 'flex', gap: 10, padding: '10px 12px', overflowX: 'hidden' }}>
+            {['✉️','📨','💬','📝'].map((e, i) => (
+              <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, flexShrink: 0 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 9, background: '#e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>{e}</div>
+                <div style={{ width: 28, height: 4, borderRadius: 2, background: '#d1d5db' }}/>
+              </div>
+            ))}
+          </div>
+          <div style={{ height: 0.5, background: '#d1d5db' }}/>
+          {/* "Agregar a pantalla de inicio" — highlighted */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: 'rgba(0,122,255,0.08)' }}>
+            <div style={{ width: 28, height: 28, borderRadius: 7, background: '#007AFF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="4" stroke="#fff" strokeWidth="2"/><path d="M12 8v8M8 12h8" stroke="#fff" strokeWidth="2" strokeLinecap="round"/></svg>
+            </div>
+            <span style={{ fontSize: 10, fontWeight: 700, color: '#007AFF', fontFamily: '-apple-system,sans-serif', lineHeight: 1.2 }}>Agregar a pantalla<br/>de inicio</span>
+          </div>
+          {/* Another option */}
+          <div style={{ height: 0.5, background: '#d1d5db', margin: '0 12px' }}/>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px' }}>
+            <div style={{ width: 28, height: 28, borderRadius: 7, background: '#e5e7eb' }}/>
+            <span style={{ fontSize: 11, color: '#374151', fontFamily: '-apple-system,sans-serif' }}>Copiar enlace</span>
+          </div>
+        </div>
+      </div>
+    </PhoneFrame>
+  )
+}
+
+const IOS_STEPS = [
+  {
+    label: 'Paso 1',
+    text: 'Tocá el botón ··· en la barra inferior de Safari',
+    illustration: <Step1Phone />,
+  },
+  {
+    label: 'Paso 2',
+    text: 'Tocá "Compartir" en el menú que aparece',
+    illustration: <Step2Phone />,
+  },
+  {
+    label: 'Paso 3',
+    text: 'Seleccioná "Agregar a pantalla de inicio"',
+    illustration: <Step3Phone />,
+  },
+]
+
 // ─── iOS Bottom Sheet ─────────────────────────────────────────────────────────
 
 function IOSBottomSheet({ onDismiss }) {
+  const [step, setStep] = useState(0)
+  const isLast = step === IOS_STEPS.length - 1
+
   return (
     <div style={overlayStyle}>
       <style>{`
@@ -46,148 +234,97 @@ function IOSBottomSheet({ onDismiss }) {
           from { opacity: 0; }
           to   { opacity: 1; }
         }
-        @keyframes np-bounce-down {
-          0%, 100% { transform: translateY(0); opacity: 1; }
-          50%       { transform: translateY(10px); opacity: 0.5; }
+        @keyframes np-phone-in {
+          from { opacity: 0; transform: scale(0.95) translateY(6px); }
+          to   { opacity: 1; transform: scale(1) translateY(0); }
         }
-        .np-sheet {
-          animation: np-sheet-up 380ms cubic-bezier(0.32, 0.72, 0, 1) forwards;
-        }
-        .np-backdrop {
-          animation: np-fade-in 300ms ease forwards;
-        }
-        .np-arrow-bounce {
-          animation: np-bounce-down 1.2s ease-in-out infinite;
-        }
+        .np-sheet { animation: np-sheet-up 380ms cubic-bezier(0.32,0.72,0,1) forwards; }
+        .np-backdrop { animation: np-fade-in 300ms ease forwards; }
+        .np-phone { animation: np-phone-in 220ms ease forwards; }
         .np-ios-btn {
-          width: 100%; padding: 15px; border: none; border-radius: 14px;
-          background: #007AFF; color: #fff; font-size: 17px; font-weight: 600;
-          cursor: pointer; font-family: -apple-system, sans-serif;
+          flex: 1; padding: 14px; border: none; border-radius: 14px;
+          background: #007AFF; color: #fff; font-size: 16px; font-weight: 600;
+          cursor: pointer; font-family: -apple-system,sans-serif;
           transition: opacity 120ms; -webkit-tap-highlight-color: transparent;
         }
         .np-ios-btn:active { opacity: 0.75; }
-        .np-ios-step {
-          display: flex; align-items: center; gap: 14px;
-          padding: 12px 0;
+        .np-ios-btn-ghost {
+          flex: 1; padding: 14px; border: 1.5px solid #e5e7eb; border-radius: 14px;
+          background: transparent; color: #374151; font-size: 16px; font-weight: 600;
+          cursor: pointer; font-family: -apple-system,sans-serif;
+          transition: background 120ms; -webkit-tap-highlight-color: transparent;
         }
-        .np-ios-step + .np-ios-step {
-          border-top: 1px solid #f3f4f6;
+        .np-ios-btn-ghost:active { background: #f3f4f6; }
+        .np-nav-arrow {
+          width: 40px; height: 40px; border-radius: 50%; border: 1.5px solid #e5e7eb;
+          background: #fff; cursor: pointer; display: flex; align-items: center;
+          justify-content: center; color: #374151; transition: background 120ms;
+          flex-shrink: 0;
         }
+        .np-nav-arrow:active { background: #f3f4f6; }
+        .np-nav-arrow:disabled { opacity: 0.3; cursor: default; }
       `}</style>
 
       {/* Backdrop */}
-      <div
-        className="np-backdrop"
-        onClick={onDismiss}
-        style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)' }}
-      />
+      <div className="np-backdrop" onClick={onDismiss} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)' }} />
 
       {/* Sheet */}
       <div className="np-sheet" style={sheetStyle}>
-        {/* Handle */}
-        <div style={{ width: 36, height: 5, borderRadius: 3, background: '#d1d5db', margin: '0 auto 24px' }} />
-
-        {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-          <div style={{ width: 44, height: 44, borderRadius: 12, background: '#ede9fe', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <BellIcon color="#7c3aed" size={22} />
-          </div>
-          <div>
-            <div style={{ fontSize: 19, fontWeight: 700, color: '#111827', fontFamily: '-apple-system, sans-serif', lineHeight: 1.2 }}>
-              Recibí avisos en tu iPhone
-            </div>
-            <div style={{ fontSize: 14, color: '#6b7280', marginTop: 3, fontFamily: '-apple-system, sans-serif', lineHeight: 1.4 }}>
-              Seguí estos pasos en Safari:
-            </div>
+        {/* Handle + close */}
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 20 }}>
+          <div style={{ flex: 1 }} />
+          <div style={{ width: 36, height: 5, borderRadius: 3, background: '#d1d5db' }} />
+          <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end' }}>
+            <button onClick={onDismiss} style={{ width: 28, height: 28, borderRadius: '50%', border: 'none', background: '#e5e7eb', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6b7280' }}>
+              <CloseIcon />
+            </button>
           </div>
         </div>
 
-        {/* Steps */}
-        <div style={{ margin: '20px 0' }}>
-          <div className="np-ios-step">
-            <StepNum n={1} />
-            <div style={stepTextStyle}>
-              Tocá el botón{' '}
-              <SafariDotsBadge />{' '}
-              en la barra inferior de Safari
-            </div>
+        {/* Title */}
+        <div style={{ textAlign: 'center', marginBottom: 6 }}>
+          <span style={{ fontSize: 13, fontWeight: 700, color: '#007AFF', fontFamily: '-apple-system,sans-serif', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            {IOS_STEPS[step].label}
+          </span>
+        </div>
+        <div style={{ textAlign: 'center', fontSize: 17, fontWeight: 600, color: '#111827', fontFamily: '-apple-system,sans-serif', lineHeight: 1.35, marginBottom: 24, padding: '0 8px' }}>
+          {IOS_STEPS[step].text}
+        </div>
+
+        {/* Phone illustration + nav arrows */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginBottom: 24 }}>
+          <button className="np-nav-arrow" onClick={() => setStep(s => s - 1)} disabled={step === 0}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          </button>
+
+          <div key={step} className="np-phone">
+            {IOS_STEPS[step].illustration}
           </div>
-          <div className="np-ios-step">
-            <StepNum n={2} />
-            <div style={stepTextStyle}>
-              Tocá{' '}
-              <SafariShareBadge />{' '}
-              <span style={{ fontWeight: 600, color: '#111827' }}>"Compartir"</span>
-            </div>
-          </div>
-          <div className="np-ios-step">
-            <StepNum n={3} />
-            <div style={stepTextStyle}>
-              Seleccioná{' '}
-              <span style={{ fontWeight: 600, color: '#111827' }}>"Agregar a pantalla de inicio"</span>
-            </div>
-          </div>
+
+          <button className="np-nav-arrow" onClick={() => setStep(s => s + 1)} disabled={isLast}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          </button>
+        </div>
+
+        {/* Dots indicator */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginBottom: 24 }}>
+          {IOS_STEPS.map((_, i) => (
+            <div key={i} onClick={() => setStep(i)} style={{ width: i === step ? 18 : 6, height: 6, borderRadius: 3, background: i === step ? '#007AFF' : '#d1d5db', transition: 'all 250ms', cursor: 'pointer' }} />
+          ))}
         </div>
 
         {/* CTA */}
-        <button className="np-ios-btn" onClick={onDismiss}>Entendido</button>
-
-        {/* Arrow pointing to Safari toolbar */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: 20, paddingBottom: 'env(safe-area-inset-bottom, 16px)', gap: 4 }}>
-          <div style={{ fontSize: 11, color: '#9ca3af', fontFamily: '-apple-system, sans-serif' }}>
-            El botón compartir está aquí abajo
-          </div>
-          <div className="np-arrow-bounce" style={{ color: '#007AFF' }}>
-            <ArrowDownIcon />
-          </div>
+        <div style={{ display: 'flex', gap: 10, paddingBottom: 'max(env(safe-area-inset-bottom,0px), 16px)' }}>
+          {isLast
+            ? <button className="np-ios-btn" onClick={onDismiss}>¡Listo!</button>
+            : <>
+                <button className="np-ios-btn-ghost" onClick={onDismiss}>Ahora no</button>
+                <button className="np-ios-btn" onClick={() => setStep(s => s + 1)}>Siguiente →</button>
+              </>
+          }
         </div>
       </div>
     </div>
-  )
-}
-
-function StepNum({ n }) {
-  return (
-    <div style={{
-      width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
-      background: '#007AFF', color: '#fff',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontSize: 14, fontWeight: 700, fontFamily: '-apple-system, sans-serif',
-    }}>{n}</div>
-  )
-}
-
-function SafariDotsBadge() {
-  return (
-    <span style={{
-      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-      width: 28, height: 28, borderRadius: 7,
-      background: '#e5e7eb', verticalAlign: 'middle', margin: '0 2px',
-      flexShrink: 0,
-    }}>
-      <svg width="15" height="5" viewBox="0 0 15 5" fill="none">
-        <circle cx="2.5" cy="2.5" r="2" fill="#111827"/>
-        <circle cx="7.5" cy="2.5" r="2" fill="#111827"/>
-        <circle cx="12.5" cy="2.5" r="2" fill="#111827"/>
-      </svg>
-    </span>
-  )
-}
-
-function SafariShareBadge() {
-  return (
-    <span style={{
-      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-      width: 28, height: 28, borderRadius: 7,
-      background: '#e5e7eb', verticalAlign: 'middle', margin: '0 2px',
-      flexShrink: 0,
-    }}>
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-        <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" stroke="#111827" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
-        <polyline points="16 6 12 2 8 6" stroke="#111827" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
-        <line x1="12" y1="2" x2="12" y2="15" stroke="#111827" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
-      </svg>
-    </span>
   )
 }
 
@@ -239,7 +376,6 @@ export function NotificationPrompt({ messages }) {
 
   if (state === 'idle') return null
 
-  // Bottom sheet is full-screen, rendered on top of everything
   if (state === 'ios-pwa-sheet') return <IOSBottomSheet onDismiss={() => setState('idle')} />
 
   return (
@@ -266,7 +402,7 @@ export function NotificationPrompt({ messages }) {
         .np-btn-dismiss:hover { background: rgba(0,0,0,0.06); color: #374151; }
       `}</style>
 
-      {/* ── Desktop / Android: standard web push ── */}
+      {/* ── Desktop / Android ── */}
       {state === 'web-prompt' && (
         <div className="np-card" style={{ ...cardBase, borderColor: '#bfdbfe', background: '#f0f7ff' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -323,7 +459,7 @@ export function NotificationPrompt({ messages }) {
         </div>
       )}
 
-      {/* ── iOS < 16: unsupported ── */}
+      {/* ── iOS < 16 ── */}
       {state === 'ios-unsupported' && (
         <div className="np-card" style={{ ...cardBase, borderColor: '#e5e7eb', background: '#f9fafb' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -352,13 +488,7 @@ const sheetStyle = {
   borderRadius: '20px 20px 0 0',
   padding: '16px 24px 0',
   boxShadow: '0 -4px 30px rgba(0,0,0,0.15)',
-  maxHeight: '90vh', overflowY: 'auto',
-}
-
-const stepTextStyle = {
-  fontSize: 15, color: '#374151',
-  fontFamily: '-apple-system, sans-serif',
-  lineHeight: 1.45, flex: 1,
+  maxHeight: '92vh', overflowY: 'auto',
 }
 
 const wrapStyle = { padding: '0 12px 8px', flexShrink: 0 }
@@ -405,14 +535,6 @@ function BlockedIcon() {
     <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
       <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
       <path d="M4.93 4.93l14.14 14.14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-    </svg>
-  )
-}
-
-function ArrowDownIcon() {
-  return (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-      <path d="M12 4v16M6 14l6 6 6-6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
   )
 }
