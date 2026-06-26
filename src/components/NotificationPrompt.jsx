@@ -221,7 +221,6 @@ const IOS_STEPS = [
 
 function IOSBottomSheet({ onDismiss }) {
   const [step, setStep] = useState(0)
-  const isLast = step === IOS_STEPS.length - 1
 
   return (
     <div style={overlayStyle}>
@@ -240,38 +239,38 @@ function IOSBottomSheet({ onDismiss }) {
         }
         .np-sheet { animation: np-sheet-up 380ms cubic-bezier(0.32,0.72,0,1) forwards; }
         .np-backdrop { animation: np-fade-in 300ms ease forwards; }
-        .np-phone { animation: np-phone-in 220ms ease forwards; }
+        .np-phone { animation: np-phone-in 200ms ease forwards; }
         .np-ios-btn {
-          flex: 1; padding: 14px; border: none; border-radius: 14px;
+          width: 100%; padding: 15px; border: none; border-radius: 14px;
           background: #007AFF; color: #fff; font-size: 16px; font-weight: 600;
           cursor: pointer; font-family: -apple-system,sans-serif;
           transition: opacity 120ms; -webkit-tap-highlight-color: transparent;
         }
         .np-ios-btn:active { opacity: 0.75; }
-        .np-ios-btn-ghost {
-          flex: 1; padding: 14px; border: 1.5px solid #e5e7eb; border-radius: 14px;
-          background: transparent; color: #374151; font-size: 16px; font-weight: 600;
-          cursor: pointer; font-family: -apple-system,sans-serif;
-          transition: background 120ms; -webkit-tap-highlight-color: transparent;
-        }
-        .np-ios-btn-ghost:active { background: #f3f4f6; }
         .np-nav-arrow {
-          width: 40px; height: 40px; border-radius: 50%; border: 1.5px solid #e5e7eb;
+          width: 36px; height: 36px; border-radius: 50%; border: 1.5px solid #e5e7eb;
           background: #fff; cursor: pointer; display: flex; align-items: center;
           justify-content: center; color: #374151; transition: background 120ms;
           flex-shrink: 0;
         }
         .np-nav-arrow:active { background: #f3f4f6; }
-        .np-nav-arrow:disabled { opacity: 0.3; cursor: default; }
+        .np-nav-arrow:disabled { opacity: 0.25; cursor: default; }
+        .np-step-row {
+          display: flex; align-items: center; gap: 12; padding: 10px 12px;
+          border-radius: 12px; cursor: pointer; transition: background 150ms;
+          border: 1.5px solid transparent;
+        }
+        .np-step-row.active {
+          background: #eff6ff; border-color: #bfdbfe;
+        }
+        .np-step-row:not(.active):hover { background: #f9fafb; }
       `}</style>
 
-      {/* Backdrop */}
       <div className="np-backdrop" onClick={onDismiss} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)' }} />
 
-      {/* Sheet */}
       <div className="np-sheet" style={sheetStyle}>
         {/* Handle + close */}
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 18 }}>
           <div style={{ flex: 1 }} />
           <div style={{ width: 36, height: 5, borderRadius: 3, background: '#d1d5db' }} />
           <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end' }}>
@@ -281,47 +280,60 @@ function IOSBottomSheet({ onDismiss }) {
           </div>
         </div>
 
-        {/* Title */}
-        <div style={{ textAlign: 'center', marginBottom: 6 }}>
-          <span style={{ fontSize: 13, fontWeight: 700, color: '#007AFF', fontFamily: '-apple-system,sans-serif', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-            {IOS_STEPS[step].label}
-          </span>
+        {/* Sheet title */}
+        <div style={{ fontSize: 19, fontWeight: 700, color: '#111827', fontFamily: '-apple-system,sans-serif', marginBottom: 14, textAlign: 'center' }}>
+          Cómo agregar al inicio
         </div>
-        <div style={{ textAlign: 'center', fontSize: 17, fontWeight: 600, color: '#111827', fontFamily: '-apple-system,sans-serif', lineHeight: 1.35, marginBottom: 24, padding: '0 8px' }}>
-          {IOS_STEPS[step].text}
+
+        {/* Steps list — all visible, tappable */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 18 }}>
+          {IOS_STEPS.map((s, i) => (
+            <div
+              key={i}
+              className={`np-step-row${step === i ? ' active' : ''}`}
+              style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 12, cursor: 'pointer', transition: 'all 150ms', border: `1.5px solid ${step === i ? '#bfdbfe' : 'transparent'}`, background: step === i ? '#eff6ff' : 'transparent' }}
+              onClick={() => setStep(i)}
+            >
+              <div style={{
+                width: 26, height: 26, borderRadius: '50%', flexShrink: 0,
+                background: step === i ? '#007AFF' : '#e5e7eb',
+                color: step === i ? '#fff' : '#6b7280',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 13, fontWeight: 700, fontFamily: '-apple-system,sans-serif',
+                transition: 'all 150ms',
+              }}>{i + 1}</div>
+              <div style={{ fontSize: 14, color: step === i ? '#1d4ed8' : '#374151', fontFamily: '-apple-system,sans-serif', fontWeight: step === i ? 600 : 400, lineHeight: 1.3, transition: 'all 150ms' }}>
+                {s.text}
+              </div>
+            </div>
+          ))}
         </div>
 
         {/* Phone illustration + nav arrows */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginBottom: 24 }}>
-          <button className="np-nav-arrow" onClick={() => setStep(s => s - 1)} disabled={step === 0}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginBottom: 14 }}>
+          <button className="np-nav-arrow" onClick={() => setStep(s => Math.max(0, s - 1))} disabled={step === 0}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </button>
 
           <div key={step} className="np-phone">
             {IOS_STEPS[step].illustration}
           </div>
 
-          <button className="np-nav-arrow" onClick={() => setStep(s => s + 1)} disabled={isLast}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          <button className="np-nav-arrow" onClick={() => setStep(s => Math.min(IOS_STEPS.length - 1, s + 1))} disabled={step === IOS_STEPS.length - 1}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </button>
         </div>
 
-        {/* Dots indicator */}
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginBottom: 24 }}>
+        {/* Dots */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginBottom: 20 }}>
           {IOS_STEPS.map((_, i) => (
             <div key={i} onClick={() => setStep(i)} style={{ width: i === step ? 18 : 6, height: 6, borderRadius: 3, background: i === step ? '#007AFF' : '#d1d5db', transition: 'all 250ms', cursor: 'pointer' }} />
           ))}
         </div>
 
         {/* CTA */}
-        <div style={{ display: 'flex', gap: 10, paddingBottom: 'max(env(safe-area-inset-bottom,0px), 16px)' }}>
-          {isLast
-            ? <button className="np-ios-btn" onClick={onDismiss}>¡Listo!</button>
-            : <>
-                <button className="np-ios-btn-ghost" onClick={onDismiss}>Ahora no</button>
-                <button className="np-ios-btn" onClick={() => setStep(s => s + 1)}>Siguiente →</button>
-              </>
-          }
+        <div style={{ paddingBottom: 'max(env(safe-area-inset-bottom,0px), 16px)' }}>
+          <button className="np-ios-btn" onClick={onDismiss}>Entendido</button>
         </div>
       </div>
     </div>
