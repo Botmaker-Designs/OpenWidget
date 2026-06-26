@@ -66,19 +66,17 @@ export function NotificationPrompt({ messages }) {
 
       {state === 'prompt' && (
         <div className="np-card" style={{ ...cardBase, borderColor: '#bfdbfe', background: '#f0f7ff' }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <div style={iconWrap('#dbeafe', '#2563eb')}>
               <BellIcon />
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={titleStyle}>¿Querés recibir avisos?</div>
               <div style={descStyle}>Te notificamos cuando un agente te responda, aunque cierres esta pestaña.</div>
-              <div style={{ marginTop: 12 }}>
-                <button className="np-btn-primary" onClick={handleActivate}>
-                  Activar notificaciones
-                </button>
-              </div>
             </div>
+            <button className="np-btn-primary" onClick={handleActivate} style={{ flexShrink: 0 }}>
+              Activar
+            </button>
             <button className="np-btn-dismiss" onClick={() => setState('idle')} aria-label="Cerrar">
               <CloseIcon />
             </button>
