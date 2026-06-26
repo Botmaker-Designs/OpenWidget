@@ -108,21 +108,23 @@ function IOSBottomSheet({ onDismiss }) {
             <StepNum n={1} />
             <div style={stepTextStyle}>
               Tocá el botón{' '}
-              <SafariShareBadge />{' '}
+              <SafariDotsBadge />{' '}
               en la barra inferior de Safari
             </div>
           </div>
           <div className="np-ios-step">
             <StepNum n={2} />
             <div style={stepTextStyle}>
-              Desplazate y seleccioná{' '}
-              <span style={{ fontWeight: 600, color: '#111827' }}>"Agregar a pantalla de inicio"</span>
+              Tocá{' '}
+              <SafariShareBadge />{' '}
+              <span style={{ fontWeight: 600, color: '#111827' }}>"Compartir"</span>
             </div>
           </div>
           <div className="np-ios-step">
             <StepNum n={3} />
             <div style={stepTextStyle}>
-              Abrí la app desde tu inicio y activá los avisos
+              Seleccioná{' '}
+              <span style={{ fontWeight: 600, color: '#111827' }}>"Agregar a pantalla de inicio"</span>
             </div>
           </div>
         </div>
@@ -152,6 +154,23 @@ function StepNum({ n }) {
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       fontSize: 14, fontWeight: 700, fontFamily: '-apple-system, sans-serif',
     }}>{n}</div>
+  )
+}
+
+function SafariDotsBadge() {
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+      width: 28, height: 28, borderRadius: 7,
+      background: '#636366', verticalAlign: 'middle', margin: '0 2px',
+      flexShrink: 0,
+    }}>
+      <svg width="15" height="5" viewBox="0 0 15 5" fill="none">
+        <circle cx="2.5" cy="2.5" r="2" fill="#fff"/>
+        <circle cx="7.5" cy="2.5" r="2" fill="#fff"/>
+        <circle cx="12.5" cy="2.5" r="2" fill="#fff"/>
+      </svg>
+    </span>
   )
 }
 
