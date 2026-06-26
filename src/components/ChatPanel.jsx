@@ -74,23 +74,25 @@ export function ChatPanel({ config, messages, isTyping, typingMode, typingStates
             fallbackText={config.fallbackMessage}
             agentName={agentSession?.name}
           />
+          {!isClosed && <NotificationPrompt messages={messages} />}
         </div>
       ) : (
-        <MessageList
-          messages={messages}
-          isTyping={isTyping}
-          typingMode={typingMode}
-          typingStates={typingStates}
-          quickReplies={config.quickReplies}
-          onQuickReply={onQuickReply}
-          onEscalate={onEscalate}
-          onLeaveMessage={onLeaveMessage}
-          fallbackText={config.fallbackMessage}
-          agentName={agentSession?.name}
-        />
+        <>
+          <MessageList
+            messages={messages}
+            isTyping={isTyping}
+            typingMode={typingMode}
+            typingStates={typingStates}
+            quickReplies={config.quickReplies}
+            onQuickReply={onQuickReply}
+            onEscalate={onEscalate}
+            onLeaveMessage={onLeaveMessage}
+            fallbackText={config.fallbackMessage}
+            agentName={agentSession?.name}
+          />
+          {!isClosed && <NotificationPrompt messages={messages} />}
+        </>
       )}
-
-      {!isClosed && <NotificationPrompt messages={messages} />}
 
       {isClosed ? (
         <div style={closedBannerStyle}>

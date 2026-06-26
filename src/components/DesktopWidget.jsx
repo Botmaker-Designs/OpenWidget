@@ -431,6 +431,7 @@ export function DesktopWidget({ onClose, config: configOverrides = {} }) {
               agentName={isHistoryView ? selectedSession.name : agentSession?.name}
               isMobile={isMobile}
             />
+            {!isHistoryView && <NotificationPrompt messages={messages} />}
             {/* Mini video widget flotante — absolutamente posicionado sobre los mensajes */}
             {activeVideoCall && videoMinimized && (
               <MiniVideoWidget
@@ -448,8 +449,6 @@ export function DesktopWidget({ onClose, config: configOverrides = {} }) {
               />
             )}
           </div>
-
-          {!isHistoryView && <NotificationPrompt messages={messages} />}
 
           {/* Input — solo en sesión activa */}
           {isHistoryView ? (
