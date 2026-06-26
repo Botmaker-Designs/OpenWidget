@@ -11,6 +11,7 @@ import { BrandAvatar } from './BrandAvatar'
 import { IncomingCall } from './IncomingCall'
 import { ActiveCall } from './ActiveCall'
 import { ActiveVideoCall } from './ActiveVideoCall'
+import { NotificationPrompt } from './NotificationPrompt'
 
 let nextDesktopId = 5000
 
@@ -447,6 +448,8 @@ export function DesktopWidget({ onClose, config: configOverrides = {} }) {
               />
             )}
           </div>
+
+          {!isHistoryView && <NotificationPrompt messages={messages} />}
 
           {/* Input — solo en sesión activa */}
           {isHistoryView ? (
