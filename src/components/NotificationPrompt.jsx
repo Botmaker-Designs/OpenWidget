@@ -176,7 +176,7 @@ function SafariShareBadge() {
 
 export function NotificationPrompt({ messages }) {
   const [state, setState] = useState('idle')
-  // idle | web-prompt | web-granted | web-denied | ios-pwa | ios-unsupported
+  // idle | web-prompt | web-granted | web-denied | ios-pwa | ios-pwa-sheet | ios-unsupported
   const triggered = useRef(false)
   const grantedTimer = useRef(null)
 
@@ -220,8 +220,8 @@ export function NotificationPrompt({ messages }) {
 
   if (state === 'idle') return null
 
-  // iOS bottom sheet is full-screen, rendered outside the card wrapper
-  if (state === 'ios-pwa') return <IOSBottomSheet onDismiss={() => setState('idle')} />
+  // Bottom sheet is full-screen, rendered on top of everything
+  if (state === 'ios-pwa-sheet') return <IOSBottomSheet onDismiss={() => setState('idle')} />
 
   return (
     <div style={wrapStyle}>
@@ -284,6 +284,21 @@ export function NotificationPrompt({ messages }) {
               <div style={{ ...titleStyle, color: '#374151' }}>Notificaciones bloqueadas</div>
               <div style={descStyle}>Habilitá los permisos desde el <strong>🔒 candado</strong> en la barra de URL.</div>
             </div>
+            <button className="np-btn-dismiss" onClick={() => setState('idle')} aria-label="Cerrar"><CloseIcon /></button>
+          </div>
+        </div>
+      )}
+
+      {/* ── iOS 16+: inline card → bottom sheet ── */}
+      {state === 'ios-pwa' && (
+        <div className="np-card" style={{ ...cardBase, borderColor: '#e9d5ff', background: '#faf5ff' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={iconWrap('#ede9fe', '#7c3aed')}><BellIcon color="#7c3aed" size={17} /></div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ ...titleStyle, color: '#6d28d9' }}>¿Te avisamos cuando te respondan?</div>
+              <div style={descStyle}>Podés recibir avisos en tu iPhone agregando esta página al inicio.</div>
+            </div>
+            <button className="np-btn-primary" style={{ background: '#7c3aed' }} onClick={() => setState('ios-pwa-sheet')}>Ver cómo</button>
             <button className="np-btn-dismiss" onClick={() => setState('idle')} aria-label="Cerrar"><CloseIcon /></button>
           </div>
         </div>
