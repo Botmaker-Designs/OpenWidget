@@ -761,7 +761,7 @@ function DWSessionsPanel({ activeName, activeTitle, activeAvatar, activeIsAgent,
 
         {/* Blur overlay — inside position:relative, outside scroll div → covers visible area only */}
         {!loggedInUser && (
-        <div style={{ position: 'absolute', inset: 0, backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', background: 'rgba(255,255,255,0.6)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 10, padding: '28px 20px 20px', gap: 12, overflowY: 'auto' }}>
+        <div style={{ position: 'absolute', inset: 0, backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', background: 'rgba(255,255,255,0.6)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', zIndex: 10, padding: '28px 20px 20px', gap: 12, overflowY: 'auto' }}>
           <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(255,255,255,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
               <rect x="3" y="11" width="18" height="11" rx="2" stroke="#6b7280" strokeWidth="2"/>
@@ -793,6 +793,7 @@ function DWSessionsPanel({ activeName, activeTitle, activeAvatar, activeIsAgent,
         </div>
       )}
     </div>
+  </div>
   )
 }
 
