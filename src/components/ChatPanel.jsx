@@ -174,7 +174,7 @@ function PanelHeader({ config, agentSession, isExpanded, onToggleExpand, onClose
 
         {/* LEFT: brand avatar + name + status */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
-          <BrandAvatar size={38} logoUrl={config.clientLogo ?? null} />
+          <BrandAvatar size={38} />
           <div style={{ minWidth: 0, flex: 1 }}>
             <div style={{ fontWeight: 700, fontSize: 14, color: '#111827', lineHeight: 1.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {config.botName}
@@ -197,7 +197,7 @@ function PanelHeader({ config, agentSession, isExpanded, onToggleExpand, onClose
         </div>
 
         {/* RIGHT: attended-by pill */}
-        {!isClosed && <AttendedByPill isAgent={isAgent} agentSession={agentSession} isTransferring={isTransferring} clientLogo={config.clientLogo ?? null} />}
+        {!isClosed && <AttendedByPill isAgent={isAgent} agentSession={agentSession} isTransferring={isTransferring} />}
 
         {/* action buttons */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 2, flexShrink: 0 }}>
@@ -215,7 +215,7 @@ function PanelHeader({ config, agentSession, isExpanded, onToggleExpand, onClose
   )
 }
 
-function AttendedByPill({ isAgent, agentSession, isTransferring, clientLogo = null }) {
+function AttendedByPill({ isAgent, agentSession, isTransferring }) {
   if (isAgent && agentSession) {
     const av  = agentSession.avatar || null
     const nm  = agentSession.name   || ''
@@ -252,10 +252,8 @@ function AttendedByPill({ isAgent, agentSession, isTransferring, clientLogo = nu
   }
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 20, padding: '5px 10px 5px 5px', flexShrink: 0 }}>
-      <div style={{ width: 26, height: 26, borderRadius: '50%', flexShrink: 0, background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-        {clientLogo
-          ? <img src={clientLogo} alt="" style={{ width: '76%', height: '76%', objectFit: 'contain' }} />
-          : <BotmakerLogo size={14} />}
+      <div style={{ width: 26, height: 26, borderRadius: '50%', flexShrink: 0, background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <BotmakerLogo size={14} />
       </div>
       <div>
         <div style={{ fontSize: 10, color: '#1d4ed8', fontWeight: 500, lineHeight: 1.1 }}>Asistente</div>

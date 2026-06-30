@@ -63,11 +63,11 @@ function formatTime(date) {
   return date.toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })
 }
 
-export function ChatWidget({ config: configOverrides = {}, initialOpen = false, clientSelector = null }) {
+export function ChatWidget({ config: configOverrides = {} }) {
   const config = useConfig(configOverrides)
   const { logFallback } = useFallbackLog(config.fallbackLogEndpoint)
 
-  const [isOpen, setIsOpen]         = useState(initialOpen)
+  const [isOpen, setIsOpen]         = useState(false)
   const [animKey, setAnimKey]       = useState(0)
   const [isExpanded, setIsExpanded] = useState(true)
   const [view, setView]             = useState('home')
@@ -78,7 +78,7 @@ export function ChatWidget({ config: configOverrides = {}, initialOpen = false, 
   const [typingStates, setTypingStates] = useState(null)
   const [notification, setNotification] = useState(null)
   const [unreadCount, setUnreadCount] = useState(0)
-  const [loggedInUser, setLoggedInUser] = useState(null)
+  const [loggedInUser, setLoggedInUser] = useState({ name: 'Santiago' })
   const [incomingCall, setIncomingCall]   = useState(null)
   const [activeCall, setActiveCall]       = useState(null)
   const [activeVideoCall, setActiveVideoCall] = useState(null)
@@ -411,10 +411,6 @@ export function ChatWidget({ config: configOverrides = {}, initialOpen = false, 
                 sessions={sessions}
                 onSelectSession={openSession}
                 animKey={animKey}
-                clientSelector={clientSelector}
-                primaryColor={config.primaryColor}
-                clientLogo={config.clientLogo ?? null}
-                faqArticles={config.faqArticles ?? null}
               />
             ) : view === 'help' ? (
               <HelpCenter
@@ -516,9 +512,6 @@ export function ChatWidget({ config: configOverrides = {}, initialOpen = false, 
                   sidebarQuery={sidebarQuery}
                   onQueryChange={setSidebarQuery}
                   openSession={(id) => { openSession(id); setHistoryOpen(false) }}
-                  clientLogo={config.clientLogo ?? null}
-                  loggedInUser={loggedInUser}
-                  onLogin={setLoggedInUser}
                 />
               </div>
             </>
@@ -538,9 +531,6 @@ export function ChatWidget({ config: configOverrides = {}, initialOpen = false, 
                 sidebarQuery={sidebarQuery}
                 onQueryChange={setSidebarQuery}
                 openSession={openSession}
-                clientLogo={config.clientLogo ?? null}
-                loggedInUser={loggedInUser}
-                onLogin={setLoggedInUser}
               />
             </div>
           )}
@@ -584,10 +574,6 @@ export function ChatWidget({ config: configOverrides = {}, initialOpen = false, 
                   sessions={sessions}
                   onSelectSession={openSession}
                   animKey={animKey}
-                  clientSelector={clientSelector}
-                  primaryColor={config.primaryColor}
-                  clientLogo={config.clientLogo ?? null}
-                  faqArticles={config.faqArticles ?? null}
                 />
               ) : view === 'help' ? (
                 <HelpCenter
@@ -667,7 +653,6 @@ export function ChatWidget({ config: configOverrides = {}, initialOpen = false, 
           onClick={handleOpen}
           notification={!isOpen ? notification : null}
           onDismissNotification={() => setNotification(null)}
-          logoUrl={config.clientLogo ?? null}
         />
       )}
     </div>
@@ -813,55 +798,11 @@ const sidebarHeaderStyle = {
   flexShrink: 0,
 }
 
-const DEMO_BLUR_SESSIONS = [
-  { id: '__blur1', closed: true, messages: [{ text: 'Consulta sobre mi cuenta', role: 'user' }, { text: 'En qué más puedo ayudarte hoy?', role: 'bot' }], timestamp: 'Ayer', agent: null, startedAt: null },
-  { id: '__blur2', closed: true, messages: [{ text: 'Problema con mi factura', role: 'user' }, { text: 'Tu factura ha sido procesada.', role: 'bot' }], timestamp: 'Lun', agent: null, startedAt: null },
-  { id: '__blur3', closed: true, messages: [{ text: 'Seguimiento de pedido #48291', role: 'user' }, { text: 'Tu pedido está en camino.', role: 'bot' }], timestamp: '15 jun', agent: null, startedAt: null },
-  { id: '__blur4', closed: true, messages: [{ text: 'Activar autenticación 2FA', role: 'user' }, { text: '¿Hay algo más en que pueda ayudarte?', role: 'bot' }], timestamp: '8 jun', agent: null, startedAt: null },
-]
-
-function LoginCard({ onLogin }) {
-  return (
-    <div style={{ background: 'rgba(255,255,255,0.96)', borderRadius: 16, padding: '24px 14px', width: '100%', boxShadow: '0 8px 32px rgba(0,0,0,0.14)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-      <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-          <rect x="3" y="11" width="18" height="11" rx="2" stroke="#6b7280" strokeWidth="2"/>
-          <path d="M7 11V7a5 5 0 0110 0v4" stroke="#6b7280" strokeWidth="2" strokeLinecap="round"/>
-        </svg>
-      </div>
-      <div style={{ textAlign: 'center' }}>
-        <p style={{ margin: '0 0 6px', fontWeight: 700, fontSize: 14, color: '#111827', fontFamily: 'var(--cw-font-family)', lineHeight: 1.3 }}>Accedé a tu historial</p>
-        <p style={{ margin: 0, fontSize: 12, color: '#6b7280', fontFamily: 'var(--cw-font-family)', lineHeight: 1.5 }}>Ingresá con tu cuenta para ver todas tus conversaciones anteriores.</p>
-      </div>
-      <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 8, marginTop: 4 }}>
-        <button onClick={() => onLogin({ name: 'Santiago', provider: 'google' })} style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '9px 14px', border: '1.5px solid #e5e7eb', borderRadius: 10, background: '#fff', cursor: 'pointer', fontFamily: 'var(--cw-font-family)', fontSize: 13, fontWeight: 500, color: '#111827' }} onMouseEnter={e => e.currentTarget.style.background = '#f9fafb'} onMouseLeave={e => e.currentTarget.style.background = '#fff'}>
-          <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#4285F4" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 7.9 3l5.7-5.7C34.5 6.5 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.2-.1-2.4-.4-3.5z"/><path fill="#34A853" d="M6.3 14.7l6.6 4.8C14.5 16.1 18.9 13 24 13c3.1 0 5.8 1.1 7.9 3l5.7-5.7C34.5 6.5 29.6 4 24 4c-7.7 0-14.4 4.3-17.7 10.7z"/><path fill="#FBBC05" d="M24 44c5.4 0 10.3-1.9 14-5.1l-6.5-5.3C29.6 35.4 26.9 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.6 5.1C9.5 39.6 16.3 44 24 44z"/><path fill="#EA4335" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.3 5.6l6.5 5.3C41.6 36 44 31 44 24c0-1.2-.1-2.4-.4-3.5z"/></svg>
-          Continuar con Google
-        </button>
-        <button onClick={() => onLogin({ name: 'Santiago', provider: 'facebook' })} style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '9px 14px', border: '1.5px solid #e5e7eb', borderRadius: 10, background: '#fff', cursor: 'pointer', fontFamily: 'var(--cw-font-family)', fontSize: 13, fontWeight: 500, color: '#111827' }} onMouseEnter={e => e.currentTarget.style.background = '#f9fafb'} onMouseLeave={e => e.currentTarget.style.background = '#fff'}>
-          <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#1877F2" d="M48 24C48 10.7 37.3 0 24 0S0 10.7 0 24c0 12 8.8 21.9 20.3 23.7V30.9h-6.1V24h6.1v-5.3c0-6 3.6-9.3 9-9.3 2.6 0 5.4.5 5.4.5v5.9h-3c-3 0-3.9 1.8-3.9 3.7V24h6.6l-1.1 6.9h-5.5v16.8C39.2 45.9 48 36 48 24z"/></svg>
-          Continuar con Facebook
-        </button>
-        <button onClick={() => onLogin({ name: 'Santiago', provider: 'email' })} style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '9px 14px', border: '1.5px solid #e5e7eb', borderRadius: 10, background: '#fff', cursor: 'pointer', fontFamily: 'var(--cw-font-family)', fontSize: 13, fontWeight: 500, color: '#111827' }} onMouseEnter={e => e.currentTarget.style.background = '#f9fafb'} onMouseLeave={e => e.currentTarget.style.background = '#fff'}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="2" y="4" width="20" height="16" rx="2" stroke="#6b7280" strokeWidth="2"/><path d="M2 7l10 7 10-7" stroke="#6b7280" strokeWidth="2" strokeLinecap="round"/></svg>
-          Continuar con email
-        </button>
-        <button onClick={() => onLogin({ name: 'Santiago', provider: 'phone' })} style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '9px 14px', border: '1.5px solid #e5e7eb', borderRadius: 10, background: '#fff', cursor: 'pointer', fontFamily: 'var(--cw-font-family)', fontSize: 13, fontWeight: 500, color: '#111827' }} onMouseEnter={e => e.currentTarget.style.background = '#f9fafb'} onMouseLeave={e => e.currentTarget.style.background = '#fff'}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6.6 10.8a15.2 15.2 0 006.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2a11.6 11.6 0 003.6 1.2c.6.1 1 .6 1 1.2V21a1 1 0 01-1 1C10.6 22 2 13.4 2 3a1 1 0 011-1h3.8c.6 0 1.1.4 1.2 1 .2 1.3.6 2.5 1.2 3.6.2.3.1.7-.2 1L6.6 10.8z" stroke="#6b7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-          Continuar con teléfono
-        </button>
-      </div>
-    </div>
-  )
-}
-
-function SidebarPanel({ sessions, activeSessionId, sidebarQuery, onQueryChange, openSession, clientLogo = null, loggedInUser = null, onLogin }) {
+function SidebarPanel({ sessions, activeSessionId, sidebarQuery, onQueryChange, openSession }) {
   const q = sidebarQuery.toLowerCase()
   const matches = s => !q || (s.agent?.name ?? 'Botsy AI').toLowerCase().includes(q) || (s.messages?.at(-1)?.text ?? '').toLowerCase().includes(q)
   const active  = sessions.filter(s => !s.closed && matches(s))
-  const history = loggedInUser
-    ? sessions.filter(s => s.closed && matches(s))
-    : DEMO_BLUR_SESSIONS
+  const history = sessions.filter(s =>  s.closed && matches(s))
 
   return (
     <>
@@ -883,49 +824,22 @@ function SidebarPanel({ sessions, activeSessionId, sidebarQuery, onQueryChange, 
           />
         </div>
       </div>
-      <div style={{ flex: 1, overflowY: 'auto', scrollbarWidth: 'thin', scrollbarColor: '#e5e7eb transparent', padding: '4px 6px', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ flex: 1, overflowY: 'auto', scrollbarWidth: 'thin', scrollbarColor: '#e5e7eb transparent', padding: '4px 6px' }}>
         {active.length > 0 && (
           <>
             <div style={sidebarSectionLabel}>EN CURSO</div>
-            {active.map(s => <SidebarSessionRow key={s.id} session={s} isActive={s.id === activeSessionId} onSelect={() => openSession(s.id)} clientLogo={clientLogo} />)}
+            {active.map(s => <SidebarSessionRow key={s.id} session={s} isActive={s.id === activeSessionId} onSelect={() => openSession(s.id)} />)}
           </>
         )}
-        <div style={{ flex: 1, position: 'relative', minHeight: 120, display: 'flex', flexDirection: 'column' }}>
-          <div style={sidebarSectionLabel}>HISTORIAL</div>
-          {history.map(s => <SidebarSessionRow key={s.id} session={s} isActive={false} onSelect={undefined} clientLogo={clientLogo} />)}
-          {!loggedInUser && (
-            <div style={{ position: 'absolute', inset: 0, backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', background: 'rgba(255,255,255,0.6)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 10, padding: '20px 14px', gap: 12 }}>
-              <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(255,255,255,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                  <rect x="3" y="11" width="18" height="11" rx="2" stroke="#6b7280" strokeWidth="2"/>
-                  <path d="M7 11V7a5 5 0 0110 0v4" stroke="#6b7280" strokeWidth="2" strokeLinecap="round"/>
-                </svg>
-              </div>
-              <div style={{ textAlign: 'center' }}>
-                <p style={{ margin: '0 0 6px', fontWeight: 700, fontSize: 14, color: '#111827', fontFamily: 'var(--cw-font-family)', lineHeight: 1.3 }}>Accedé a tu historial</p>
-                <p style={{ margin: 0, fontSize: 12, color: '#6b7280', fontFamily: 'var(--cw-font-family)', lineHeight: 1.5 }}>Ingresá con tu cuenta para ver todas tus conversaciones anteriores.</p>
-              </div>
-              <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 8, marginTop: 4 }}>
-                <button onClick={() => onLogin({ name: 'Santiago', provider: 'google' })} style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '9px 14px', border: '1.5px solid #e5e7eb', borderRadius: 10, background: '#fff', cursor: 'pointer', fontFamily: 'var(--cw-font-family)', fontSize: 13, fontWeight: 500, color: '#111827' }} onMouseEnter={e => e.currentTarget.style.background = '#f9fafb'} onMouseLeave={e => e.currentTarget.style.background = '#fff'}>
-                  <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#4285F4" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 7.9 3l5.7-5.7C34.5 6.5 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.2-.1-2.4-.4-3.5z"/><path fill="#34A853" d="M6.3 14.7l6.6 4.8C14.5 16.1 18.9 13 24 13c3.1 0 5.8 1.1 7.9 3l5.7-5.7C34.5 6.5 29.6 4 24 4c-7.7 0-14.4 4.3-17.7 10.7z"/><path fill="#FBBC05" d="M24 44c5.4 0 10.3-1.9 14-5.1l-6.5-5.3C29.6 35.4 26.9 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.6 5.1C9.5 39.6 16.3 44 24 44z"/><path fill="#EA4335" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.3 5.6l6.5 5.3C41.6 36 44 31 44 24c0-1.2-.1-2.4-.4-3.5z"/></svg>
-                  Continuar con Google
-                </button>
-                <button onClick={() => onLogin({ name: 'Santiago', provider: 'facebook' })} style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '9px 14px', border: '1.5px solid #e5e7eb', borderRadius: 10, background: '#fff', cursor: 'pointer', fontFamily: 'var(--cw-font-family)', fontSize: 13, fontWeight: 500, color: '#111827' }} onMouseEnter={e => e.currentTarget.style.background = '#f9fafb'} onMouseLeave={e => e.currentTarget.style.background = '#fff'}>
-                  <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#1877F2" d="M48 24C48 10.7 37.3 0 24 0S0 10.7 0 24c0 12 8.8 21.9 20.3 23.7V30.9h-6.1V24h6.1v-5.3c0-6 3.6-9.3 9-9.3 2.6 0 5.4.5 5.4.5v5.9h-3c-3 0-3.9 1.8-3.9 3.7V24h6.6l-1.1 6.9h-5.5v16.8C39.2 45.9 48 36 48 24z"/></svg>
-                  Continuar con Facebook
-                </button>
-                <button onClick={() => onLogin({ name: 'Santiago', provider: 'email' })} style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '9px 14px', border: '1.5px solid #e5e7eb', borderRadius: 10, background: '#fff', cursor: 'pointer', fontFamily: 'var(--cw-font-family)', fontSize: 13, fontWeight: 500, color: '#111827' }} onMouseEnter={e => e.currentTarget.style.background = '#f9fafb'} onMouseLeave={e => e.currentTarget.style.background = '#fff'}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="2" y="4" width="20" height="16" rx="2" stroke="#6b7280" strokeWidth="2"/><path d="M2 7l10 7 10-7" stroke="#6b7280" strokeWidth="2" strokeLinecap="round"/></svg>
-                  Continuar con email
-                </button>
-                <button onClick={() => onLogin({ name: 'Santiago', provider: 'phone' })} style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '9px 14px', border: '1.5px solid #e5e7eb', borderRadius: 10, background: '#fff', cursor: 'pointer', fontFamily: 'var(--cw-font-family)', fontSize: 13, fontWeight: 500, color: '#111827' }} onMouseEnter={e => e.currentTarget.style.background = '#f9fafb'} onMouseLeave={e => e.currentTarget.style.background = '#fff'}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6.6 10.8a15.2 15.2 0 006.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2a11.6 11.6 0 003.6 1.2c.6.1 1 .6 1 1.2V21a1 1 0 01-1 1C10.6 22 2 13.4 2 3a1 1 0 011-1h3.8c.6 0 1.1.4 1.2 1 .2 1.3.6 2.5 1.2 3.6.2.3.1.7-.2 1L6.6 10.8z" stroke="#6b7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                  Continuar con teléfono
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
+        {history.length > 0 && (
+          <>
+            <div style={sidebarSectionLabel}>HISTORIAL</div>
+            {history.map(s => <SidebarSessionRow key={s.id} session={s} isActive={s.id === activeSessionId} onSelect={() => openSession(s.id)} />)}
+          </>
+        )}
+        {active.length === 0 && history.length === 0 && (
+          <p style={{ textAlign: 'center', color: '#9ca3af', fontSize: 13, marginTop: 32, fontFamily: 'var(--cw-font-family)' }}>Sin resultados</p>
+        )}
       </div>
     </>
   )
@@ -938,7 +852,7 @@ function deriveTitle(messages) {
   return t.length > 38 ? t.slice(0, 36) + '…' : t
 }
 
-function SidebarSessionRow({ session, isActive, onSelect, clientLogo = null }) {
+function SidebarSessionRow({ session, isActive, onSelect }) {
   const lastMsg = session.messages.filter(m => m.text).at(-1)
   const preview = lastMsg?.text ?? '...'
   const name    = session.agent?.name ?? 'Botsy AI'
@@ -966,7 +880,6 @@ function SidebarSessionRow({ session, isActive, onSelect, clientLogo = null }) {
       <BrandAvatar
         size={38}
         pipSize={17}
-        logoUrl={clientLogo}
         agentAvatar={avatar}
         agentName={avatar ? null : (name !== 'Botsy AI' ? name : null)}
       />
@@ -978,7 +891,7 @@ function SidebarSessionRow({ session, isActive, onSelect, clientLogo = null }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 4, overflow: 'hidden' }}>
           {session.agent?.avatar
             ? <img src={session.agent.avatar} alt="" style={{ width: 16, height: 16, borderRadius: '50%', flexShrink: 0, objectFit: 'cover', border: '1px solid #e5e7eb' }} />
-            : <div style={{ width: 16, height: 16, borderRadius: '50%', background: '#f3f4f6', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #e5e7eb', overflow: 'hidden' }}>{clientLogo ? <img src={clientLogo} alt="" style={{ width: '76%', height: '76%', objectFit: 'contain' }} /> : <BotmakerLogo size={9} />}</div>
+            : <div style={{ width: 16, height: 16, borderRadius: '50%', background: '#f3f4f6', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #e5e7eb' }}><BotmakerLogo size={9} /></div>
           }
           <p style={{ margin: 0, fontSize: 11, color: '#6b7280', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{preview}</p>
         </div>

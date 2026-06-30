@@ -77,7 +77,7 @@ function CloseIcon() {
   )
 }
 
-export function FloatingButton({ isOpen, unreadCount = 0, position = 'bottom-right', onClick, notification, onDismissNotification, logoUrl = null }) {
+export function FloatingButton({ isOpen, unreadCount = 0, position = 'bottom-right', onClick, notification, onDismissNotification }) {
   const [mounted, setMounted]     = useState(false)
   const [visible, setVisible]     = useState(false)
   const [notifData, setNotifData] = useState(null)
@@ -199,13 +199,7 @@ export function FloatingButton({ isOpen, unreadCount = 0, position = 'bottom-rig
           aria-label={isOpen ? 'Cerrar chat' : 'Abrir chat'}
         >
           <span style={styles.shine} />
-          {isOpen ? <CloseIcon /> : (
-            logoUrl
-              ? <div style={{ width: 34, height: 34, borderRadius: '50%', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
-                  <img src={logoUrl} alt="" style={{ width: '76%', height: '76%', objectFit: 'contain' }} />
-                </div>
-              : <BotmakerLogo size={26} white />
-          )}
+          {isOpen ? <CloseIcon /> : <BotmakerLogo size={26} white />}
           {!isOpen && unreadCount > 0 && (
             <span style={styles.badge}>
               {unreadCount > 99 ? '99+' : unreadCount}
