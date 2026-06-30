@@ -1,6 +1,100 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { HELP_COLLECTIONS } from '../config/helpContent'
 import { BotmakerLogo } from './BotmakerLogo'
+
+function ClientSelectorDropdown({ clients, activeId, onChange }) {
+  const [open, setOpen] = useState(false)
+  const [pos, setPos] = useState({ top: 0, left: 0 })
+  const btnRef = useRef(null)
+  const panelRef = useRef(null)
+  const active = clients.find(c => c.id === activeId) ?? null
+
+  const handleToggle = () => {
+    if (!open && btnRef.current) {
+      const rect = btnRef.current.getBoundingClientRect()
+      setPos({ top: rect.bottom + 6, left: rect.left })
+    }
+    setOpen(o => !o)
+  }
+
+  useEffect(() => {
+    if (!open) return
+    const handler = (e) => {
+      if (
+        (!btnRef.current || !btnRef.current.contains(e.target)) &&
+        (!panelRef.current || !panelRef.current.contains(e.target))
+      ) setOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [open])
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <button
+        ref={btnRef}
+        onClick={handleToggle}
+        style={{
+          display: 'flex', alignItems: 'center', gap: 6,
+          background: 'rgba(255,255,255,0.15)',
+          border: '1px solid rgba(255,255,255,0.25)',
+          borderRadius: 99, padding: '5px 10px 5px 6px',
+          cursor: 'pointer', color: '#fff',
+          fontSize: 12, fontWeight: 600,
+          backdropFilter: 'blur(4px)',
+          transition: 'background 140ms',
+        }}
+      >
+        {active
+          ? <div style={{ width: 20, height: 20, borderRadius: '50%', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+              <img src={active.logo} alt="" style={{ width: '80%', height: '80%', objectFit: 'contain' }} />
+            </div>
+          : <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+        }
+        <span>{active ? active.name : 'Empresa'}</span>
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" style={{ opacity: 0.7 }}>
+          <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </button>
+
+      {open && createPortal(
+        <div ref={panelRef} style={{
+          position: 'fixed', top: pos.top, left: pos.left,
+          width: 220, maxHeight: 280, overflowY: 'auto',
+          background: '#fff', borderRadius: 12,
+          boxShadow: '0 8px 32px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.1)',
+          zIndex: 99999, padding: '4px 0',
+        }}>
+          <style>{`
+            .cw-sel-row { display:flex; align-items:center; gap:9px; padding:8px 12px; cursor:pointer; transition:background 100ms; }
+            .cw-sel-row:hover { background:#f5f3ff; }
+            .cw-sel-row.active { background:#ede9fe; }
+          `}</style>
+          {clients.map(c => (
+            <div
+              key={c.id}
+              className={`cw-sel-row${c.id === activeId ? ' active' : ''}`}
+              onClick={() => { onChange(c); setOpen(false) }}
+            >
+              <div style={{ width: 28, height: 28, borderRadius: '50%', background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+                <img src={c.logo} alt="" style={{ width: '80%', height: '80%', objectFit: 'contain' }} />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: '#111827', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.name}</div>
+                <div style={{ fontSize: 11, color: '#9ca3af' }}>{c.category}</div>
+              </div>
+              {c.id === activeId && (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#6d28d9" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              )}
+            </div>
+          ))}
+        </div>,
+        document.body
+      )}
+    </div>
+  )
+}
 
 const DAY_NAMES = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday']
 const DAY_LABELS = { monday:'Lun', tuesday:'Mar', wednesday:'Mié', thursday:'Jue', friday:'Vie', saturday:'Sáb', sunday:'Dom' }
@@ -57,15 +151,16 @@ const TOP_ARTICLES = [
   { id: 'fl-5', title: 'Integraciones con APIs externas', mins: 6 },
 ]
 
-export function HomeScreen({ onClose, isExpanded, onToggleExpand, onNewChat, onTabChange, userName, loggedInUser, onLoginClick, onAskArticle, chatCardVariant = 'team', businessHours, sessions = [], onSelectSession, animKey = 0 }) {
+export function HomeScreen({ onClose, isExpanded, onToggleExpand, onNewChat, onTabChange, userName, loggedInUser, onLoginClick, onAskArticle, chatCardVariant = 'team', businessHours, sessions = [], onSelectSession, animKey = 0, clientSelector = null, primaryColor = null, clientLogo = null, faqArticles = null }) {
   const [query, setQuery] = useState('')
   const available      = useMemo(() => isWithinBusinessHours(businessHours), [businessHours])
   const scheduleLabel  = useMemo(() => formatScheduleSummary(businessHours), [businessHours])
   const timeRange      = useMemo(() => formatTimeRange(businessHours), [businessHours])
 
+  const articles = faqArticles ?? TOP_ARTICLES
   const filteredArticles = query.trim()
-    ? TOP_ARTICLES.filter(a => a.title.toLowerCase().includes(query.toLowerCase()))
-    : TOP_ARTICLES
+    ? articles.filter(a => a.title.toLowerCase().includes(query.toLowerCase()))
+    : articles
 
   return (
     <div style={containerStyle}>
@@ -85,10 +180,25 @@ export function HomeScreen({ onClose, isExpanded, onToggleExpand, onNewChat, onT
       {/* Hero con foto de fondo blureada */}
       <div key={`hero-${animKey}`} className="cw-anim-hero" style={heroStyle}>
         <div style={heroBgStyle} />
-        <div style={heroOverlayStyle} />
+        <div style={primaryColor
+          ? { ...heroOverlayStyle, background: `linear-gradient(160deg, ${primaryColor}e6 0%, ${primaryColor}b3 100%)` }
+          : heroOverlayStyle
+        } />
         <div style={topRowStyle}>
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            <BotmakerLogo size={42} white />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            {clientLogo
+              ? <div style={{ width: 42, height: 42, borderRadius: '50%', background: 'rgba(255,255,255,0.22)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+                  <img src={clientLogo} alt="" style={{ width: '72%', height: '72%', objectFit: 'contain' }} />
+                </div>
+              : <BotmakerLogo size={42} white />
+            }
+            {clientSelector && (
+              <ClientSelectorDropdown
+                clients={clientSelector.clients}
+                activeId={clientSelector.activeId}
+                onChange={clientSelector.onChange}
+              />
+            )}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             {!loggedInUser && (
@@ -122,13 +232,13 @@ export function HomeScreen({ onClose, isExpanded, onToggleExpand, onNewChat, onT
         {/* Card de chat */}
         <div style={sectionStyle}>
           {(() => { const open = sessions.find(s => !s.closed); return open ? (
-            <RecentMessage session={open} onSelect={() => onSelectSession?.(open.id)} />
+            <RecentMessage session={open} onSelect={() => onSelectSession?.(open.id)} clientLogo={clientLogo} />
           ) : null })()}
           {!sessions.find(s => !s.closed) && (chatCardVariant === 'hours' ? (
             <button className="cw-home-card" style={chatCardStyle} onClick={onNewChat}>
               <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
                 <div style={{ ...cardIconStyle, position: 'relative' }}>
-                  <BotmakerLogo size={22} />
+                  {clientLogo ? <img src={clientLogo} alt="" style={{ width: 22, height: 22, objectFit: 'contain' }} /> : <BotmakerLogo size={22} />}
                   <span style={{ ...onlineBadgeStyle, background: available ? '#22c55e' : '#f59e0b' }} />
                 </div>
               </div>
@@ -145,7 +255,7 @@ export function HomeScreen({ onClose, isExpanded, onToggleExpand, onNewChat, onT
               {/* Fila superior: icono + título+subtítulo + chevron */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%' }}>
                 <div style={{ ...cardIconStyle, flexShrink: 0 }}>
-                  <BotmakerLogo size={22} />
+                  {clientLogo ? <img src={clientLogo} alt="" style={{ width: 22, height: 22, objectFit: 'contain' }} /> : <BotmakerLogo size={22} />}
                 </div>
                 <div style={{ flex: 1, textAlign: 'left' }}>
                   <div style={{ fontWeight: 600, fontSize: 14, color: '#111827' }}>
@@ -242,7 +352,7 @@ export function HomeScreen({ onClose, isExpanded, onToggleExpand, onNewChat, onT
 
 // ── Recent message card ───────────────────────────────────────────────────────
 
-function RecentMessage({ session, onSelect }) {
+function RecentMessage({ session, onSelect, clientLogo = null }) {
   const lastMsg  = session.messages.filter(m => m.text).at(-1)
   const preview  = lastMsg?.text ?? '...'
   const name     = session.agent?.name ?? lastMsg?.senderName ?? 'Botsy AI'
@@ -257,7 +367,9 @@ function RecentMessage({ session, onSelect }) {
           <div style={recentAvatarWrapStyle}>
             {avatar
               ? <img src={avatar} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              : <BotmakerLogo size={20} />
+              : clientLogo
+                ? <img src={clientLogo} alt="" style={{ width: '65%', height: '65%', objectFit: 'contain' }} />
+                : <BotmakerLogo size={20} />
             }
           </div>
           <span style={{ position: 'absolute', bottom: -2, right: -2, width: 11, height: 11, borderRadius: '50%', background: '#22c55e', border: '2px solid #fff' }} />

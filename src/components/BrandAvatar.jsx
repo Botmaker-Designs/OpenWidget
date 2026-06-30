@@ -14,24 +14,27 @@ function initials(name) {
  * Props:
  *   size        — diámetro del círculo principal (default 36)
  *   pipSize     — diámetro del pip (default 18)
+ *   logoUrl     — URL del logo del cliente (reemplaza al logo de Botmaker)
  *   agentAvatar — URL de la foto del agente (pip con foto)
  *   agentName   — nombre del agente (pip con iniciales si no hay foto)
- *                 Si ambos son null/undefined → sin pip (Botsy AI)
  */
-export function BrandAvatar({ size = 36, pipSize = 18, agentAvatar = null, agentName = null }) {
+export function BrandAvatar({ size = 36, pipSize = 18, logoUrl = null, agentAvatar = null, agentName = null }) {
   const hasPip   = !!(agentAvatar || agentName)
   const logoSize = Math.round(size * 0.48)
 
   return (
     <div style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
-      {/* Círculo principal — siempre la marca */}
+      {/* Círculo principal */}
       <div style={{
         width: size, height: size, borderRadius: '50%',
         background: '#f3f4f6',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         overflow: 'hidden',
       }}>
-        <BotmakerLogo size={logoSize} />
+        {logoUrl
+          ? <img src={logoUrl} alt="" style={{ width: '76%', height: '76%', objectFit: 'contain', display: 'block' }} />
+          : <BotmakerLogo size={logoSize} />
+        }
       </div>
 
       {/* Pip — foto real o iniciales como fallback */}
