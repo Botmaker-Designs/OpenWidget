@@ -586,7 +586,7 @@ export function DesktopWidget({ onClose, config: configOverrides = {}, clientNam
             }}>
               <div style={{
                 background: '#fff', borderRadius: 20,
-                width: '100%', maxWidth: 360,
+                width: '100%', maxWidth: 420,
                 boxShadow: '0 24px 64px rgba(0,0,0,0.25)',
                 overflow: 'hidden',
               }}>

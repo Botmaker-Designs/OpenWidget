@@ -141,7 +141,7 @@ function LoginModal({ client: clientProp, onLogin, onClose }) {
         onClick={e => e.stopPropagation()}
         style={{
           background: '#fff', borderRadius: 20,
-          width: '100%', maxWidth: 400,
+          width: '100%', maxWidth: 460,
           boxShadow: '0 32px 80px rgba(0,0,0,0.2)',
           overflow: 'hidden',
         }}
