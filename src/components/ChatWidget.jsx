@@ -207,6 +207,21 @@ export function ChatWidget({ config: configOverrides = {}, initialOpen = false, 
     const sid = activeSessionId
     addMessage(sid, { id: nextId++, role: 'user', type: attachments.length ? 'image' : 'text', text, attachments, createdAt: new Date() })
 
+    if (/botonera/i.test(text.trim())) {
+      setIsTyping(true)
+      setTypingMode('writing')
+      setTimeout(() => {
+        setIsTyping(false)
+        addMessage(sid, { id: nextId++, role: 'bot', type: 'menu', title: 'Seleccioná una opción', items: [
+          { id: 'opt1', icon: 'lightning', label: 'Ver mis pedidos' },
+          { id: 'opt2', icon: 'chat',      label: 'Hablar con un agente' },
+          { id: 'opt3', icon: 'target',    label: 'Consultar estado de envío' },
+          { id: 'opt4', icon: 'arrow',     label: 'Hacer una devolución' },
+        ], createdAt: new Date(), senderName: config.botName, senderType: 'Asistente IA' })
+      }, 1000)
+      return
+    }
+
     // Si Camila preguntó por una llamada y el usuario responde "si"
     if (agentSession && /^s[ií]$/i.test(text.trim())) {
       setTimeout(() => setIncomingCall(agentSession), 1200)
@@ -813,12 +828,14 @@ const sidebarHeaderStyle = {
   flexShrink: 0,
 }
 
+/* DISABLED: blur historial — conservado para uso futuro
 const DEMO_BLUR_SESSIONS = [
   { id: '__blur1', closed: true, messages: [{ text: 'Consulta sobre mi cuenta', role: 'user' }, { text: 'En qué más puedo ayudarte hoy?', role: 'bot' }], timestamp: 'Ayer', agent: null, startedAt: null },
   { id: '__blur2', closed: true, messages: [{ text: 'Problema con mi factura', role: 'user' }, { text: 'Tu factura ha sido procesada.', role: 'bot' }], timestamp: 'Lun', agent: null, startedAt: null },
   { id: '__blur3', closed: true, messages: [{ text: 'Seguimiento de pedido #48291', role: 'user' }, { text: 'Tu pedido está en camino.', role: 'bot' }], timestamp: '15 jun', agent: null, startedAt: null },
   { id: '__blur4', closed: true, messages: [{ text: 'Activar autenticación 2FA', role: 'user' }, { text: '¿Hay algo más en que pueda ayudarte?', role: 'bot' }], timestamp: '8 jun', agent: null, startedAt: null },
 ]
+*/
 
 function LoginCard({ onLogin }) {
   return (
@@ -859,9 +876,8 @@ function SidebarPanel({ sessions, activeSessionId, sidebarQuery, onQueryChange, 
   const q = sidebarQuery.toLowerCase()
   const matches = s => !q || (s.agent?.name ?? 'Botsy AI').toLowerCase().includes(q) || (s.messages?.at(-1)?.text ?? '').toLowerCase().includes(q)
   const active  = sessions.filter(s => !s.closed && matches(s))
-  const history = loggedInUser
-    ? sessions.filter(s => s.closed && matches(s))
-    : DEMO_BLUR_SESSIONS
+  const history = sessions.filter(s => s.closed && matches(s))
+  // DISABLED: const history = loggedInUser ? sessions.filter(s => s.closed && matches(s)) : DEMO_BLUR_SESSIONS
 
   return (
     <>
@@ -893,7 +909,7 @@ function SidebarPanel({ sessions, activeSessionId, sidebarQuery, onQueryChange, 
         <div style={{ flex: 1, position: 'relative', minHeight: 120, display: 'flex', flexDirection: 'column' }}>
           <div style={sidebarSectionLabel}>HISTORIAL</div>
           {history.map(s => <SidebarSessionRow key={s.id} session={s} isActive={false} onSelect={undefined} clientLogo={clientLogo} />)}
-          {!loggedInUser && (
+          {false /* DISABLED: blur historial — cambiar a !loggedInUser para reactivar */ && !loggedInUser && (
             <div style={{ position: 'absolute', inset: 0, backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', background: 'rgba(255,255,255,0.6)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 10, padding: '20px 14px', gap: 12 }}>
               <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(255,255,255,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
@@ -971,8 +987,8 @@ function SidebarSessionRow({ session, isActive, onSelect, clientLogo = null }) {
         agentName={avatar ? null : (name !== 'Botsy AI' ? name : null)}
       />
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
-          <span style={{ fontSize: 11, fontWeight: 600, color: '#111827' }}>{session.title || deriveTitle(session.messages)}</span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5, gap: 6, overflow: 'hidden' }}>
+          <span style={{ fontSize: 11, fontWeight: 600, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{session.title || deriveTitle(session.messages)}</span>
           <span style={{ fontSize: 10, color: '#9ca3af', flexShrink: 0 }}>{date}</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4, overflow: 'hidden' }}>

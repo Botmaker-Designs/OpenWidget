@@ -20,6 +20,14 @@ function dayLabel(date) {
   return d.toLocaleDateString('es-AR', { day: 'numeric', month: 'long' })
 }
 
+const BUBBLE_ANIM = `
+  @keyframes cw-msg-in {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .cw-msg-in { animation: cw-msg-in 0.35s cubic-bezier(0.25, 0.8, 0.4, 1) both; }
+`
+
 export function MessageList({ messages, isTyping, typingMode, typingStates, quickReplies, onQuickReply, onEscalate, onLeaveMessage, fallbackText, agentName, isMobile = false }) {
   const bottomRef = useRef(null)
   const [lightboxSrc, setLightboxSrc] = useState(null)
@@ -53,6 +61,7 @@ export function MessageList({ messages, isTyping, typingMode, typingStates, quic
 
   return (
     <div style={listStyle}>
+      <style>{BUBBLE_ANIM}</style>
       {lightboxSrc && <Lightbox src={lightboxSrc} onClose={() => setLightboxSrc(null)} />}
       {items.map(item =>
         item.kind === 'separator'
@@ -103,7 +112,7 @@ function FileMessage({ message, isMobile, onOpenLightbox }) {
   const fs     = isMobile ? 15 : 13
   const openPreview = () => onOpenLightbox && onOpenLightbox({ type: 'file', name: message.file.name, size: message.file.size })
   return (
-    <div style={bubbleWrap(message.role)}>
+    <div className="cw-msg-in" style={bubbleWrap(message.role)}>
       <div style={{ maxWidth: '78%' }}>
         <div style={{ overflow: 'hidden', padding: '8px 12px 5px', borderRadius: isUser ? '16px 16px 4px 16px' : '16px 16px 16px 4px', background: isUser ? 'var(--cw-bg-message-user)' : 'var(--cw-bg-message-bot)', boxShadow: '0 1px 2px rgba(0,0,0,0.08)' }}>
           {message.text && (
@@ -175,7 +184,7 @@ function AudioMessage({ message, isRead, isMobile }) {
         <div style={{
           overflow: 'hidden',
           padding: isMobile ? '10px 14px 8px' : '8px 12px 6px',
-          borderRadius: isUser ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
+          borderRadius: isUser ? '8px 8px 2px 8px' : '8px 8px 8px 2px',
           background: isUser ? 'var(--cw-bg-message-user)' : 'var(--cw-bg-message-bot)',
           minWidth: 185,
           boxShadow: '0 1px 2px rgba(0,0,0,0.08)',
@@ -227,11 +236,14 @@ function Message({ message, isRead, onOpenLightbox, quickReplies, onQuickReply, 
     return <AgentJoinMessage agentName={message.agentName} agentAvatar={message.agentAvatar} timestamp={message.timestamp} isMobile={isMobile} />
   }
 
+  if (message.type === 'menu') {
+    return <MenuMessage message={message} onSelect={onQuickReply} isMobile={isMobile} />
+  }
+
   if (message.type === 'fallback') {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 4 }}>
-        <FallbackMessage text={fallbackText} onEscalate={onEscalate} onLeaveMessage={onLeaveMessage} acted={message.acted} isMobile={isMobile} />
-        {senderName && <BubbleLabel name={senderName} type={senderType} />}
+      <div className="cw-msg-in" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 4 }}>
+        <FallbackMessage text={fallbackText} onEscalate={onEscalate} onLeaveMessage={onLeaveMessage} acted={message.acted} isMobile={isMobile} senderName={senderName} senderType={senderType} />
       </div>
     )
   }
@@ -241,7 +253,7 @@ function Message({ message, isRead, onOpenLightbox, quickReplies, onQuickReply, 
   const streaming = message.type === 'streaming'
 
   return (
-    <div>
+    <div className="cw-msg-in">
       <div style={bubbleWrap(message.role)}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: isUser ? 'flex-end' : 'flex-start', gap: 4, maxWidth: '72%' }}>
           {message.attachments?.length > 0 && (
@@ -284,6 +296,63 @@ function Ticks({ read, streaming }) {
       <path d="M1 5l3.5 3.5L12 1" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
       <path d="M5 5l3.5 3.5L16 1" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
+  )
+}
+
+const MENU_ICONS = {
+  lightning: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="#6366f1"/></svg>
+  ),
+  arrow: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="#6366f1" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+  ),
+  target: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#6366f1" strokeWidth="2"/><circle cx="12" cy="12" r="4" fill="#6366f1"/></svg>
+  ),
+  chat: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke="#6366f1" strokeWidth="2" strokeLinejoin="round"/></svg>
+  ),
+  star: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6L12 2z" fill="#6366f1"/></svg>
+  ),
+}
+
+function MenuMessage({ message, onSelect, isMobile = false }) {
+  return (
+    <div className="cw-msg-in" style={{ maxWidth: isMobile ? '100%' : '42%', width: isMobile ? '100%' : undefined, paddingBottom: 8 }}>
+      {message.title && (
+        <div style={{ fontSize: 13, fontWeight: 600, color: '#111827', marginBottom: 10, paddingLeft: 2 }}>
+          {message.title}
+        </div>
+      )}
+      <div style={{ border: '1px solid #e5e7eb', borderRadius: 12, overflow: 'hidden', background: '#fff', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
+        {message.items.map((item, i) => (
+          <button
+            key={item.id ?? i}
+            onClick={() => onSelect?.({ value: item.id ?? item.label, label: item.label })}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 12,
+              width: '100%', padding: '9px 12px',
+              background: '#fff', border: 'none',
+              borderTop: i > 0 ? '1px solid #f3f4f6' : 'none',
+              cursor: 'pointer', textAlign: 'left',
+              fontFamily: 'var(--cw-font-family)',
+              transition: 'background 120ms',
+            }}
+            onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'}
+            onMouseLeave={e => e.currentTarget.style.background = '#fff'}
+          >
+            <div style={{ width: 26, height: 26, borderRadius: 6, background: '#eef2ff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              {MENU_ICONS[item.icon] ?? MENU_ICONS.arrow}
+            </div>
+            <span style={{ flex: 1, fontSize: 13, fontWeight: 500, color: '#111827' }}>{item.label}</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, color: '#9ca3af' }}>
+              <path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+        ))}
+      </div>
+    </div>
   )
 }
 
@@ -516,9 +585,10 @@ const bubbleWrap = (role) => ({
 })
 
 const bubbleStyle = (isUser, isMobile = false) => ({
+  position: 'relative',
   overflow: 'hidden',
-  padding: isMobile ? '9px 16px 5px' : '7px 13px 4px',
-  borderRadius: isUser ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
+  padding: isMobile ? '9px 16px 22px' : '7px 13px 20px',
+  borderRadius: isUser ? '8px 8px 2px 8px' : '8px 8px 8px 2px',
   background: isUser ? 'var(--cw-bg-message-user)' : 'var(--cw-bg-message-bot)',
   color: isUser ? 'var(--cw-text-message-user)' : 'var(--cw-text)',
   fontSize: 14,
@@ -528,16 +598,15 @@ const bubbleStyle = (isUser, isMobile = false) => ({
   boxShadow: '0 1px 2px rgba(0,0,0,0.08)',
 })
 
-// Invisible spacer that reserves width for the meta so short text doesn't let meta overflow
 const metaStyle = (isUser, isMobile = false) => ({
-  float: 'right',
-  marginLeft: 6,
-  marginTop: isMobile ? 5 : 3,
+  position: 'absolute',
+  bottom: 4,
+  right: 8,
   display: 'flex',
   alignItems: 'center',
   gap: 3,
-  fontSize: 11,
-  color: isUser ? 'rgba(0,0,0,0.45)' : '#9ca3af',
+  fontSize: 10,
+  color: isUser ? 'rgba(255,255,255,0.75)' : '#9ca3af',
   whiteSpace: 'nowrap',
   userSelect: 'none',
   lineHeight: 1,

@@ -1,4 +1,4 @@
-export function FallbackMessage({ text, onEscalate, onLeaveMessage, acted, isMobile = false }) {
+export function FallbackMessage({ text, onEscalate, onLeaveMessage, acted, isMobile = false, senderName, senderType }) {
   const btnSize = 13
   return (
     <>
@@ -37,6 +37,12 @@ export function FallbackMessage({ text, onEscalate, onLeaveMessage, acted, isMob
       <div style={wrapStyle}>
         <div style={bubbleStyle}>{text}</div>
 
+        {senderName && (
+          <div style={{ fontSize: 11, color: 'var(--cw-primary)', fontWeight: 500, paddingLeft: 2, fontFamily: 'var(--cw-font-family)' }}>
+            {senderName}
+          </div>
+        )}
+
         {!acted && (
           <div style={actionsStyle}>
             <button className="cw-fallback-action" onClick={onEscalate}>
@@ -62,7 +68,7 @@ const wrapStyle = {
 
 const bubbleStyle = {
   padding: '9px 13px',
-  borderRadius: '16px 16px 16px 4px',
+  borderRadius: '8px 8px 8px 2px',
   background: 'var(--cw-bg-message-bot)',
   color: 'var(--cw-text)',
   fontSize: 14,

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import '../styles/global.css'
 import { useConfig } from '../hooks/useConfig'
+import { LoginContent } from './LoginContent'
 import { useFallbackLog } from '../hooks/useFallbackLog'
 import { MessageList, Lightbox } from './MessageList'
 import { ChatInput } from './ChatInput'
@@ -39,7 +40,7 @@ const ARTICLE_RESPONSES = {
   'ch-3': 'Para integrar el Webchat en tu sitio solo necesitás copiar un snippet de JavaScript generado desde tu cuenta de Botmaker y pegarlo antes del cierre del tag </body>.',
 }
 
-export function DesktopWidget({ onClose, config: configOverrides = {} }) {
+export function DesktopWidget({ onClose, config: configOverrides = {}, clientName, clientLogo, topInset = 0, loggedInUser = null, onLogin, onLogout, onOpenProfile, onOpenLogin }) {
   const config = useConfig(configOverrides)
   const { logFallback } = useFallbackLog(config.fallbackLogEndpoint)
 
@@ -49,7 +50,7 @@ export function DesktopWidget({ onClose, config: configOverrides = {} }) {
   const [typingStates, setTypingStates] = useState(null)
   const [agentSession, setAgentSession] = useState(null)
   const [voiceMode, setVoiceMode]     = useState(false)
-  const [sessionsOpen, setSessionsOpen]   = useState(false)
+  const [sessionsOpen, setSessionsOpen]   = useState(true)
   const [selectedSession, setSelectedSession] = useState(null)
   const [infoOpen, setInfoOpen]           = useState(() => window.innerWidth >= 768)
   const [incomingCall, setIncomingCall]   = useState(null)
@@ -67,12 +68,12 @@ export function DesktopWidget({ onClose, config: configOverrides = {} }) {
   const shellRef      = useRef(null)
 
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768)
-  const [loggedInUser, setLoggedInUser] = useState(null)
   useEffect(() => {
     const handler = () => setIsMobile(window.innerWidth < 768)
     window.addEventListener('resize', handler)
     return () => window.removeEventListener('resize', handler)
   }, [])
+  const [showAppStrip, setShowAppStrip] = useState(true)
 
   // Apply theme CSS variables (same as ChatWidget)
   useEffect(() => {
@@ -174,6 +175,21 @@ export function DesktopWidget({ onClose, config: configOverrides = {} }) {
         addMessage({ id: nextDesktopId++, role: 'bot', type: 'file', text: 'Gracias por compartirlo. Te mando la documentación relacionada:', file: { name: 'Documentacion_caso.pdf', size: '248 KB' }, createdAt: new Date(), senderName, senderType: agentSession ? 'Agente' : 'Asistente IA' })
         notifyIfHidden('Gracias por compartirlo. Te mando la documentación relacionada:', senderName)
       }, 3200)
+      return
+    }
+
+    if (/botonera/i.test(text.trim())) {
+      setIsTyping(true)
+      setTypingMode('writing')
+      setTimeout(() => {
+        setIsTyping(false)
+        addMessage({ id: nextDesktopId++, role: 'bot', type: 'menu', title: 'Seleccioná una opción', items: [
+          { id: 'opt1', icon: 'lightning', label: 'Ver mis pedidos' },
+          { id: 'opt2', icon: 'chat',      label: 'Hablar con un agente' },
+          { id: 'opt3', icon: 'target',    label: 'Consultar estado de envío' },
+          { id: 'opt4', icon: 'arrow',     label: 'Hacer una devolución' },
+        ], createdAt: new Date(), senderName: config.botName, senderType: 'Asistente IA' })
+      }, 1000)
       return
     }
 
@@ -327,7 +343,9 @@ export function DesktopWidget({ onClose, config: configOverrides = {} }) {
     onSelectActive: () => { setSelectedSession(null); if (isMobile) setSessionsOpen(false) },
     onSelectPast: (s) => { setSelectedSession(s); if (isMobile) setSessionsOpen(false) },
     loggedInUser,
-    onLogin: setLoggedInUser,
+    onLogin: onOpenLogin,
+    onLogout,
+    onOpenProfile,
   }
 
   const infoPanelProps = {
@@ -340,6 +358,7 @@ export function DesktopWidget({ onClose, config: configOverrides = {} }) {
   return (
     <div ref={shellRef} style={{
       ...shellStyle,
+      top: topInset,
       padding: isMobile ? 0 : 12,
       '--cw-bg-message-user': config.primaryColor,
       '--cw-text-message-user': isLightColor(config.primaryColor) ? '#111827' : '#ffffff',
@@ -398,6 +417,10 @@ export function DesktopWidget({ onClose, config: configOverrides = {} }) {
             .dw-resize-handle.active::after { background: #2563eb; }
           `}</style>
 
+          {isMobile && showAppStrip && (
+            <AppDownloadStrip onDismiss={() => setShowAppStrip(false)} />
+          )}
+
           {/* Header */}
           <div style={{ ...headerStyle, background: (() => { const [r,g,b] = hexToRgb(config.primaryColor); return `linear-gradient(180deg, rgba(${r},${g},${b},0.07) 0%, #ffffff 100%)` })() }}>
             <style>{`@keyframes dw-spin{to{transform:rotate(360deg)}}.dw-spin{animation:dw-spin 0.9s linear infinite}`}</style>
@@ -406,35 +429,42 @@ export function DesktopWidget({ onClose, config: configOverrides = {} }) {
                 <ChatsListIcon />
               </button>
 
-              {/* LEFT: brand avatar + name + status */}
+              {/* LEFT: brand avatar + name + attended-by */}
               <div
-                style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0, cursor: 'pointer' }}
+                style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0, cursor: 'pointer' }}
                 onClick={() => setInfoOpen(o => !o)}
               >
                 <PanelAvatar size={isMobile ? 54 : 40} logoUrl={config.clientLogo ?? null} />
                 <div style={{ minWidth: 0, flex: 1 }}>
-                  <div style={{ fontWeight: 700, fontSize: 15, color: '#111827', lineHeight: 1.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{config.botName}</div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
-                    {!isHistoryView && <span style={{ width: 6, height: 6, borderRadius: '50%', flexShrink: 0, background: isTransferring ? '#f59e0b' : '#22c55e' }} />}
-                    <span style={{ fontSize: 11, color: isHistoryView ? '#9ca3af' : '#6b7280', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 5, minWidth: 0 }}>
+                    <span style={{ fontWeight: 700, fontSize: 15, color: '#111827', lineHeight: 1.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{clientName ?? config.botName}</span>
+                    <img src="/verified.png" alt="Verificado" style={{ width: 16, height: 16, flexShrink: 0 }} />
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 3 }}>
+                    {/* Mini avatar: agent photo, AI icon, or dot */}
+                    {!isHistoryView && !isTransferring && isAgent && agentSession.avatar
+                      ? <img src={agentSession.avatar} alt={agentSession.name} style={{ width: 16, height: 16, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: '1.5px solid #e5e7eb' }} />
+                      : !isHistoryView && !isTransferring && !isAgent
+                        ? <span style={{ width: 16, height: 16, borderRadius: '50%', background: '#ede9fe', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
+                              <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6L12 2z" fill="#7c3aed"/>
+                            </svg>
+                          </span>
+                        : <span style={{ width: 7, height: 7, borderRadius: '50%', flexShrink: 0, background: isHistoryView ? '#d1d5db' : '#f59e0b', marginLeft: 2, marginRight: 3 }} />
+                    }
+                    <span style={{ fontSize: 12, color: '#6b7280', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {isHistoryView
                         ? 'Sesión cerrada'
                         : isTransferring
                           ? 'Conectando con un agente...'
                           : isAgent
-                            ? 'Centro de atención · < 3 mins'
-                            : subtitle}
+                            ? `Atendido por ${agentSession.name}`
+                            : `Atendido por Asistente IA`}
                     </span>
                   </div>
                 </div>
               </div>
 
-              {/* RIGHT: attended-by pill */}
-              {!isHistoryView && <DWAttendedByPill isAgent={isAgent} agentSession={agentSession} isTransferring={isTransferring} clientLogo={config.clientLogo ?? null} />}
-
-              <button className="dw-hdr-btn" aria-label="Cerrar" onClick={onClose}>
-                <CloseIcon />
-              </button>
             </div>
           </div>
 
@@ -543,6 +573,30 @@ export function DesktopWidget({ onClose, config: configOverrides = {} }) {
               />
             </div>
           )}
+
+          {/* Login overlay — shown when not authenticated */}
+          {!loggedInUser && (
+            <div style={{
+              position: 'fixed', inset: 0, zIndex: 9999,
+              background: 'rgba(15,23,42,0.5)',
+              backdropFilter: 'blur(6px)',
+              WebkitBackdropFilter: 'blur(6px)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              padding: 20,
+            }}>
+              <div style={{
+                background: '#fff', borderRadius: 20,
+                width: '100%', maxWidth: 360,
+                boxShadow: '0 24px 64px rgba(0,0,0,0.25)',
+                overflow: 'hidden',
+              }}>
+                <LoginContent
+                  client={{ name: clientName ?? config.botName, logo: clientLogo ?? config.clientLogo ?? null, primaryColor: config.primaryColor }}
+                  onLogin={onLogin}
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* ── Info panel ── */}
@@ -647,8 +701,9 @@ function deriveTitle(messages) {
   return t.length > 38 ? t.slice(0, 36) + '…' : t
 }
 
-function DWSessionsPanel({ activeName, activeTitle, activeAvatar, activeIsAgent, activeLastMsg, activeUnread, selectedId, clientLogo, onClose, onSelectActive, onSelectPast, isMobile, loggedInUser = null, onLogin }) {
+function DWSessionsPanel({ activeName, activeTitle, activeAvatar, activeIsAgent, activeLastMsg, activeUnread, selectedId, clientLogo, onClose, onSelectActive, onSelectPast, isMobile, loggedInUser = null, onLogin, onLogout, onOpenProfile }) {
   const [search, setSearch] = useState('')
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
   const filtered = PAST_SESSIONS.filter(s =>
     s.title.toLowerCase().includes(search.toLowerCase()) ||
     s.lastMsg.toLowerCase().includes(search.toLowerCase())
@@ -759,8 +814,8 @@ function DWSessionsPanel({ activeName, activeTitle, activeAvatar, activeIsAgent,
           )}
         </div>
 
-        {/* Blur overlay — inside position:relative, outside scroll div → covers visible area only */}
-        {!loggedInUser && (
+        {/* DISABLED: blur historial — cambiar false a !loggedInUser para reactivar */}
+        {false && !loggedInUser && (
         <div style={{ position: 'absolute', inset: 0, backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', background: 'rgba(255,255,255,0.6)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', zIndex: 10, padding: '28px 20px 20px', gap: 12, overflowY: 'auto' }}>
           <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(255,255,255,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
@@ -793,6 +848,72 @@ function DWSessionsPanel({ activeName, activeTitle, activeAvatar, activeIsAgent,
         </div>
       )}
     </div>
+
+      {/* User footer — Slack-style */}
+      <div style={{ borderTop: '1px solid #f3f4f6', padding: '8px 10px', flexShrink: 0, position: 'relative' }}>
+        {!loggedInUser ? (
+          <button
+            onClick={() => onLogin?.()}
+            style={{ display: 'flex', alignItems: 'center', gap: 9, width: '100%', padding: '9px 12px', background: 'transparent', border: 'none', borderRadius: 10, cursor: 'pointer', transition: 'background 120ms', fontFamily: 'var(--cw-font-family)' }}
+            onMouseEnter={e => e.currentTarget.style.background = '#f3f4f6'}
+            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+          >
+            <div style={{ width: 30, height: 30, borderRadius: '50%', background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" stroke="#6b7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <polyline points="10 17 15 12 10 7" stroke="#6b7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <line x1="15" y1="12" x2="3" y2="12" stroke="#6b7280" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+            </div>
+            <span style={{ flex: 1, textAlign: 'left', fontSize: 13, fontWeight: 600, color: '#374151', fontFamily: 'var(--cw-font-family)' }}>Ingresar</span>
+          </button>
+        ) : (
+          <button
+            onClick={() => setUserMenuOpen(o => !o)}
+            style={{ display: 'flex', alignItems: 'center', gap: 9, width: '100%', padding: '7px 8px', background: 'transparent', border: 'none', borderRadius: 10, cursor: 'pointer', transition: 'background 120ms', fontFamily: 'var(--cw-font-family)' }}
+            onMouseEnter={e => e.currentTarget.style.background = '#f3f4f6'}
+            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+          >
+            <img src="/avatar-santiago.jpg" alt="Santiago" style={{ width: 30, height: 30, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+            <span style={{ flex: 1, textAlign: 'left', fontSize: 13, fontWeight: 600, color: '#111827', fontFamily: 'var(--cw-font-family)' }}>Santiago</span>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style={{ color: '#9ca3af', flexShrink: 0 }}>
+              <path d="M6 9l6-6 6 6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+        )}
+
+        {userMenuOpen && <div onClick={() => setUserMenuOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 0 }} />}
+        {userMenuOpen && (
+          <div style={{ position: 'absolute', bottom: 'calc(100% + 4px)', left: 10, right: 10, background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, boxShadow: '0 -4px 20px rgba(0,0,0,0.08)', zIndex: 100, overflow: 'hidden' }}>
+            <div style={{ padding: '12px 14px 10px', borderBottom: '1px solid #f3f4f6', display: 'flex', alignItems: 'center', gap: 10 }}>
+              <img src="/avatar-santiago.jpg" alt="Santiago" style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 13, color: '#111827', fontFamily: 'var(--cw-font-family)' }}>Santiago</div>
+                <div style={{ fontSize: 11, color: '#9ca3af', fontFamily: 'var(--cw-font-family)', marginTop: 2 }}>santiago.garbers@botmaker.io</div>
+              </div>
+            </div>
+            <button
+              onClick={() => { setUserMenuOpen(false); onOpenProfile?.() }}
+              style={{ display: 'flex', alignItems: 'center', gap: 9, width: '100%', padding: '10px 14px', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: 13, color: '#111827', fontFamily: 'var(--cw-font-family)', textAlign: 'left', transition: 'background 120ms' }}
+              onMouseEnter={e => e.currentTarget.style.background = '#f9fafb'}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="#6b7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><circle cx="12" cy="7" r="4" stroke="#6b7280" strokeWidth="2"/></svg>
+              Datos del perfil
+            </button>
+            <div style={{ height: 1, background: '#f3f4f6', margin: '0 10px' }} />
+            <button
+              onClick={() => { setUserMenuOpen(false); onLogout && onLogout() }}
+              style={{ display: 'flex', alignItems: 'center', gap: 9, width: '100%', padding: '10px 14px', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: 13, color: '#ef4444', fontFamily: 'var(--cw-font-family)', textAlign: 'left', transition: 'background 120ms' }}
+              onMouseEnter={e => e.currentTarget.style.background = '#fff1f1'}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><polyline points="16 17 21 12 16 7" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><line x1="21" y1="12" x2="9" y2="12" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              Cerrar sesión
+            </button>
+          </div>
+        )}
+      </div>
   </div>
   )
 }
@@ -811,6 +932,71 @@ function ChatsListIcon() {
   return (
     <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
       <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  )
+}
+
+function AppDownloadStrip({ onDismiss }) {
+  return (
+    <div style={appStripStyle}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 7, minWidth: 0 }}>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+          <AppleGlyph />
+          <PlayGlyph />
+        </span>
+        <span style={{ fontSize: 11.5, color: '#64748b', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: 'var(--cw-font-family)' }}>
+          Seguí este chat desde la app
+        </span>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+        <a
+          href="https://apps.apple.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={appStripLinkStyle}
+        >
+          Abrir app
+        </a>
+        <button className="dw-hdr-btn" aria-label="Cerrar aviso" onClick={onDismiss} style={{ width: 22, height: 22 }}>
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none">
+            <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function AppleGlyph() {
+  return (
+    <svg width="12" height="14" viewBox="0 0 20 24" fill="none">
+      <path d="M16.462 12.748c-.028-3.22 2.634-4.773 2.754-4.847-1.503-2.195-3.836-2.494-4.662-2.524-1.977-.2-3.872 1.17-4.875 1.17-1.003 0-2.544-1.143-4.189-1.113-2.148.033-4.14 1.254-5.244 3.17C-1.93 12.57.532 18.39 2.9 21.56c1.176 1.683 2.573 3.57 4.404 3.503 1.78-.072 2.447-1.142 4.593-1.142 2.147 0 2.764 1.142 4.642 1.107 1.907-.033 3.114-1.703 4.273-3.398 1.369-1.942 1.921-3.854 1.946-3.953-.043-.017-3.715-1.427-3.75-5.67l-.546.74z" fill="#64748b"/>
+      <path d="M13.178 3.967C14.13 2.81 14.78 1.22 14.597 0c-1.533.063-3.42 1.026-4.406 2.154-.956 1.097-1.8 2.882-1.575 4.553 1.716.132 3.48-.876 4.562-2.74z" fill="#64748b"/>
+    </svg>
+  )
+}
+
+function PlayGlyph() {
+  return (
+    <svg width="12" height="13" viewBox="0 0 20 22" fill="none">
+      <path d="M1.215.366C.898.7.71 1.21.71 1.87v18.26c0 .66.188 1.17.505 1.504l.08.077 10.23-10.23v-.24L1.295.289l-.08.077z" fill="url(#dw-gp1)"/>
+      <path d="M14.94 14.82l-3.41-3.41v-.24l3.41-3.41.077.044 4.04 2.295c1.154.655 1.154 1.727 0 2.382l-4.04 2.295-.077.044z" fill="url(#dw-gp2)"/>
+      <path d="M15.017 14.776L11.53 11.29.71 22.11c.38.402.998.452 1.698.05l12.609-7.384z" fill="url(#dw-gp3)"/>
+      <path d="M15.017 7.804L2.408.42C1.708.018 1.09.068.71.47l10.82 10.82 3.487-3.487z" fill="url(#dw-gp4)"/>
+      <defs>
+        <linearGradient id="dw-gp1" x1="10.83" y1="1.57" x2="-3.9" y2="16.3" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#00A0FF"/><stop offset="1" stopColor="#00AEFF"/>
+        </linearGradient>
+        <linearGradient id="dw-gp2" x1="20.3" y1="11.29" x2="10.26" y2="11.29" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#FFD800"/><stop offset="1" stopColor="#FF8A00"/>
+        </linearGradient>
+        <linearGradient id="dw-gp3" x1="12.86" y1="13.59" x2="-1.34" y2="27.79" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#FF3A44"/><stop offset="1" stopColor="#C31162"/>
+        </linearGradient>
+        <linearGradient id="dw-gp4" x1="-1.69" y1="-2.54" x2="5.41" y2="4.56" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#32A071"/><stop offset="1" stopColor="#2DA771"/>
+        </linearGradient>
+      </defs>
     </svg>
   )
 }
@@ -843,13 +1029,25 @@ function DWInfoPanel({ onClose, name, avatar, isAgent, subtitle, messages, confi
 
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: isMobile ? '16px 18px' : '14px 16px', borderBottom: '1px solid #f3f4f6', flexShrink: 0 }}>
-          <button
-            onClick={onClose}
-            style={{ width: 32, height: 32, border: 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6b7280', borderRadius: '50%', flexShrink: 0 }}
-          >
-            <BackIcon />
-          </button>
-          <span style={{ fontSize: 16, fontWeight: 700, color: '#111827' }}>Info. del contacto</span>
+          {isMobile && (
+            <button
+              onClick={onClose}
+              style={{ width: 32, height: 32, border: 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6b7280', borderRadius: '50%', flexShrink: 0 }}
+            >
+              <BackIcon />
+            </button>
+          )}
+          <span style={{ fontSize: 16, fontWeight: 700, color: '#111827', flex: 1 }}>Info. del contacto</span>
+          {!isMobile && (
+            <button
+              onClick={onClose}
+              style={{ width: 32, height: 32, border: 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6b7280', borderRadius: '50%', flexShrink: 0, transition: 'background 120ms' }}
+              onMouseEnter={e => e.currentTarget.style.background = '#f3f4f6'}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+            >
+              <CloseIconSmall />
+            </button>
+          )}
         </div>
 
         {/* Profile */}
@@ -1150,7 +1348,7 @@ function MiniVideoWidget({ agent, seconds, isMobile, onRestore, onHangUp }) {
 
 const shellStyle = {
   position: 'fixed',
-  inset: 0,
+  top: 0, left: 0, right: 0, bottom: 0,
   zIndex: 10000,
   background: '#fff',
   display: 'flex',
@@ -1211,6 +1409,25 @@ const headerStyle = {
   borderBottom: '1px solid #f3f4f6',
   padding: '12px 14px',
   flexShrink: 0,
+}
+
+const appStripStyle = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  gap: 8,
+  padding: '6px 14px',
+  background: '#f8fafc',
+  borderBottom: '1px solid #f1f5f9',
+  flexShrink: 0,
+}
+const appStripLinkStyle = {
+  fontSize: 11.5,
+  fontWeight: 700,
+  color: 'var(--cw-primary)',
+  textDecoration: 'none',
+  whiteSpace: 'nowrap',
+  fontFamily: 'var(--cw-font-family)',
 }
 
 function darken(hex) {

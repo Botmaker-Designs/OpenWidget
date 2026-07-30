@@ -30,6 +30,7 @@ export function ChatInput({ onSend, disabled, onVoice, voiceMode, wrapStyle, onS
     setAttachments([])
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto'
+      textareaRef.current.style.overflowY = 'hidden'
       textareaRef.current?.focus()
     }
   }
@@ -174,11 +175,24 @@ export function ChatInput({ onSend, disabled, onVoice, voiceMode, wrapStyle, onS
   const canSend = (text.trim().length > 0 || attachments.length > 0) && !disabled
   const hasContent = attachments.length > 0 || text.length > 0
 
+  const MAX_H_DESKTOP = 144 // 6 lines at 14px × 1.5 + 18px padding
+  const MAX_H_MOBILE  = 140 // 6 lines at 16px × 1.45
+
+  const autoResize = (ta, maxH) => {
+    ta.style.height = 'auto'
+    const newH = Math.min(ta.scrollHeight, maxH)
+    ta.style.height = newH + 'px'
+    ta.style.overflowY = ta.scrollHeight > maxH ? 'auto' : 'hidden'
+  }
+
   const handleMobileTextChange = (e) => {
     setText(e.target.value)
-    const ta = e.target
-    ta.style.height = 'auto'
-    ta.style.height = Math.min(ta.scrollHeight, 120) + 'px'
+    autoResize(e.target, MAX_H_MOBILE)
+  }
+
+  const handleDesktopTextChange = (e) => {
+    setText(e.target.value)
+    autoResize(e.target, MAX_H_DESKTOP)
   }
 
   const PILL_MENU_ITEMS = [
@@ -248,7 +262,8 @@ export function ChatInput({ onSend, disabled, onVoice, voiceMode, wrapStyle, onS
           font-size: 14px; color: var(--cw-text);
           line-height: 1.5;
           padding: 12px 14px 6px;
-          flex: 1; overflow-y: auto; width: 100%;
+          overflow-y: hidden; width: 100%;
+          min-height: 39px;
         }
         .cw-textarea::placeholder { color: #9ca3af; }
         .cw-textarea-pill {
@@ -260,7 +275,7 @@ export function ChatInput({ onSend, disabled, onVoice, voiceMode, wrapStyle, onS
           padding: 0;
           flex: 1; overflow-y: hidden;
           width: 100%;
-          max-height: 120px;
+          max-height: 140px;
         }
         .cw-textarea-pill::placeholder { color: #9ca3af; }
         .cw-action-row {
@@ -391,7 +406,7 @@ export function ChatInput({ onSend, disabled, onVoice, voiceMode, wrapStyle, onS
             {emojiOpen && (
               <div style={{ position: 'absolute', bottom: 'calc(100% + 4px)', left: 12, zIndex: 20 }}>
                 <EmojiPicker
-                  onSelect={(emoji) => { setText(t => t + emoji); textareaRef.current?.focus() }}
+                  onSelect={(emoji) => { setText(t => t + emoji); textareaRef.current?.focus(); setTimeout(() => { if (textareaRef.current) autoResize(textareaRef.current, isMobile ? MAX_H_MOBILE : MAX_H_DESKTOP) }, 0) }}
                   onClose={() => setEmojiOpen(false)}
                 />
               </div>
@@ -449,7 +464,7 @@ export function ChatInput({ onSend, disabled, onVoice, voiceMode, wrapStyle, onS
                 )}
 
                 {/* Input row */}
-                <div style={{ display: 'flex', alignItems: 'center', padding: '7px 6px 7px 8px', gap: 2 }}>
+                <div style={{ display: 'flex', alignItems: 'flex-end', padding: '7px 6px 7px 8px', gap: 2 }}>
                   {/* + button */}
                   <button
                     onClick={() => setPlusMenuOpen(o => !o)}
@@ -568,7 +583,7 @@ export function ChatInput({ onSend, disabled, onVoice, voiceMode, wrapStyle, onS
                   className="cw-textarea"
                   rows={1}
                   value={text}
-                  onChange={e => setText(e.target.value)}
+                  onChange={handleDesktopTextChange}
                   onKeyDown={handleKeyDown}
                   placeholder="Escribí tu mensaje..."
                   disabled={disabled}
@@ -584,7 +599,7 @@ export function ChatInput({ onSend, disabled, onVoice, voiceMode, wrapStyle, onS
                     </button>
                     {emojiOpen && (
                       <EmojiPicker
-                        onSelect={(emoji) => { setText(t => t + emoji); textareaRef.current?.focus() }}
+                        onSelect={(emoji) => { setText(t => t + emoji); textareaRef.current?.focus(); setTimeout(() => { if (textareaRef.current) autoResize(textareaRef.current, isMobile ? MAX_H_MOBILE : MAX_H_DESKTOP) }, 0) }}
                         onClose={() => setEmojiOpen(false)}
                       />
                     )}
