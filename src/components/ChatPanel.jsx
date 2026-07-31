@@ -21,9 +21,10 @@ const WA_BG_MOBILE = {
   backgroundRepeat: 'repeat',
 }
 
-export function ChatPanel({ config, messages, isTyping, typingMode, typingStates, onSend, onQuickReply, onEscalate, onLeaveMessage, onClose, agentSession, isExpanded, onToggleExpand, onAddVoiceMessage, onStreamVoiceBot, onTabChange, sessions = [], onSelectSession, isMobile = false, historyOpen = false, onToggleHistory, isClosed = false }) {
+export function ChatPanel({ config, messages, isTyping, typingMode, typingStates, onSend, onQuickReply, onEscalate, onLeaveMessage, onClose, agentSession, isExpanded, onToggleExpand, onAddVoiceMessage, onStreamVoiceBot, onSendGif, onSendFile, onSendLocation, onSendContact, onReact, onTabChange, sessions = [], onSelectSession, isMobile = false, historyOpen = false, onToggleHistory, isClosed = false }) {
   const [voiceMode, setVoiceMode] = useState(false)
   const [showAppStrip, setShowAppStrip] = useState(true)
+  const [replyDraft, setReplyDraft] = useState(null)
   const isTransferring = !agentSession && !isClosed && messages.some(m => m.type === 'transferring')
 
   return (
@@ -78,6 +79,8 @@ export function ChatPanel({ config, messages, isTyping, typingMode, typingStates
             onLeaveMessage={onLeaveMessage}
             fallbackText={config.fallbackMessage}
             agentName={agentSession?.name}
+            onReply={setReplyDraft}
+            onReact={onReact}
           />
           {!isClosed && <NotificationPrompt messages={messages} />}
         </div>
@@ -94,6 +97,8 @@ export function ChatPanel({ config, messages, isTyping, typingMode, typingStates
             onLeaveMessage={onLeaveMessage}
             fallbackText={config.fallbackMessage}
             agentName={agentSession?.name}
+            onReply={setReplyDraft}
+            onReact={onReact}
           />
           {!isClosed && <NotificationPrompt messages={messages} />}
         </>
@@ -115,6 +120,12 @@ export function ChatPanel({ config, messages, isTyping, typingMode, typingStates
           onSend={onSend}
           disabled={isTyping}
           onVoice={() => setVoiceMode(true)}
+          onSendGif={onSendGif}
+          onSendFile={onSendFile}
+          onSendLocation={onSendLocation}
+          onSendContact={onSendContact}
+          replyTo={replyDraft}
+          onCancelReply={() => setReplyDraft(null)}
           isMobile={isMobile}
           wrapStyle={isMobile ? { ...WA_BG_MOBILE, flexShrink: 0, minHeight: 'unset' } : undefined}
         />

@@ -1,11 +1,40 @@
 import { useState, useRef, useEffect } from 'react'
 import { BotmakerLogo } from './BotmakerLogo'
 import { EmojiPicker } from './EmojiPicker'
+import { GifPicker } from './GifPicker'
+import { summarizeReply } from './MessageList'
 
 const MAX_ATTACHMENTS = 3
 const REC_BAR_COUNT = 28
+const DOC_ACCEPT = '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.csv,.txt,.zip'
 
-export function ChatInput({ onSend, disabled, onVoice, voiceMode, wrapStyle, onSendAudio, isMobile = false }) {
+function formatBytes(bytes) {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
+function ReplyPreview({ replyTo, onCancel }) {
+  if (!replyTo) return null
+  const summary = summarizeReply(replyTo)
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: 8,
+      background: '#f8fafc', borderLeft: '3px solid var(--cw-primary)',
+      borderRadius: 8, padding: '6px 10px', margin: '10px 12px 0',
+    }}>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--cw-primary)' }}>Respondiendo a {summary.label}</div>
+        <div style={{ fontSize: 12, color: '#6b7280', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{summary.snippet}</div>
+      </div>
+      <button onClick={onCancel} aria-label="Cancelar respuesta" style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: '#9ca3af', display: 'flex', flexShrink: 0 }}>
+        <CloseIcon />
+      </button>
+    </div>
+  )
+}
+
+export function ChatInput({ onSend, disabled, onVoice, voiceMode, wrapStyle, onSendAudio, onSendGif, onSendFile, onSendLocation, onSendContact, replyTo, onCancelReply, isMobile = false }) {
   const [text, setText]               = useState('')
   const [attachments, setAttachments] = useState([])
   const [isRecording, setIsRecording] = useState(false)
@@ -14,9 +43,11 @@ export function ChatInput({ onSend, disabled, onVoice, voiceMode, wrapStyle, onS
   const [recBars, setRecBars]         = useState(() => Array(REC_BAR_COUNT).fill(4))
   const [plusMenuOpen, setPlusMenuOpen] = useState(false)
   const [emojiOpen, setEmojiOpen]     = useState(false)
+  const [gifOpen, setGifOpen]         = useState(false)
   const [dragging, setDragging]       = useState(false)
   const textareaRef  = useRef(null)
   const fileRef      = useRef(null)
+  const docFileRef   = useRef(null)
   const analyserRef  = useRef(null)
   const streamRef    = useRef(null)
   const rafRef       = useRef(null)
@@ -25,9 +56,10 @@ export function ChatInput({ onSend, disabled, onVoice, voiceMode, wrapStyle, onS
   const handleSend = () => {
     const trimmed = text.trim()
     if (!trimmed && attachments.length === 0 || disabled) return
-    onSend(trimmed, attachments)
+    onSend(trimmed, attachments, replyTo)
     setText('')
     setAttachments([])
+    onCancelReply?.()
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto'
       textareaRef.current.style.overflowY = 'hidden'
@@ -69,6 +101,32 @@ export function ChatInput({ onSend, disabled, onVoice, voiceMode, wrapStyle, onS
 
   const removeAttachment = (id) => {
     setAttachments(prev => prev.filter(a => a.id !== id))
+  }
+
+  const handleDocFileChange = (e) => {
+    const files = Array.from(e.target.files || [])
+    files.forEach(file => onSendFile?.({ name: file.name, size: formatBytes(file.size) }))
+    e.target.value = ''
+    onCancelReply?.()
+  }
+
+  const handleGifSelect = (gif) => {
+    onSendGif?.(gif)
+    setGifOpen(false)
+    setPlusMenuOpen(false)
+    onCancelReply?.()
+  }
+
+  const handleShareLocation = () => {
+    onSendLocation?.()
+    setPlusMenuOpen(false)
+    onCancelReply?.()
+  }
+
+  const handleShareContact = () => {
+    onSendContact?.()
+    setPlusMenuOpen(false)
+    onCancelReply?.()
   }
 
   // Recording timer
@@ -209,12 +267,27 @@ export function ChatInput({ onSend, disabled, onVoice, voiceMode, wrapStyle, onS
     {
       label: 'Archivos',
       icon: <FilesMenuIcon />,
-      action: () => { fileRef.current?.click(); setPlusMenuOpen(false) },
+      action: () => { docFileRef.current?.click(); setPlusMenuOpen(false) },
     },
     {
       label: 'Emoji',
       icon: <EmojiMenuIcon />,
       action: () => { setEmojiOpen(o => !o); setPlusMenuOpen(false) },
+    },
+    {
+      label: 'GIF',
+      icon: <GifMenuIcon />,
+      action: () => { setGifOpen(o => !o); setPlusMenuOpen(false) },
+    },
+    {
+      label: 'Ubicación',
+      icon: <LocationMenuIcon />,
+      action: handleShareLocation,
+    },
+    {
+      label: 'Contacto',
+      icon: <ContactMenuIcon />,
+      action: handleShareContact,
     },
   ]
 
@@ -372,7 +445,18 @@ export function ChatInput({ onSend, disabled, onVoice, voiceMode, wrapStyle, onS
         onChange={handleFileChange}
       />
 
+      <input
+        ref={docFileRef}
+        type="file"
+        accept={DOC_ACCEPT}
+        multiple
+        style={{ display: 'none' }}
+        onChange={handleDocFileChange}
+      />
+
       <div className="cw-input-wrap" style={wrapStyle}>
+
+        <ReplyPreview replyTo={replyTo} onCancel={onCancelReply} />
 
         {/* ── MOBILE PILL LAYOUT ── */}
         {isMobile ? (
@@ -409,6 +493,13 @@ export function ChatInput({ onSend, disabled, onVoice, voiceMode, wrapStyle, onS
                   onSelect={(emoji) => { setText(t => t + emoji); textareaRef.current?.focus(); setTimeout(() => { if (textareaRef.current) autoResize(textareaRef.current, isMobile ? MAX_H_MOBILE : MAX_H_DESKTOP) }, 0) }}
                   onClose={() => setEmojiOpen(false)}
                 />
+              </div>
+            )}
+
+            {/* GIF picker (mobile) */}
+            {gifOpen && (
+              <div style={{ position: 'absolute', bottom: 'calc(100% + 4px)', left: 12, zIndex: 20 }}>
+                <GifPicker onSelect={handleGifSelect} onClose={() => setGifOpen(false)} />
               </div>
             )}
 
@@ -464,7 +555,7 @@ export function ChatInput({ onSend, disabled, onVoice, voiceMode, wrapStyle, onS
                 )}
 
                 {/* Input row */}
-                <div style={{ display: 'flex', alignItems: 'flex-end', padding: '7px 6px 7px 8px', gap: 2 }}>
+                <div style={{ display: 'flex', alignItems: 'center', padding: '7px 6px 7px 8px', gap: 2 }}>
                   {/* + button */}
                   <button
                     onClick={() => setPlusMenuOpen(o => !o)}
@@ -593,6 +684,9 @@ export function ChatInput({ onSend, disabled, onVoice, voiceMode, wrapStyle, onS
                   <button className="cw-action-btn" title={canAdd ? 'Adjuntar imagen' : `Máximo ${MAX_ATTACHMENTS} imágenes`} disabled={!canAdd} onClick={() => fileRef.current?.click()}>
                     <AttachIcon />
                   </button>
+                  <button className="cw-action-btn" title="Adjuntar archivo" disabled={disabled} onClick={() => docFileRef.current?.click()}>
+                    <DocAttachIcon />
+                  </button>
                   <div style={{ position: 'relative' }}>
                     <button className="cw-action-btn" title="Emoji" disabled={disabled} onClick={() => setEmojiOpen(o => !o)}>
                       <EmojiIcon />
@@ -604,7 +698,20 @@ export function ChatInput({ onSend, disabled, onVoice, voiceMode, wrapStyle, onS
                       />
                     )}
                   </div>
-                  <button className="cw-action-btn" title="GIF" disabled={disabled}><GifIcon /></button>
+                  <div style={{ position: 'relative' }}>
+                    <button className="cw-action-btn" title="GIF" disabled={disabled} onClick={() => setGifOpen(o => !o)}>
+                      <GifIcon />
+                    </button>
+                    {gifOpen && (
+                      <GifPicker onSelect={handleGifSelect} onClose={() => setGifOpen(false)} />
+                    )}
+                  </div>
+                  <button className="cw-action-btn" title="Compartir ubicación" disabled={disabled} onClick={handleShareLocation}>
+                    <LocationMenuIcon size={17} />
+                  </button>
+                  <button className="cw-action-btn" title="Compartir contacto" disabled={disabled} onClick={handleShareContact}>
+                    <ContactMenuIcon size={17} />
+                  </button>
                   <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 2 }}>
                     <button className="cw-action-btn" title="Grabar audio" disabled={disabled} onClick={startRecording}><AudioMicIcon /></button>
                     {canSend
@@ -723,6 +830,38 @@ function GifIcon() {
     <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
       <rect x="2" y="5" width="20" height="14" rx="3" stroke="currentColor" strokeWidth="2"/>
       <text x="5.5" y="16" fontSize="7.5" fontWeight="700" fill="currentColor" fontFamily="sans-serif">GIF</text>
+    </svg>
+  )
+}
+function GifMenuIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+      <rect x="2" y="5" width="20" height="14" rx="3" stroke="currentColor" strokeWidth="2"/>
+      <text x="5" y="16.5" fontSize="8.5" fontWeight="700" fill="currentColor" fontFamily="sans-serif">GIF</text>
+    </svg>
+  )
+}
+function LocationMenuIcon({ size = 20 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <path d="M12 21s7-6.5 7-12a7 7 0 0 0-14 0c0 5.5 7 12 7 12z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <circle cx="12" cy="9" r="2.5" stroke="currentColor" strokeWidth="2"/>
+    </svg>
+  )
+}
+function ContactMenuIcon({ size = 20 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="2"/>
+      <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+    </svg>
+  )
+}
+function DocAttachIcon() {
+  return (
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <polyline points="14 2 14 8 20 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
   )
 }

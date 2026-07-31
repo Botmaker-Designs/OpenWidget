@@ -3,7 +3,7 @@ import '../styles/global.css'
 import { useConfig } from '../hooks/useConfig'
 import { LoginContent } from './LoginContent'
 import { useFallbackLog } from '../hooks/useFallbackLog'
-import { MessageList, Lightbox } from './MessageList'
+import { MessageList, Lightbox, summarizeReply } from './MessageList'
 import { ChatInput } from './ChatInput'
 import { VoiceChat } from './VoiceChat'
 import { BotmakerLogo } from './BotmakerLogo'
@@ -74,6 +74,8 @@ export function DesktopWidget({ onClose, config: configOverrides = {}, clientNam
     return () => window.removeEventListener('resize', handler)
   }, [])
   const [showAppStrip, setShowAppStrip] = useState(true)
+  const [replyDraft, setReplyDraft] = useState(null)
+  const [isClosed, setIsClosed] = useState(false)
 
   // Apply theme CSS variables (same as ChatWidget)
   useEffect(() => {
@@ -163,8 +165,8 @@ export function DesktopWidget({ onClose, config: configOverrides = {}, clientNam
     }, 18)
   }
 
-  const addUserMessage = (text, attachments = []) => {
-    addMessage({ id: nextDesktopId++, role: 'user', type: attachments.length ? 'image' : 'text', text, attachments, createdAt: new Date() })
+  const addUserMessage = (text, attachments = [], replyTo = null) => {
+    addMessage({ id: nextDesktopId++, role: 'user', type: attachments.length ? 'image' : 'text', text, attachments, replyTo: replyTo ? summarizeReply(replyTo) : undefined, createdAt: new Date() })
 
     if (attachments.length > 0) {
       const senderName = agentSession?.name ?? config.botName ?? 'Botsy AI'
@@ -190,6 +192,74 @@ export function DesktopWidget({ onClose, config: configOverrides = {}, clientNam
           { id: 'opt4', icon: 'arrow',     label: 'Hacer una devolución' },
         ], createdAt: new Date(), senderName: config.botName, senderType: 'Asistente IA' })
       }, 1000)
+      return
+    }
+
+    if (/tarjeta|^card$/i.test(text.trim())) {
+      setIsTyping(true)
+      setTypingMode('writing')
+      setTimeout(() => {
+        setIsTyping(false)
+        addMessage({ id: nextDesktopId++, role: 'bot', type: 'card', card: {
+          icon: '📶', color: 'linear-gradient(135deg,#6366f1,#4338ca)', title: 'Plan Premium', subtitle: 'Internet + móvil ilimitado a un precio especial este mes.',
+          ctaLabel: 'Ver detalles', ctaValue: 'ver_plan_premium',
+        }, createdAt: new Date(), senderName: config.botName, senderType: 'Asistente IA' })
+      }, 1000)
+      return
+    }
+
+    if (/carrusel/i.test(text.trim())) {
+      setIsTyping(true)
+      setTypingMode('writing')
+      setTimeout(() => {
+        setIsTyping(false)
+        addMessage({ id: nextDesktopId++, role: 'bot', type: 'carousel', cards: [
+          { icon: '📱', color: 'linear-gradient(135deg,#0ea5e9,#0369a1)', title: 'Plan Básico',   subtitle: 'Ideal para uso diario.',      ctaLabel: 'Elegir', ctaValue: 'plan_basico' },
+          { icon: '📶', color: 'linear-gradient(135deg,#6366f1,#4338ca)', title: 'Plan Premium',  subtitle: 'Más datos y velocidad.',       ctaLabel: 'Elegir', ctaValue: 'plan_premium' },
+          { icon: '👨‍👩‍👧', color: 'linear-gradient(135deg,#f59e0b,#b45309)', title: 'Plan Familiar', subtitle: 'Para todo tu hogar, sin límites.', ctaLabel: 'Elegir', ctaValue: 'plan_familiar' },
+        ], createdAt: new Date(), senderName: config.botName, senderType: 'Asistente IA' })
+      }, 1000)
+      return
+    }
+
+    if (/formulario/i.test(text.trim())) {
+      setIsTyping(true)
+      setTypingMode('writing')
+      setTimeout(() => {
+        setIsTyping(false)
+        addMessage({ id: nextDesktopId++, role: 'bot', type: 'form', form: {
+          title: 'Dejanos tus datos de contacto',
+          fields: [
+            { id: 'nombre', label: 'Nombre completo', placeholder: 'Juan Pérez', required: true },
+            { id: 'email', label: 'Email', type: 'email', placeholder: 'juan@mail.com', required: true },
+            { id: 'telefono', label: 'Teléfono', type: 'tel', placeholder: '11 1234-5678' },
+          ],
+          submitLabel: 'Enviar datos',
+        }, createdAt: new Date(), senderName: config.botName, senderType: 'Asistente IA' })
+      }, 1000)
+      return
+    }
+
+    if (/agendar|callback/i.test(text.trim())) {
+      setIsTyping(true)
+      setTypingMode('writing')
+      setTimeout(() => {
+        setIsTyping(false)
+        addMessage({ id: nextDesktopId++, role: 'bot', type: 'callback', createdAt: new Date(), senderName: config.botName, senderType: 'Asistente IA' })
+      }, 1000)
+      return
+    }
+
+    if (/^cerrar$|calificar/i.test(text.trim())) {
+      handleCloseConversation()
+      return
+    }
+
+    if (/^⭐+\s*\(\d\/5\)$/.test(text.trim())) {
+      setTimeout(() => {
+        addMessage({ id: nextDesktopId++, role: 'bot', type: 'text', text: '¡Gracias por tu feedback! Cerramos esta conversación por ahora. Si necesitás algo más, escribinos cuando quieras.', createdAt: new Date(), senderName: config.botName, senderType: 'Asistente IA' })
+        setIsClosed(true)
+      }, 900)
       return
     }
 
@@ -241,6 +311,55 @@ export function DesktopWidget({ onClose, config: configOverrides = {}, clientNam
         createdAt: new Date(),
       })
     }, 3500)
+  }
+
+  const toggleReaction = (messageId, emoji) => {
+    setMessages(prev => prev.map(m => m.id === messageId ? { ...m, reaction: m.reaction === emoji ? undefined : emoji } : m))
+  }
+
+  const handleSendGif = (gif) => {
+    addMessage({ id: nextDesktopId++, role: 'user', type: 'gif', gif, createdAt: new Date() })
+    setIsTyping(true)
+    setTypingMode('writing')
+    setTimeout(() => {
+      setIsTyping(false)
+      streamText('¡Buenísimo! 😄')
+    }, 1400)
+  }
+
+  const handleSendFile = (file) => {
+    addMessage({ id: nextDesktopId++, role: 'user', type: 'file', file, createdAt: new Date() })
+    setIsTyping(true)
+    setTypingMode('writing')
+    setTimeout(() => {
+      setIsTyping(false)
+      streamText('Perfecto, ya recibí tu archivo. Dejame revisarlo y te cuento.')
+    }, 1600)
+  }
+
+  const handleSendLocation = () => {
+    addMessage({ id: nextDesktopId++, role: 'user', type: 'location', location: { label: 'Mi ubicación actual', address: 'Av. Corrientes 1234, CABA' }, createdAt: new Date() })
+    setIsTyping(true)
+    setTypingMode('writing')
+    setTimeout(() => {
+      setIsTyping(false)
+      streamText('Recibido, gracias por compartir tu ubicación.')
+    }, 1200)
+  }
+
+  const handleSendContact = () => {
+    addMessage({ id: nextDesktopId++, role: 'user', type: 'contact', contact: { name: 'Santiago Garbers', phone: '+54 9 11 1234-5678' }, createdAt: new Date() })
+    setIsTyping(true)
+    setTypingMode('writing')
+    setTimeout(() => {
+      setIsTyping(false)
+      streamText('Gracias, ya guardé el contacto.')
+    }, 1200)
+  }
+
+  const handleCloseConversation = () => {
+    addMessage({ id: nextDesktopId++, role: 'bot', type: 'csat', createdAt: new Date(), senderName: config.botName, senderType: 'Asistente IA' })
+    setInfoOpen(false)
   }
 
   const markFallbackActed = () => {
@@ -353,6 +472,7 @@ export function DesktopWidget({ onClose, config: configOverrides = {}, clientNam
     name: displayName, avatar: displayAvatar, isAgent: displayIsAgent,
     subtitle: displaySubtitle, messages: displayMessages, config,
     isMobile,
+    onCloseConversation: (isHistoryView || isClosed) ? undefined : handleCloseConversation,
   }
 
   return (
@@ -485,6 +605,8 @@ export function DesktopWidget({ onClose, config: configOverrides = {}, clientNam
               fallbackText={config.fallbackMessage}
               agentName={isHistoryView ? selectedSession.name : agentSession?.name}
               isMobile={isMobile}
+              onReply={isHistoryView ? undefined : setReplyDraft}
+              onReact={isHistoryView ? undefined : toggleReaction}
             />
             {!isHistoryView && <NotificationPrompt messages={messages} />}
             {/* Mini video widget flotante — absolutamente posicionado sobre los mensajes */}
@@ -516,6 +638,10 @@ export function DesktopWidget({ onClose, config: configOverrides = {}, clientNam
                 Ir a la activa →
               </button>
             </div>
+          ) : isClosed ? (
+            <div style={closedBarStyle}>
+              <span style={{ fontSize: 13, color: '#9ca3af' }}>Esta conversación está cerrada</span>
+            </div>
           ) : voiceMode ? (
             <VoiceChat
               onAddMessage={(msg) => addMessage({ id: nextDesktopId++, createdAt: new Date(), senderName: config.botName, senderType: 'Asistente IA', ...msg })}
@@ -526,6 +652,12 @@ export function DesktopWidget({ onClose, config: configOverrides = {}, clientNam
             <ChatInput
               onSend={addUserMessage}
               onSendAudio={handleSendAudio}
+              onSendGif={handleSendGif}
+              onSendFile={handleSendFile}
+              onSendLocation={handleSendLocation}
+              onSendContact={handleSendContact}
+              replyTo={replyDraft}
+              onCancelReply={() => setReplyDraft(null)}
               disabled={isTyping}
               onVoice={() => setVoiceMode(true)}
               wrapStyle={inputWrapStyle}
@@ -1001,7 +1133,7 @@ function PlayGlyph() {
   )
 }
 
-function DWInfoPanel({ onClose, name, avatar, isAgent, subtitle, messages, config, isMobile = false }) {
+function DWInfoPanel({ onClose, name, avatar, isAgent, subtitle, messages, config, isMobile = false, onCloseConversation }) {
   const sharedImages = messages.filter(m => m.attachments?.length > 0).flatMap(m => m.attachments)
   const role         = isAgent ? 'Agente humano' : 'Asistente IA'
   const [lightboxSrc, setLightboxSrc] = useState(null)
@@ -1137,7 +1269,11 @@ function DWInfoPanel({ onClose, name, avatar, isAgent, subtitle, messages, confi
             <ChevronIcon />
           </div>
 
-          <div className="dw-info-row" style={{ borderBottom: 'none' }}>
+          <div
+            className="dw-info-row"
+            style={{ borderBottom: 'none', cursor: onCloseConversation ? 'pointer' : 'default', opacity: onCloseConversation ? 1 : 0.45 }}
+            onClick={onCloseConversation}
+          >
             <div style={{ width: isMobile ? 50 : 36, height: isMobile ? 50 : 36, borderRadius: '50%', background: '#fef2f2', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: '#ef4444' }}>
               <CloseIconSmall />
             </div>

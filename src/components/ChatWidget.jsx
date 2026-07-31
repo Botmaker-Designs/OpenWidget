@@ -5,6 +5,7 @@ import { FloatingButton } from './FloatingButton'
 import { BotmakerLogo } from './BotmakerLogo'
 import { BrandAvatar } from './BrandAvatar'
 import { ChatPanel } from './ChatPanel'
+import { summarizeReply } from './MessageList'
 import { SessionsList } from './SessionsList'
 import { HelpCenter } from './HelpCenter'
 import { HomeScreen } from './HomeScreen'
@@ -203,9 +204,9 @@ export function ChatWidget({ config: configOverrides = {}, initialOpen = false, 
     setView('chat')
   }
 
-  const addUserMessage = (text, attachments = []) => {
+  const addUserMessage = (text, attachments = [], replyTo = null) => {
     const sid = activeSessionId
-    addMessage(sid, { id: nextId++, role: 'user', type: attachments.length ? 'image' : 'text', text, attachments, createdAt: new Date() })
+    addMessage(sid, { id: nextId++, role: 'user', type: attachments.length ? 'image' : 'text', text, attachments, replyTo: replyTo ? summarizeReply(replyTo) : undefined, createdAt: new Date() })
 
     if (/botonera/i.test(text.trim())) {
       setIsTyping(true)
@@ -219,6 +220,79 @@ export function ChatWidget({ config: configOverrides = {}, initialOpen = false, 
           { id: 'opt4', icon: 'arrow',     label: 'Hacer una devolución' },
         ], createdAt: new Date(), senderName: config.botName, senderType: 'Asistente IA' })
       }, 1000)
+      return
+    }
+
+    if (/tarjeta|^card$/i.test(text.trim())) {
+      setIsTyping(true)
+      setTypingMode('writing')
+      setTimeout(() => {
+        setIsTyping(false)
+        addMessage(sid, { id: nextId++, role: 'bot', type: 'card', card: {
+          icon: '📶', color: 'linear-gradient(135deg,#6366f1,#4338ca)', title: 'Plan Premium', subtitle: 'Internet + móvil ilimitado a un precio especial este mes.',
+          ctaLabel: 'Ver detalles', ctaValue: 'ver_plan_premium',
+        }, createdAt: new Date(), senderName: config.botName, senderType: 'Asistente IA' })
+      }, 1000)
+      return
+    }
+
+    if (/carrusel/i.test(text.trim())) {
+      setIsTyping(true)
+      setTypingMode('writing')
+      setTimeout(() => {
+        setIsTyping(false)
+        addMessage(sid, { id: nextId++, role: 'bot', type: 'carousel', cards: [
+          { icon: '📱', color: 'linear-gradient(135deg,#0ea5e9,#0369a1)', title: 'Plan Básico',   subtitle: 'Ideal para uso diario.',      ctaLabel: 'Elegir', ctaValue: 'plan_basico' },
+          { icon: '📶', color: 'linear-gradient(135deg,#6366f1,#4338ca)', title: 'Plan Premium',  subtitle: 'Más datos y velocidad.',       ctaLabel: 'Elegir', ctaValue: 'plan_premium' },
+          { icon: '👨‍👩‍👧', color: 'linear-gradient(135deg,#f59e0b,#b45309)', title: 'Plan Familiar', subtitle: 'Para todo tu hogar, sin límites.', ctaLabel: 'Elegir', ctaValue: 'plan_familiar' },
+        ], createdAt: new Date(), senderName: config.botName, senderType: 'Asistente IA' })
+      }, 1000)
+      return
+    }
+
+    if (/formulario/i.test(text.trim())) {
+      setIsTyping(true)
+      setTypingMode('writing')
+      setTimeout(() => {
+        setIsTyping(false)
+        addMessage(sid, { id: nextId++, role: 'bot', type: 'form', form: {
+          title: 'Dejanos tus datos de contacto',
+          fields: [
+            { id: 'nombre', label: 'Nombre completo', placeholder: 'Juan Pérez', required: true },
+            { id: 'email', label: 'Email', type: 'email', placeholder: 'juan@mail.com', required: true },
+            { id: 'telefono', label: 'Teléfono', type: 'tel', placeholder: '11 1234-5678' },
+          ],
+          submitLabel: 'Enviar datos',
+        }, createdAt: new Date(), senderName: config.botName, senderType: 'Asistente IA' })
+      }, 1000)
+      return
+    }
+
+    if (/agendar|callback/i.test(text.trim())) {
+      setIsTyping(true)
+      setTypingMode('writing')
+      setTimeout(() => {
+        setIsTyping(false)
+        addMessage(sid, { id: nextId++, role: 'bot', type: 'callback', createdAt: new Date(), senderName: config.botName, senderType: 'Asistente IA' })
+      }, 1000)
+      return
+    }
+
+    if (/^cerrar$|calificar/i.test(text.trim())) {
+      setIsTyping(true)
+      setTypingMode('writing')
+      setTimeout(() => {
+        setIsTyping(false)
+        addMessage(sid, { id: nextId++, role: 'bot', type: 'csat', createdAt: new Date(), senderName: config.botName, senderType: 'Asistente IA' })
+      }, 1000)
+      return
+    }
+
+    if (/^⭐+\s*\(\d\/5\)$/.test(text.trim())) {
+      setTimeout(() => {
+        addMessage(sid, { id: nextId++, role: 'bot', type: 'text', text: '¡Gracias por tu feedback! Cerramos esta conversación por ahora. Si necesitás algo más, escribinos cuando quieras.', createdAt: new Date(), senderName: config.botName, senderType: 'Asistente IA' })
+        setSessions(prev => prev.map(s => s.id === sid ? { ...s, closed: true } : s))
+      }, 900)
       return
     }
 
@@ -322,6 +396,62 @@ export function ChatWidget({ config: configOverrides = {}, initialOpen = false, 
     const sid = activeSessionId
     markFallbackActed(sid)
     addMessage(sid, { id: nextId++, role: 'bot', type: 'text', text: 'Dejá tu mensaje y te responderemos a la brevedad.', createdAt: new Date(), senderName: config.botName, senderType: 'Asistente IA' })
+  }
+
+  const toggleReaction = (messageId, emoji) => {
+    updateSession(activeSessionId, s => ({
+      ...s,
+      messages: s.messages.map(m => m.id === messageId ? { ...m, reaction: m.reaction === emoji ? undefined : emoji } : m),
+    }))
+  }
+
+  const handleSendGif = (gif) => {
+    const sid = activeSessionId
+    addMessage(sid, { id: nextId++, role: 'user', type: 'gif', gif, createdAt: new Date() })
+    setIsTyping(true)
+    setTypingMode('writing')
+    setTimeout(() => {
+      setIsTyping(false)
+      streamText(sid, '¡Buenísimo! 😄')
+    }, 1400)
+  }
+
+  const handleSendFile = (file) => {
+    const sid = activeSessionId
+    addMessage(sid, { id: nextId++, role: 'user', type: 'file', file, createdAt: new Date() })
+    setIsTyping(true)
+    setTypingMode('writing')
+    setTimeout(() => {
+      setIsTyping(false)
+      streamText(sid, 'Perfecto, ya recibí tu archivo. Dejame revisarlo y te cuento.')
+    }, 1600)
+  }
+
+  const handleSendLocation = () => {
+    const sid = activeSessionId
+    addMessage(sid, { id: nextId++, role: 'user', type: 'location', location: { label: 'Mi ubicación actual', address: 'Av. Corrientes 1234, CABA' }, createdAt: new Date() })
+    setIsTyping(true)
+    setTypingMode('writing')
+    setTimeout(() => {
+      setIsTyping(false)
+      streamText(sid, 'Recibido, gracias por compartir tu ubicación.')
+    }, 1200)
+  }
+
+  const handleSendContact = () => {
+    const sid = activeSessionId
+    addMessage(sid, { id: nextId++, role: 'user', type: 'contact', contact: { name: 'Santiago Garbers', phone: '+54 9 11 1234-5678' }, createdAt: new Date() })
+    setIsTyping(true)
+    setTypingMode('writing')
+    setTimeout(() => {
+      setIsTyping(false)
+      streamText(sid, 'Gracias, ya guardé el contacto.')
+    }, 1200)
+  }
+
+  const handleCloseConversation = () => {
+    const sid = activeSessionId
+    addMessage(sid, { id: nextId++, role: 'bot', type: 'csat', createdAt: new Date(), senderName: config.botName, senderType: 'Asistente IA' })
   }
 
   const handleAskArticle = (article) => {
@@ -470,6 +600,11 @@ export function ChatWidget({ config: configOverrides = {}, initialOpen = false, 
                 onToggleExpand={() => setIsExpanded(e => !e)}
                 onAddVoiceMessage={(msg) => addMessage(activeSessionId, { id: nextId++, createdAt: new Date(), senderName: config.botName, senderType: 'Asistente IA', ...msg })}
                 onStreamVoiceBot={(text) => streamText(activeSessionId, text)}
+                onSendGif={handleSendGif}
+                onSendFile={handleSendFile}
+                onSendLocation={handleSendLocation}
+                onSendContact={handleSendContact}
+                onReact={toggleReaction}
                 onTabChange={handleTabChange}
                 isMobile={isMobile}
                 historyOpen={historyOpen}
@@ -643,6 +778,11 @@ export function ChatWidget({ config: configOverrides = {}, initialOpen = false, 
                   onToggleExpand={() => setIsExpanded(e => !e)}
                   onAddVoiceMessage={(msg) => addMessage(activeSessionId, { id: nextId++, createdAt: new Date(), senderName: config.botName, senderType: 'Asistente IA', ...msg })}
                   onStreamVoiceBot={(text) => streamText(activeSessionId, text)}
+                  onSendGif={handleSendGif}
+                  onSendFile={handleSendFile}
+                  onSendLocation={handleSendLocation}
+                  onSendContact={handleSendContact}
+                  onReact={toggleReaction}
                   onTabChange={handleTabChange}
                   isMobile={false}
                   historyOpen={historyOpen}
